@@ -4,6 +4,8 @@
 #define GIT_ANALYZE_HPP
 #include <cstdint>
 
+/// CreateTimerQueueTimer
+/// timer
 class AnalyzeTask {
 public:
   AnalyzeTask(const char *repodir, const char *branch);

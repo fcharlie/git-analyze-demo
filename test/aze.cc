@@ -71,8 +71,8 @@ int git_diff_file_compare(const git_diff_delta *delta, float progress,
       return 0;
     }
     auto size = git_blob_rawsize(blob);
-    printf("%ld\n", size);
-    if (size > 100) {
+    // printf("%ld\n", size);
+    if (size > 1024 * 1024) {
       fprintf(stderr, "File: %s\n", delta->new_file.path);
     }
   }
