@@ -2,16 +2,18 @@
 #include <string>
 #include <cstdio>
 #include <cstdlib>
+#include <stdexcept>
 #include <git2.h>
 
-class RiiaRepository {
+class RaiiRepository {
 public:
-  RiiaRepository(const char *dir) {
+  RaiiRepository(const char *dir) {
     if (git_repository_open(&repo_, dir) != 0) {
-      // throw std::runtime
+      auto err = giterr_last();
+      throw std::runtime_error(err->message);
     }
   }
-  ~RiiaRepository() {
+  ~RaiiRepository() {
     if (repo_) {
       git_repository_free(repo_);
     }
@@ -24,6 +26,13 @@ private:
 
 bool Analyze(const char *dir, const char *ref) {
   ///
+  try {
+    RaiiRepository repo(dir);
+    ////
+  } catch (const std::exception &e) {
+    fprintf(stderr, "RaiiRepository throw: %s\n", e.what());
+    return false;
+  }
   return true;
 }
 
@@ -43,5 +52,12 @@ int main(int argc, char **argv) {
     ref_ = argv[2];
     break;
   }
+  git_libgit2_init();
+  if (Analyze(dir_, ref_)) {
+    printf("Analyze success %s %s\n", dir_, ref_);
+  } else {
+    fprintf(stderr, "Analyze failed :%s %s\n", dir_, ref_);
+  }
+  git_libgit2_shutdown();
   return 0;
 }
