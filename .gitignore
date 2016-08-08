@@ -1,0 +1,21 @@
+#this is ignore file
+*.o
+*.a
+*.out
+*.exe
+*.dll
+*.obj
+*.res
+*.pdb
+*.swp
+*.s
+build/
+CMakeFiles/
+CMakeCache.txt
+cpp/post-receive
+cpp/pre-receive
+cpp/update
+go/post-receive
+go/pre-receive
+go/update
+*.VC.db*
