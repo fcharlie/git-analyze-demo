@@ -14,11 +14,21 @@
 
 /*
 * git-analyze argument
-* git-analyze [<options>...] [--] [<pathspec>...] [<refs|branch>...]
+* git-analyze [<options>...] [--] [<pathspec>...] [<refs|branches>...]
 */
 
 void AnalyzeUsage() {
-  ///
+  const char *kUsage =
+      R"(OVERVIEW: GIT analyze tools
+Usage: git-analyze <options>...] [--] [<pathspec>...] [<refs|branches> ...]
+OPTIONS:
+  -h [--help]      print usage and exit
+  --limitsize      set analyze engine limit blob size
+  --warnsize       set analyze engine warn blob size
+  --timeout        set analyze engine lifycycle
+  --all            analyze will scanf all refs
+)";
+  printf("%s\n", kUsage);
 }
 
 template <class T> inline void ResolveInteger(const char *cstr, T &t) {
@@ -86,15 +96,13 @@ int ProcessArgv(int Argc, char **Argv, AnalyzeArgs &analyzeArgs) {
   return 0;
 }
 
-void DebugAnalyzeArgs(const AnalyzeArgs &a) {
-  printf("%s %s\nLimit %ld Warn %ld Timeout %ld All Switch %d\n",
-         a.repository.c_str(), a.ref.c_str(), a.limitsize, a.warnsize,
-         a.timeout, a.allrefs);
-}
-
 int main(int argc, char **argv) {
   AnalyzeArgs analyzeArgs;
   ProcessArgv(argc, argv, analyzeArgs);
-  DebugAnalyzeArgs(analyzeArgs);
+  if (ProcessAnalyzeTask(analyzeArgs)) {
+    ////
+  } else {
+  }
+  // DebugAnalyzeArgs(analyzeArgs);
   return 0;
 }

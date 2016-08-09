@@ -94,4 +94,5 @@ include_directories(
 
 
 add_subdirectory(vendor/libgit2)
+add_subdirectory(tools/analyze)
 add_subdirectory(test)
