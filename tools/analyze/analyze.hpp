@@ -22,9 +22,10 @@ std::size_t EnvLimitSize();
 std::size_t EnvWarnSize();
 std::int64_t EnvTimeout();
 
+extern std::int64_t g_limitsize;
+extern std::int64_t g_warnsize;
+
 struct AnalyzeArgs {
-  std::size_t limitsize{0};
-  std::size_t warnsize{0};
   std::int64_t timeout{-1};
   std::string repository;
   std::string ref;

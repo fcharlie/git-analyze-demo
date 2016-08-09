@@ -51,13 +51,13 @@ int ProcessArgv(int Argc, char **Argv, AnalyzeArgs &analyzeArgs) {
       if (++i < Argc) {
         std::size_t limit_ = 0;
         ResolveInteger(Argv[i], limit_);
-        analyzeArgs.limitsize = limit_ * MBSIZE;
+        g_limitsize = limit_ * MBSIZE;
       }
     } else if (IsArg(arg, "--warnsize")) {
       if (++i < Argc) {
         std::size_t warn_ = 0;
         ResolveInteger(Argv[i], warn_);
-        analyzeArgs.warnsize = warn_ * MBSIZE;
+        g_warnsize = warn_ * MBSIZE;
       }
     } else if (IsArg(arg, "--all")) {
       analyzeArgs.allrefs = true;
@@ -86,11 +86,11 @@ int ProcessArgv(int Argc, char **Argv, AnalyzeArgs &analyzeArgs) {
   if (analyzeArgs.timeout == -1) {
     analyzeArgs.timeout = EnvTimeout();
   }
-  if (analyzeArgs.limitsize == 0) {
-    analyzeArgs.limitsize = EnvLimitSize();
+  if (g_limitsize == 0) {
+    g_limitsize = EnvLimitSize();
   }
-  if (analyzeArgs.warnsize == 0) {
-    analyzeArgs.warnsize = EnvWarnSize();
+  if (g_warnsize == 0) {
+    g_warnsize = EnvWarnSize();
   }
 
   return 0;
