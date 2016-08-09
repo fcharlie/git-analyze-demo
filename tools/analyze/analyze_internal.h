@@ -15,6 +15,7 @@ public:
   bool refcommit(const char *refname);
   bool walk();
   bool load(const char *dir);
+  bool foreachref();
   git_repository *repository() const { return repo_; }
   git_commit *commit() const { return cur_commit_; }
 

@@ -120,7 +120,6 @@ bool RaiiRepository::walk() {
   git_tree *old_tree = nullptr;
   git_tree *new_tree = nullptr;
   if (git_commit_tree(&old_tree, parent) != 0) {
-    fprintf(stderr, "%s\n", git_oid_tostr_s(git_commit_id(parent)));
     git_commit_free(parent);
     return false;
   }
@@ -143,6 +142,35 @@ bool RaiiRepository::walk() {
   git_tree_free(new_tree);
   git_commit_free(cur_commit_);
   cur_commit_ = parent;
+  return true;
+}
+
+bool RaiiRepository::foreachref() {
+  git_branch_iterator *iter_{nullptr};
+  if (git_branch_iterator_new(&iter_, repo_, GIT_BRANCH_LOCAL) != 0) {
+    auto err = giterr_last();
+    fprintf(stderr, "git_branch_iterator_new: %s\n", err->message);
+    return false;
+  }
+  git_reference *ref_{nullptr};
+  git_branch_t tb;
+  /// bacause we set git_branch_iterator_new GIT_BRANCH_LOCAL.
+  while (git_branch_next(&ref_, &tb, iter_) == 0) {
+    auto oid = git_reference_target(ref_);
+    if (git_commit_lookup(&cur_commit_, repo_, oid) != 0) {
+      git_reference_free(ref_);
+      auto err = giterr_last();
+      fprintf(stderr, "Parse reference: %s\n", err->message);
+      return false;
+    }
+    printf("Parse ref: %s\n", git_reference_name(ref_));
+    while (walk()) {
+      /////
+    }
+    git_commit_free(cur_commit_);
+    cur_commit_ = nullptr;
+    git_reference_free(ref_);
+  }
   return true;
 }
 
@@ -174,10 +202,11 @@ bool ProcessAnalyzeTask(const AnalyzeArgs &analyzeArgs) {
     return false;
   }
   if (analyzeArgs.allrefs) {
-
+    return repository.foreachref();
   } else {
     if (!repository.refcommit(analyzeArgs.ref.c_str()))
       return false;
+    printf("Parse single ref: %s\n", analyzeArgs.ref.c_str());
     while (repository.walk()) {
       ///
     }

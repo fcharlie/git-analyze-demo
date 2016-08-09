@@ -47,20 +47,24 @@ int ProcessArgv(int Argc, char **Argv, AnalyzeArgs &analyzeArgs) {
       if (++i < Argc) {
         ResolveInteger(Argv[i], analyzeArgs.timeout);
       }
+      continue;
     } else if (IsArg(arg, "--limitsize")) {
       if (++i < Argc) {
         std::size_t limit_ = 0;
         ResolveInteger(Argv[i], limit_);
         g_limitsize = limit_ * MBSIZE;
       }
+      continue;
     } else if (IsArg(arg, "--warnsize")) {
       if (++i < Argc) {
         std::size_t warn_ = 0;
         ResolveInteger(Argv[i], warn_);
         g_warnsize = warn_ * MBSIZE;
       }
+      continue;
     } else if (IsArg(arg, "--all")) {
       analyzeArgs.allrefs = true;
+      continue;
     } else if (IsArg(arg, "-h", "--help")) {
       AnalyzeUsage();
       exit(0);
@@ -100,9 +104,9 @@ int main(int argc, char **argv) {
   AnalyzeArgs analyzeArgs;
   ProcessArgv(argc, argv, analyzeArgs);
   if (ProcessAnalyzeTask(analyzeArgs)) {
-    ////
+    printf("git-analyze process success !\n");
   } else {
+    fprintf(stderr, "git-analyze process broken !\n");
   }
-  // DebugAnalyzeArgs(analyzeArgs);
   return 0;
 }
