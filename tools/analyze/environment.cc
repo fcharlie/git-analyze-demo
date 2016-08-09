@@ -9,10 +9,10 @@
 #include <unistd.h>
 #endif
 
-#define MBSIZE (1UL << 20)
+#include "analyze.hpp"
 
-std::size_t LimitSize() {
-  auto str = getenv("GIT_LIMIT_SIZE");
+std::size_t EnvLimitSize() {
+  auto str = getenv(GIT_ANALYZE_LIMITSIZE);
   if (str) {
     char *c;
     auto l = strtol(str, &c, 10);
@@ -23,8 +23,8 @@ std::size_t LimitSize() {
   return 100 * MBSIZE;
 }
 
-std::size_t WarnSize() {
-  auto str = getenv("GIT_WARN_SIZE");
+std::size_t EnvWarnSize() {
+  auto str = getenv(GIT_ANALYZE_WARNSIZE);
   if (str) {
     char *c;
     auto l = strtol(str, &c, 10);
@@ -33,4 +33,16 @@ std::size_t WarnSize() {
     }
   }
   return 50 * MBSIZE;
+}
+
+std::int64_t EnvTimeout() {
+  auto str = getenv(GIT_ANALYZE_TIMEOUT);
+  if (str) {
+    char *c;
+    auto l = strtol(str, &c, 10);
+    if (l > 0 && l < 7200) {
+      return l;
+    }
+  }
+  return -1;
 }
