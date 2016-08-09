@@ -8,6 +8,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <vector>
 #define ARGV_NO_LINK
 #include <Argv.hpp>
 #include "analyze.hpp"
@@ -40,45 +41,40 @@ template <class T> inline void ResolveInteger(const char *cstr, T &t) {
 }
 
 int ProcessArgv(int Argc, char **Argv, AnalyzeArgs &analyzeArgs) {
-  int i = 1;
-  for (; i < Argc; i++) {
+  std::vector<const char *> Args;
+  for (int i = 1; i < Argc; i++) {
     const char *arg = Argv[i];
     if (IsArg(arg, "--timeout")) {
       if (++i < Argc) {
         ResolveInteger(Argv[i], analyzeArgs.timeout);
       }
-      continue;
     } else if (IsArg(arg, "--limitsize")) {
       if (++i < Argc) {
         std::size_t limit_ = 0;
         ResolveInteger(Argv[i], limit_);
         g_limitsize = limit_ * MBSIZE;
       }
-      continue;
     } else if (IsArg(arg, "--warnsize")) {
       if (++i < Argc) {
         std::size_t warn_ = 0;
         ResolveInteger(Argv[i], warn_);
         g_warnsize = warn_ * MBSIZE;
       }
-      continue;
     } else if (IsArg(arg, "--all")) {
       analyzeArgs.allrefs = true;
-      continue;
     } else if (IsArg(arg, "-h", "--help")) {
       AnalyzeUsage();
       exit(0);
     } else {
-      /// default break
-      break;
+      Args.push_back(arg);
     }
   }
   ///
-  if (i <= Argc - 2) {
-    analyzeArgs.repository.assign(Argv[i]);
-    analyzeArgs.ref.assign(Argv[i + 1]);
-  } else if (i <= Argc - 1) {
-    analyzeArgs.repository.append(Argv[i]);
+  if (Args.size() >= 2) {
+    analyzeArgs.repository.assign(Args[0]);
+    analyzeArgs.ref.assign(Args[1]);
+  } else if (Args.size() >= 1) {
+    analyzeArgs.repository.append(Args[0]);
     analyzeArgs.ref.assign("HEAD");
   } else {
     ///

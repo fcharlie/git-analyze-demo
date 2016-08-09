@@ -8,4 +8,16 @@
 #ifndef GIT_ANALYZE_ROLLBACK_HPP
 #define GIT_ANALYZE_ROLLBACK_HPP
 
+class RollbackDriver {
+public:
+  RollbackDriver();
+  ~RollbackDriver();
+  // bool Open()
+  bool RollbackWithCommit(const char *refname, const char *hexid, bool forced);
+  bool RollbackWithRev(const char *refname, int rev, bool forced);
+
+private:
+  ////
+};
+
 #endif
