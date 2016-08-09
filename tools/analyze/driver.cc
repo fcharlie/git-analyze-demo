@@ -104,9 +104,9 @@ int main(int argc, char **argv) {
   AnalyzeArgs analyzeArgs;
   ProcessArgv(argc, argv, analyzeArgs);
   if (ProcessAnalyzeTask(analyzeArgs)) {
-    printf("git-analyze process success !\n");
+    printf("git-analyze: Operation completed !\n");
   } else {
-    fprintf(stderr, "git-analyze process broken !\n");
+    fprintf(stderr, "git-analyze: Operation aborted !\n");
   }
   return 0;
 }
