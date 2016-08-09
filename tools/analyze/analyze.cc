@@ -88,7 +88,7 @@ bool RaiiRepository::refcommit(const char *refname) {
     //// second look branch to ref
     if (git_branch_lookup(&ref_, repo_, refname, GIT_BRANCH_LOCAL) != 0) {
       auto err = giterr_last();
-      fprintf(stderr, "Parse reference: %s\n", err->message);
+      fprintf(stderr, "Parse ref failed: %s\n", err->message);
       return false;
     }
   }
@@ -96,7 +96,7 @@ bool RaiiRepository::refcommit(const char *refname) {
   if (git_reference_resolve(&dref_, ref_) != 0) {
     git_reference_free(ref_);
     auto err = giterr_last();
-    fprintf(stderr, "Parse reference: %s\n", err->message);
+    fprintf(stderr, "Resolve ref failed: %s\n", err->message);
     return false;
   }
   auto oid = git_reference_target(dref_);
@@ -104,7 +104,7 @@ bool RaiiRepository::refcommit(const char *refname) {
     git_reference_free(ref_);
     git_reference_free(dref_);
     auto err = giterr_last();
-    fprintf(stderr, "Parse reference: %s\n", err->message);
+    fprintf(stderr, "Lookup commit: %s\n", err->message);
     return false;
   }
   git_reference_free(ref_);
