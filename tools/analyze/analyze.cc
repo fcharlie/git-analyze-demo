@@ -55,6 +55,30 @@ bool InitializeTaskTimer(std::int64_t t_) {
 std::int64_t g_limitsize = 100 * MBSIZE;
 std::int64_t g_warnsize = 50 * MBSIZE;
 
+int git_treewalk_resolveblobs(const char *root, const git_tree_entry *entry,
+                              void *payload) {
+  //
+  if (git_tree_entry_type(entry) == GIT_OBJ_BLOB) {
+    RaiiRepository *repo_ = reinterpret_cast<RaiiRepository *>(payload);
+    git_object *obj{nullptr};
+    if (git_tree_entry_to_object(&obj, repo_->repository(), entry) == 0) {
+      auto blob = reinterpret_cast<git_blob *>(obj);
+      auto size = git_blob_rawsize(blob);
+      if (size >= g_limitsize) {
+        auto cstr = git_oid_tostr_s(git_commit_id(repo_->commit()));
+        fprintf(stderr, "commit: %s file: %s/%s size<limit>: %4.2f MB\n", cstr,
+                root, git_tree_entry_name(entry), ((double)size / MBSIZE));
+      } else if (size >= g_warnsize) {
+        auto cstr = git_oid_tostr_s(git_commit_id(repo_->commit()));
+        fprintf(stderr, "commit: %s file: %s/%s size<warning>: %4.2f MB\n",
+                cstr, root, git_tree_entry_name(entry),
+                ((double)size / MBSIZE));
+      }
+    }
+  }
+  return 0;
+}
+
 //// callback
 int git_diff_callback(const git_diff_delta *delta, float progress,
                       void *payload) {
@@ -114,11 +138,19 @@ bool RaiiRepository::refcommit(const char *refname) {
 
 bool RaiiRepository::walk() {
   git_commit *parent = nullptr;
-  if (git_commit_parent(&parent, cur_commit_, 0) != 0) {
-    return false;
-  }
   git_tree *old_tree = nullptr;
   git_tree *new_tree = nullptr;
+  //// Fix me when commit is first commit ,so, use git_tree_walk parse all blob
+  if (git_commit_parent(&parent, cur_commit_, 0) != 0) {
+    auto err = giterr_last();
+    if (git_commit_tree(&new_tree, cur_commit_) != 0) {
+      git_commit_free(parent);
+      return false;
+    }
+    git_tree_walk(new_tree, GIT_TREEWALK_PRE, git_treewalk_resolveblobs, this);
+    return false;
+  }
+
   if (git_commit_tree(&old_tree, parent) != 0) {
     git_commit_free(parent);
     return false;
