@@ -5,7 +5,7 @@ add_executable(git-rollback
   driver.cc
   rollback.cc
   gc.cc
-  git-analyze.rc
+  git-rollback.rc
 )
 else()
 add_executable(git-rollback
