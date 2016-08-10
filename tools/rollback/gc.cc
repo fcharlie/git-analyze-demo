@@ -9,16 +9,60 @@
 #include <cstring>
 
 /*
-* bool GitGCInvoke(const std::string &dir,bool prune);
+* bool GitGCInvoke(const std::string &dir,bool forced);
 *
 */
 #ifdef _WIN32
 #include <Windows.h>
+
+class WCharacters {
+private:
+  wchar_t *wstr;
+
+public:
+  WCharacters(const char *str) : wstr(nullptr) {
+    if (str == nullptr)
+      return;
+    int unicodeLen = ::MultiByteToWideChar(CP_UTF8, 0, str, -1, NULL, 0);
+    if (unicodeLen == 0)
+      return;
+    wstr = new wchar_t[unicodeLen + 1];
+    if (wstr == nullptr)
+      return;
+    wstr[unicodeLen] = 0;
+    ::MultiByteToWideChar(CP_UTF8, 0, str, -1, (LPWSTR)wstr, unicodeLen);
+  }
+  const wchar_t *Get() {
+    if (!wstr)
+      return nullptr;
+    return const_cast<const wchar_t *>(wstr);
+  }
+  ~WCharacters() {
+    if (wstr)
+      delete[] wstr;
+  }
+};
+
+inline bool PathFileIsExistsU(const std::wstring &path) {
+  auto i = GetFileAttributesW(path.c_str());
+  return INVALID_FILE_ATTRIBUTES != i;
+}
+
+inline bool PathRemoveFileSpecU(wchar_t *begin, wchar_t *end) {
+  for (; end > begin; end--) {
+    if (*end == '/' || *end == '\\') {
+      *end = 0;
+      return true;
+    }
+  }
+  return false;
+}
+
 typedef BOOL(WINAPI *LPFN_ISWOW64PROCESS)(HANDLE, PBOOL);
 BOOL IsRunOnWin64() {
   BOOL bIsWow64 = FALSE;
   LPFN_ISWOW64PROCESS fnIsWow64Process = (LPFN_ISWOW64PROCESS)GetProcAddress(
-      GetModuleHandle(TEXT("kernel32")), "IsWow64Process");
+      GetModuleHandleW(L"kernel32"), "IsWow64Process");
   if (NULL != fnIsWow64Process) {
     if (!fnIsWow64Process(GetCurrentProcess(), &bIsWow64)) {
       // handle error
@@ -72,34 +116,109 @@ BOOL WINAPI FindGitInstallationLocation(std::wstring &location) {
   return result == ERROR_SUCCESS;
 }
 ////
-bool search_git_install(std::wstring &gitbin) {
+
+// ////
+// bool search_git_from_path(std::wstring &gitbin) {
+//   ///
+//   WCHAR buffer[4096] = {0};
+//   DWORD dwLength = 0;
+//   ////
+//   if ((dwLength =
+//            SearchPathW(nullptr, L"git", L".exe", 4096, buffer, nullptr)) > 0)
+//            {
+//     gitbin.assign(buffer, dwLength);
+//     return true;
+//   }
+//   return false;
+// }
+
+bool SearchGitForWindowsInstall(std::wstring &gitbin) {
   //
-  return true;
-}
-////
-bool search_git_from_path(std::wstring &gitbin) {
-  ///
-  WCHAR buffer[4096] = {0};
-  DWORD dwLength = 0;
-  ////
-  if ((dwLength =
-           SearchPathW(nullptr, L"git", L".exe", 4096, buffer, nullptr)) > 0) {
-    gitbin.assign(buffer, dwLength);
+  if (!FindGitInstallationLocation(gitbin))
+    return false;
+  gitbin.push_back('\\');
+  gitbin.append(L"git.exe");
+  if (PathFileIsExistsU(gitbin))
     return true;
-  }
   return false;
 }
 
 //
 bool GitExecutePathSearchAuto(const wchar_t *cmd, std::wstring &gitbin) {
   //// Self , Path Env,
-  return true;
+  if (PathFileIsExistsU(cmd)) {
+    gitbin.assign(cmd);
+    return true;
+  }
+  std::wstring Path;
+  Path.reserve(0x8000); /// 32767
+  ///
+  auto len = GetModuleFileNameW(nullptr, &Path[0], 32767);
+  if (len > 0) {
+    auto end = &Path[0] + len;
+    PathRemoveFileSpecU(&Path[0], end);
+    gitbin.assign(&Path[0]);
+    gitbin.push_back('//');
+    gitbin.append(cmd);
+    if (PathFileIsExistsU(gitbin))
+      return true;
+  }
+  ///
+  GetEnvironmentVariableW(L"PATH", &Path[0], 32767);
+  auto iter = &Path[0];
+  for (; *iter; iter++) {
+    if (*iter == ';') {
+      gitbin.push_back('//');
+      gitbin.append(cmd);
+      if (PathFileIsExistsU(gitbin)) {
+        return true;
+      }
+      gitbin.clear();
+    } else {
+      gitbin.push_back(*iter);
+    }
+  }
+  return false;
 }
 
 /// First search git from path.
-bool GitGCInvoke(const std::string &dir, bool prune) {
+bool GitGCInvoke(const std::string &dir, bool forced) {
   ///
-  return true;
+  WCharacters wstr(dir.c_str()); /// convert to UTF16
+  std::wstring gitbin;
+  if (!GitExecutePathSearchAuto(L"git.exe", gitbin)) {
+    if (!SearchGitForWindowsInstall(gitbin)) {
+      fprintf(stderr, "Not Found any git install in your path or current "
+                      "dir,Not found git-for-windows install");
+      return false;
+    }
+  }
+  /////////////////////////////////////////////////////////
+  std::wstring cmdline;
+  cmdline.reserve(0x8000);
+  _snwprintf_s(&cmdline[0], 32767, 32767, LR"("%s" gc )", gitbin.c_str());
+  if (forced) {
+    wcscat_s(&cmdline[0], 32767, L"--prune=now --force");
+  }
+  STARTUPINFOW si;
+  PROCESS_INFORMATION pi;
+  ZeroMemory(&si, sizeof(si));
+  ZeroMemory(&pi, sizeof(pi));
+  si.cb = sizeof(si);
+  if (!CreateProcessW(nullptr, &cmdline[0], nullptr, nullptr, FALSE, 0, nullptr,
+                      wstr.Get(), &si, &pi)) {
+    return false;
+  }
+  bool result = false;
+  if (WaitForSingleObject(pi.hProcess, INFINITE) == WAIT_OBJECT_0) {
+    DWORD dwExit = 0;
+    if (GetExitCodeProcess(pi.hProcess, &dwExit) && dwExit == 0) {
+      result = true;
+    }
+  }
+  CloseHandle(pi.hThread);
+  CloseHandle(pi.hProcess);
+  return result;
 }
 
 #else
@@ -122,7 +241,7 @@ bool GitExecutePathSearchAuto(const char *cmd, std::string &gitbin) {
   return false;
 }
 
-bool GitGCInvoke(const std::string &dir, bool prune) {
+bool GitGCInvoke(const std::string &dir, bool forced) {
   std::string gitbin;
   if (!GitExecutePathSearchAuto("git", gitbin)) {
     fprintf(stderr, "Not Found git in your path !\n");

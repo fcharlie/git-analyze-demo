@@ -29,6 +29,6 @@ public:
 private:
   ////
 };
-bool GitGCInvoke(const std::string &dir, bool prune);
+bool GitGCInvoke(const std::string &dir, bool forced);
 //
 #endif
