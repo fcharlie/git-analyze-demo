@@ -105,6 +105,7 @@ int git_diff_callback(const git_diff_delta *delta, float progress,
   return 0;
 }
 
+//// because git_reference_name_to_id require refs
 bool RaiiRepository::refcommit(const char *refname) {
   git_reference *ref_{nullptr};
   if (git_reference_lookup(&ref_, repo_, refname) != 0) {
@@ -122,6 +123,7 @@ bool RaiiRepository::refcommit(const char *refname) {
     fprintf(stderr, "Resolve ref failed: %s\n", err->message);
     return false;
   }
+  //// we check branch, but branch ref type should GIT_REF_OID
   auto oid = git_reference_target(dref_);
   if (git_commit_lookup(&cur_commit_, repo_, oid) != 0) {
     git_reference_free(ref_);

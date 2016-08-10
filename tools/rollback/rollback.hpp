@@ -7,6 +7,15 @@
 */
 #ifndef GIT_ANALYZE_ROLLBACK_HPP
 #define GIT_ANALYZE_ROLLBACK_HPP
+#include <string>
+
+struct RollbackTaskArgs {
+  std::string gitdir;
+  std::string hexid;
+  std::string refname{"HEAD"};
+  int rev{-1};
+  bool forced{false};
+};
 
 class RollbackDriver {
 public:
@@ -20,5 +29,6 @@ public:
 private:
   ////
 };
-
+bool GitGCInvoke(const std::string &dir, bool prune);
+//
 #endif
