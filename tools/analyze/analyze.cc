@@ -66,13 +66,12 @@ int git_treewalk_resolveblobs(const char *root, const git_tree_entry *entry,
       auto size = git_blob_rawsize(blob);
       if (size >= g_limitsize) {
         auto cstr = git_oid_tostr_s(git_commit_id(repo_->commit()));
-        fprintf(stderr, "commit: %s file: %s/%s size<limit>: %4.2f MB\n", cstr,
+        fprintf(stderr, "commit: %s file: %s%s size<limit>: %4.2f MB\n", cstr,
                 root, git_tree_entry_name(entry), ((double)size / MBSIZE));
       } else if (size >= g_warnsize) {
         auto cstr = git_oid_tostr_s(git_commit_id(repo_->commit()));
-        fprintf(stderr, "commit: %s file: %s/%s size<warning>: %4.2f MB\n",
-                cstr, root, git_tree_entry_name(entry),
-                ((double)size / MBSIZE));
+        fprintf(stderr, "commit: %s file: %s%s size<warning>: %4.2f MB\n", cstr,
+                root, git_tree_entry_name(entry), ((double)size / MBSIZE));
       }
     }
   }
@@ -142,12 +141,16 @@ bool RaiiRepository::walk() {
   git_tree *new_tree = nullptr;
   //// Fix me when commit is first commit ,so, use git_tree_walk parse all blob
   if (git_commit_parent(&parent, cur_commit_, 0) != 0) {
-    auto err = giterr_last();
-    if (git_commit_tree(&new_tree, cur_commit_) != 0) {
-      git_commit_free(parent);
-      return false;
+    // auto err = giterr_last();
+    if (git_commit_parentcount(cur_commit_) == 0) {
+      if (git_commit_tree(&new_tree, cur_commit_) != 0) {
+        //// cur_commit_ will released by self
+        return false;
+      }
+      git_tree_walk(new_tree, GIT_TREEWALK_PRE, git_treewalk_resolveblobs,
+                    this);
     }
-    git_tree_walk(new_tree, GIT_TREEWALK_PRE, git_treewalk_resolveblobs, this);
+
     return false;
   }
 
@@ -199,8 +202,10 @@ bool RaiiRepository::foreachref() {
     while (walk()) {
       /////
     }
-    git_commit_free(cur_commit_);
-    cur_commit_ = nullptr;
+    if (cur_commit_) {
+      git_commit_free(cur_commit_);
+      cur_commit_ = nullptr;
+    }
     git_reference_free(ref_);
   }
   return true;

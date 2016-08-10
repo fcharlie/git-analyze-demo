@@ -12,9 +12,10 @@ class RollbackDriver {
 public:
   RollbackDriver();
   ~RollbackDriver();
-  // bool Open()
-  bool RollbackWithCommit(const char *refname, const char *hexid, bool forced);
-  bool RollbackWithRev(const char *refname, int rev, bool forced);
+  bool RollbackWithCommit(const char *repodir, const char *refname,
+                          const char *hexid, bool forced);
+  bool RollbackWithRev(const char *repodir, const char *refname, int rev,
+                       bool forced);
 
 private:
   ////

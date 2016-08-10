@@ -11,3 +11,16 @@
 RollbackDriver::RollbackDriver() { git_libgit2_init(); }
 
 RollbackDriver::~RollbackDriver() { git_libgit2_shutdown(); }
+
+bool RollbackDriver::RollbackWithCommit(const char *repodir,
+                                        const char *refname, const char *hexid,
+                                        bool forced) {
+  ///
+  return true;
+}
+
+bool RollbackDriver::RollbackWithRev(const char *repodir, const char *refname,
+                                     int rev, bool forced) {
+  //
+  return true;
+}
