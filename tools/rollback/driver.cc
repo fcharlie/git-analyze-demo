@@ -5,6 +5,7 @@
 * Date: 2016.08
 * Copyright (C) 2016. OSChina.NET. All Rights Reserved.
 */
+#include <vector>
 #include <Argv.hpp>
 #include "rollback.hpp"
 
@@ -77,7 +78,58 @@ int ProcessArgs(int Argc, char **Argv, RollbackTaskArgs &taskArgs) {
   return 0;
 }
 
+#ifdef _WIN32
+#include <Windows.h>
+//// To convert Utf8
+char *CopyToUtf8(const wchar_t *wstr) {
+  auto l = WideCharToMultiByte(CP_UTF8, 0, wstr, -1, NULL, 0, NULL, NULL);
+  char *buf = (char *)malloc(sizeof(char) * l + 1);
+  if (buf == nullptr)
+    throw std::runtime_error("bad alloc ");
+  WideCharToMultiByte(CP_UTF8, 0, wstr, -1, buf, l, NULL, NULL);
+  return buf;
+}
+
+int wmain(int argc, wchar_t **argv) {
+  std::vector<char *> Argv_;
+  auto Release = [&]() {
+    for (auto &a : Argv_) {
+      free(a);
+    }
+  };
+  try {
+    for (int i = 0; i < argc; i++) {
+      Argv_.push_back(CopyToUtf8(argv[i]));
+    }
+  } catch (const std::exception &e) {
+    fprintf(stderr, "ERROR: %s\n", e.what());
+    Release();
+    return -1;
+  }
+  RollbackTaskArgs taskArgs;
+  RollbackDriver driver;
+  ProcessArgs(Argv_.size(), Argv_.data(), taskArgs);
+  bool result = false;
+  if (taskArgs.hexid.size() > 0) {
+    result = driver.RollbackWithCommit(taskArgs.gitdir.c_str(),
+                                       taskArgs.refname.c_str(),
+                                       taskArgs.hexid.c_str(), taskArgs.forced);
+  } else {
+    result = driver.RollbackWithRev(taskArgs.gitdir.c_str(),
+                                    taskArgs.refname.c_str(), taskArgs.rev,
+                                    taskArgs.forced);
+  }
+  if (result) {
+    printf("git-rollback: Operation completed !\n");
+  } else {
+    fprintf(stderr, "git-rollback: Operation aborted !\n");
+  }
+  Release();
+  return 0;
+}
+#else
 int main(int argc, char **argv) {
+
   RollbackTaskArgs taskArgs;
   RollbackDriver driver;
   ProcessArgs(argc, argv, taskArgs);
@@ -99,3 +151,5 @@ int main(int argc, char **argv) {
   //
   return 0;
 }
+
+#endif
