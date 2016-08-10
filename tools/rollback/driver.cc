@@ -80,6 +80,7 @@ int ProcessArgs(int Argc, char **Argv, RollbackTaskArgs &taskArgs) {
 int main(int argc, char **argv) {
   RollbackTaskArgs taskArgs;
   RollbackDriver driver;
+  ProcessArgs(argc, argv, taskArgs);
   bool result = false;
   if (taskArgs.hexid.size() > 0) {
     result = driver.RollbackWithCommit(taskArgs.gitdir.c_str(),

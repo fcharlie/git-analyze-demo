@@ -24,17 +24,18 @@ bool IsRelationshipCommit(git_repository *repo, git_reference *dref,
   if (git_commit_lookup(&commit_, repo, target_) != 0) {
     return false;
   }
-  for (; git_commit_parentcount(commit_) > 0;
-       git_commit_parent(&parent_, commit_, 0)) {
-    // git_commit_id(commit_)
-    if (memcmp(git_commit_id(commit_), oid, sizeof(git_oid)) == 0) {
-      git_commit_free(parent_);
-      git_commit_free(commit_);
-      return true;
-    }
-    git_commit_free(commit_);
-    commit_ = parent_;
-  }
+  do {
+	  if (memcmp(git_commit_id(commit_), oid, sizeof(git_oid)) == 0) {
+		  git_commit_free(parent_);
+		  git_commit_free(commit_);
+		  return true;
+	  }
+	  if (git_commit_parent(&parent_, commit_,0) != 0) {
+		  break;
+	  }
+	  git_commit_free(commit_);
+	  commit_ = parent_;
+  } while (true);
   git_commit_free(commit_);
   return false;
 }
@@ -42,10 +43,10 @@ bool IsRelationshipCommit(git_repository *repo, git_reference *dref,
 bool RollbackWithRealCommit(git_reference *ref, const git_oid *id) {
   ///
   git_reference *newref_{nullptr};
-  if (git_oid_cmp(id, git_reference_target(ref))) {
-    printf("No rollback, reference %s commit is %s\n", git_reference_name(ref),
+  if (git_oid_cmp(id, git_reference_target(ref))==0) {
+    printf("Rollback aborted, reference %s commit is %s\n", git_reference_name(ref),
            git_oid_tostr_s(id));
-    return true;
+    return false;
   }
   std::string log("rollback to old commit: ");
   log.append(git_oid_tostr_s(id));
@@ -104,7 +105,8 @@ bool RollbackDriver::RollbackWithCommit(const char *repodir,
     fprintf(stderr, "Not Found commit : %s In branch mainline\n", hexid);
     return false;
   }
-  if (RollbackWithRealCommit(ref_, &oid)) {
+  auto result = RollbackWithRealCommit(ref_, &oid);
+  if (result) {
     fprintf(stderr, "rollback ref: %s to commit: %s success\n",
             git_reference_name(ref_), hexid);
     Release();

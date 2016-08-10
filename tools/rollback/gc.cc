@@ -136,7 +136,7 @@ bool SearchGitForWindowsInstall(std::wstring &gitbin) {
   //
   if (!FindGitInstallationLocation(gitbin))
     return false;
-  gitbin.push_back('\\');
+  gitbin.push_back(L'\\');
   gitbin.append(L"git.exe");
   if (PathFileIsExistsU(gitbin))
     return true;
@@ -158,7 +158,7 @@ bool GitExecutePathSearchAuto(const wchar_t *cmd, std::wstring &gitbin) {
     auto end = &Path[0] + len;
     PathRemoveFileSpecU(&Path[0], end);
     gitbin.assign(&Path[0]);
-    gitbin.push_back('//');
+    gitbin.push_back(L'\\');
     gitbin.append(cmd);
     if (PathFileIsExistsU(gitbin))
       return true;
@@ -168,7 +168,7 @@ bool GitExecutePathSearchAuto(const wchar_t *cmd, std::wstring &gitbin) {
   auto iter = &Path[0];
   for (; *iter; iter++) {
     if (*iter == ';') {
-      gitbin.push_back('//');
+      gitbin.push_back(L'\\');
       gitbin.append(cmd);
       if (PathFileIsExistsU(gitbin)) {
         return true;
