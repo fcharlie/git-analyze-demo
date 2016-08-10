@@ -96,7 +96,7 @@ int ProcessArgv(int Argc, char **Argv, AnalyzeArgs &analyzeArgs) {
   return 0;
 }
 
-#ifdef _WIN32
+#ifdef _MSC_VER //// When use Visual C++, Support convert encoding to UTF8
 #include <Windows.h>
 //// To convert Utf8
 char *CopyToUtf8(const wchar_t *wstr) {
