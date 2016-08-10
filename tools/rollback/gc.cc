@@ -6,6 +6,7 @@
 * Copyright (C) 2016. OSChina.NET. All Rights Reserved.
 */
 #include <string>
+#include <cstring>
 
 /*
 * bool GitGCInvoke(const std::string &dir,bool prune);
@@ -75,13 +76,7 @@ bool search_git_install(std::wstring &gitbin) {
   //
   return true;
 }
-
-//
-bool PathSearchAuto() {
-  //// Self , Path Env,
-  return true;
-}
-
+////
 bool search_git_from_path(std::wstring &gitbin) {
   ///
   WCHAR buffer[4096] = {0};
@@ -95,6 +90,12 @@ bool search_git_from_path(std::wstring &gitbin) {
   return false;
 }
 
+//
+bool GitExecutePathSearchAuto(const wchar_t *cmd, std::wstring &gitbin) {
+  //// Self , Path Env,
+  return true;
+}
+
 /// First search git from path.
 bool GitGCInvoke(const std::string &dir, bool prune) {
   ///
@@ -104,14 +105,13 @@ bool GitGCInvoke(const std::string &dir, bool prune) {
 #else
 #include <sys/stat.h>
 
-bool PathSearchAuto(const char *cmd) {
+bool GitExecutePathSearchAuto(const char *cmd, std::string &gitbin) {
   auto path_ = getenv("PATH");
-  std::string gitbin;
   for (; *path_; path_++) {
     if (*path_ == ':') {
       gitbin.append(cmd);
       struct stat st;
-      if (stat(gitbin.c_str(), &st) == 0) {
+      if (stat(gitbin.c_str(), &st) == 0 && (st.st_mode & S_IFMT) == S_IFREG) {
         return true;
       }
       gitbin.clear();
@@ -123,7 +123,8 @@ bool PathSearchAuto(const char *cmd) {
 }
 
 bool GitGCInvoke(const std::string &dir, bool prune) {
-  if (!PathSearchAuto("git")) {
+  std::string gitbin;
+  if (!GitExecutePathSearchAuto("git", gitbin)) {
     fprintf(stderr, "Not Found git in your path !\n");
     return false;
   }
