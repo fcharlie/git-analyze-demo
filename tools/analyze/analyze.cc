@@ -241,7 +241,7 @@ bool ProcessAnalyzeTask(const AnalyzeArgs &analyzeArgs) {
   }
   LibgitHelper helper;
   RaiiRepository repository;
-  fprintf(stderr, "git-rollback limit: %4.2f MB warning: %4.2f MB\n",
+  fprintf(stderr, "git-analyze limit: %4.2f MB warning: %4.2f MB\n",
           ((double)g_limitsize / MBSIZE), ((double)g_warnsize / MBSIZE));
   if (!repository.load(analyzeArgs.repository.c_str())) {
     ////
