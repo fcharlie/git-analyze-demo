@@ -129,6 +129,11 @@ bool RollbackDriver::RollbackWithRev(const char *repodir, const char *refname,
     printf("no rollback, rev=0 \n");
     return true;
   }
+  git_repository *repo_{nullptr};
+  if (git_repository_open(&repo_, repodir) != 0) {
+    ///
+    fprintf(stderr, "\n");
+  }
   ///////////////////////
   return true;
 }
