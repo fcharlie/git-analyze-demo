@@ -162,6 +162,7 @@ bool GitExecutePathSearchAuto(const wchar_t *cmd, std::wstring &gitbin) {
     gitbin.append(cmd);
     if (PathFileIsExistsU(gitbin))
       return true;
+    gitbin.clear();
   }
   ///
   GetEnvironmentVariableW(L"PATH", &Path[0], 32767);
