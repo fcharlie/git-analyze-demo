@@ -100,7 +100,7 @@ int git_diff_callback(const git_diff_delta *delta, float progress,
     git_off_t size = git_blob_rawsize(blob);
     if (size > g_warnsize) {
       auto cstr = git_oid_tostr_s(git_commit_id(repo_->commit()));
-      fprintf(stderr, "commit: %s file: %s  (%4.2f MB) \n", cstr,
+      fprintf(stderr, "commit: %s file: %s (%4.2f MB) \n", cstr,
               delta->new_file.path, ((double)size / MBSIZE));
       if (g_showcommitter) {
         print_commit_message(repo_->commit());

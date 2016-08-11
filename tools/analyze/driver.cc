@@ -43,20 +43,31 @@ template <class T> inline void ResolveInteger(const char *cstr, T &t) {
 
 int ProcessArgv(int Argc, char **Argv, AnalyzeArgs &analyzeArgs) {
   std::vector<const char *> Args;
+  const char *va{nullptr};
   for (int i = 1; i < Argc; i++) {
     const char *arg = Argv[i];
-    if (IsArg(arg, "--timeout")) {
-      if (++i < Argc) {
+    if (IsArg(arg, "--timeout", sizeof("--timeout") - 1, &va)) {
+      if (va) {
+        ResolveInteger(va, analyzeArgs.timeout);
+      } else if (++i < Argc) {
         ResolveInteger(Argv[i], analyzeArgs.timeout);
       }
-    } else if (IsArg(arg, "--limitsize")) {
-      if (++i < Argc) {
+    } else if (IsArg(arg, "--limitsize", sizeof("--limitsize") - 1, &va)) {
+      if (va) {
+        std::size_t limit_ = 0;
+        ResolveInteger(va, limit_);
+        g_limitsize = limit_ * MBSIZE;
+      } else if (++i < Argc) {
         std::size_t limit_ = 0;
         ResolveInteger(Argv[i], limit_);
         g_limitsize = limit_ * MBSIZE;
       }
-    } else if (IsArg(arg, "--warnsize")) {
-      if (++i < Argc) {
+    } else if (IsArg(arg, "--warnsize", sizeof("--warnsize") - 1, &va)) {
+      if (va) {
+        std::size_t warn_ = 0;
+        ResolveInteger(va, warn_);
+        g_warnsize = warn_ * MBSIZE;
+      } else if (++i < Argc) {
         std::size_t warn_ = 0;
         ResolveInteger(Argv[i], warn_);
         g_warnsize = warn_ * MBSIZE;
