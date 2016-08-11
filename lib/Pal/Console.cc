@@ -79,6 +79,7 @@ int BaseErrorMessagePrint(const char *format, ...) {
   if (conhost_) {
     return BaseErrorWriteConhost(buf, l);
   }
+  /// check env has 'TERM' TERM=xterm or LANG=zh_CN.UTF-8
   return fwrite(buf, 1, l, stderr);
 }
 
