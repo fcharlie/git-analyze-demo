@@ -85,7 +85,7 @@ char *CopyToUtf8(const wchar_t *wstr) {
   auto l = WideCharToMultiByte(CP_UTF8, 0, wstr, -1, NULL, 0, NULL, NULL);
   char *buf = (char *)malloc(sizeof(char) * l + 1);
   if (buf == nullptr)
-    throw std::runtime_error("bad alloc ");
+    throw std::runtime_error("Out of Memory ");
   WideCharToMultiByte(CP_UTF8, 0, wstr, -1, buf, l, NULL, NULL);
   return buf;
 }
@@ -110,6 +110,12 @@ int wmain(int argc, wchar_t **argv) {
   RollbackDriver driver;
   ProcessArgs(Argv_.size(), Argv_.data(), taskArgs);
   bool result = false;
+  if (taskArgs.hexid.empty() && taskArgs.rev <= 0) {
+    fprintf(stderr, "usage: \ngit-rollback --git-dir=/path/to/repo "
+                    "--backrev=7 \ngit-rollback --git-dir=/path/to/repo "
+                    "--backid=commitid\n");
+    return 1;
+  }
   if (taskArgs.hexid.size() > 0) {
     result = driver.RollbackWithCommit(taskArgs.gitdir.c_str(),
                                        taskArgs.refname.c_str(),
@@ -134,6 +140,12 @@ int main(int argc, char **argv) {
   RollbackDriver driver;
   ProcessArgs(argc, argv, taskArgs);
   bool result = false;
+  if (taskArgs.hexid.empty() && taskArgs.rev <= 0) {
+    fprintf(stderr, "usage: \ngit-rollback --git-dir=/path/to/repo "
+                    "--backrev=7\ngit-rollback --git-dir=/path/to/repo "
+                    "--backid=commitid\n");
+    return 1;
+  }
   if (taskArgs.hexid.size() > 0) {
     result = driver.RollbackWithCommit(taskArgs.gitdir.c_str(),
                                        taskArgs.refname.c_str(),

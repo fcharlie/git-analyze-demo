@@ -22,6 +22,7 @@ std::size_t EnvLimitSize();
 std::size_t EnvWarnSize();
 std::int64_t EnvTimeout();
 
+extern bool g_showcommitter;
 extern std::int64_t g_limitsize;
 extern std::int64_t g_warnsize;
 

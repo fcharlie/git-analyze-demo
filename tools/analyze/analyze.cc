@@ -52,8 +52,15 @@ bool InitializeTaskTimer(std::int64_t t_) {
 }
 #endif
 
+bool g_showcommitter = false;
 std::int64_t g_limitsize = 100 * MBSIZE;
 std::int64_t g_warnsize = 50 * MBSIZE;
+
+void print_commit_message(const git_commit *commit_) {
+  auto sig = git_commit_author(commit_);
+  fprintf(stderr, "author: %s <%s>\nmessage: %s\n\n", sig->name, sig->email,
+          git_commit_message(commit_));
+}
 
 int git_treewalk_resolveblobs(const char *root, const git_tree_entry *entry,
                               void *payload) {
@@ -64,14 +71,13 @@ int git_treewalk_resolveblobs(const char *root, const git_tree_entry *entry,
     if (git_tree_entry_to_object(&obj, repo_->repository(), entry) == 0) {
       auto blob = reinterpret_cast<git_blob *>(obj);
       auto size = git_blob_rawsize(blob);
-      if (size >= g_limitsize) {
+      if (size >= g_warnsize) {
         auto cstr = git_oid_tostr_s(git_commit_id(repo_->commit()));
-        fprintf(stderr, "commit: %s file: %s%s size<limit>: %4.2f MB\n", cstr,
-                root, git_tree_entry_name(entry), ((double)size / MBSIZE));
-      } else if (size >= g_warnsize) {
-        auto cstr = git_oid_tostr_s(git_commit_id(repo_->commit()));
-        fprintf(stderr, "commit: %s file: %s%s size<warning>: %4.2f MB\n", cstr,
-                root, git_tree_entry_name(entry), ((double)size / MBSIZE));
+        fprintf(stderr, "commit: %s file: %s%s (%4.2f MB)\n", cstr, root,
+                git_tree_entry_name(entry), ((double)size / MBSIZE));
+        if (g_showcommitter) {
+          print_commit_message(repo_->commit());
+        }
       }
     }
   }
@@ -92,14 +98,13 @@ int git_diff_callback(const git_diff_delta *delta, float progress,
     }
     //// by default off_t is 8byte
     git_off_t size = git_blob_rawsize(blob);
-    if (size > g_limitsize) {
+    if (size > g_warnsize) {
       auto cstr = git_oid_tostr_s(git_commit_id(repo_->commit()));
-      fprintf(stderr, "commit: %s file: %s size<limit>: %4.2f MB\n", cstr,
+      fprintf(stderr, "commit: %s file: %s  (%4.2f MB) \n", cstr,
               delta->new_file.path, ((double)size / MBSIZE));
-    } else if (size > g_warnsize) {
-      auto cstr = git_oid_tostr_s(git_commit_id(repo_->commit()));
-      fprintf(stderr, "commit: %s file: %s size<warning>: %4.2f MB\n", cstr,
-              delta->new_file.path, ((double)size / MBSIZE));
+      if (g_showcommitter) {
+        print_commit_message(repo_->commit());
+      }
     }
   }
   return 0;
@@ -236,6 +241,8 @@ bool ProcessAnalyzeTask(const AnalyzeArgs &analyzeArgs) {
   }
   LibgitHelper helper;
   RaiiRepository repository;
+  fprintf(stderr, "git-rollback limit: %4.2f MB warning: %4.2f MB\n",
+          ((double)g_limitsize / MBSIZE), ((double)g_warnsize / MBSIZE));
   if (!repository.load(analyzeArgs.repository.c_str())) {
     ////
     return false;
@@ -245,7 +252,7 @@ bool ProcessAnalyzeTask(const AnalyzeArgs &analyzeArgs) {
   } else {
     if (!repository.refcommit(analyzeArgs.ref.c_str()))
       return false;
-    printf("Parse single ref: %s\n", analyzeArgs.ref.c_str());
+    printf("branch/ref: %s\n\n", analyzeArgs.ref.c_str());
     while (repository.walk()) {
       ///
     }

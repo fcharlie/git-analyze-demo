@@ -27,6 +27,7 @@ OPTIONS:
   --limitsize      set analyze engine limit blob size
   --warnsize       set analyze engine warn blob size
   --timeout        set analyze engine lifycycle
+  --who            show who is commit's author
   --all            analyze will scanf all refs
 )";
   printf("%s\n", kUsage);
@@ -62,6 +63,9 @@ int ProcessArgv(int Argc, char **Argv, AnalyzeArgs &analyzeArgs) {
       }
     } else if (IsArg(arg, "--all")) {
       analyzeArgs.allrefs = true;
+    } else if (IsArg(arg, "--who")) {
+      ////
+      g_showcommitter = true;
     } else if (IsArg(arg, "-h", "--help")) {
       AnalyzeUsage();
       exit(0);
@@ -100,40 +104,38 @@ int ProcessArgv(int Argc, char **Argv, AnalyzeArgs &analyzeArgs) {
 #include <Windows.h>
 //// To convert Utf8
 char *CopyToUtf8(const wchar_t *wstr) {
-	auto l = WideCharToMultiByte(CP_UTF8, 0, wstr, -1, NULL, 0, NULL, NULL);
-	char *buf = (char *)malloc(sizeof(char) * l + 1);
-	if (buf == nullptr)
-		throw std::runtime_error("Out of Memory ");
-	WideCharToMultiByte(CP_UTF8, 0, wstr, -1, buf, l, NULL, NULL);
-	return buf;
+  auto l = WideCharToMultiByte(CP_UTF8, 0, wstr, -1, NULL, 0, NULL, NULL);
+  char *buf = (char *)malloc(sizeof(char) * l + 1);
+  if (buf == nullptr)
+    throw std::runtime_error("Out of Memory ");
+  WideCharToMultiByte(CP_UTF8, 0, wstr, -1, buf, l, NULL, NULL);
+  return buf;
 }
 int wmain(int argc, wchar_t **argv) {
-	std::vector<char *> Argv_;
-	auto Release = [&]() {
-		for (auto &a : Argv_) {
-			free(a);
-		}
-	};
-	try {
-		for (int i = 0; i < argc; i++) {
-			Argv_.push_back(CopyToUtf8(argv[i]));
-		}
-	}
-	catch (const std::exception &e) {
-		fprintf(stderr, "Exception: %s\n", e.what());
-		Release();
-		return -1;
-	}
-	AnalyzeArgs analyzeArgs;
-	ProcessArgv(Argv_.size(), Argv_.data(), analyzeArgs);
-	if (ProcessAnalyzeTask(analyzeArgs)) {
-		printf("git-analyze: Operation completed !\n");
-	}
-	else {
-		fprintf(stderr, "git-analyze: Operation aborted !\n");
-	}
-	Release();
-	return 0;
+  std::vector<char *> Argv_;
+  auto Release = [&]() {
+    for (auto &a : Argv_) {
+      free(a);
+    }
+  };
+  try {
+    for (int i = 0; i < argc; i++) {
+      Argv_.push_back(CopyToUtf8(argv[i]));
+    }
+  } catch (const std::exception &e) {
+    fprintf(stderr, "Exception: %s\n", e.what());
+    Release();
+    return -1;
+  }
+  AnalyzeArgs analyzeArgs;
+  ProcessArgv(Argv_.size(), Argv_.data(), analyzeArgs);
+  if (ProcessAnalyzeTask(analyzeArgs)) {
+    printf("git-analyze: Operation completed !\n");
+  } else {
+    fprintf(stderr, "git-analyze: Operation aborted !\n");
+  }
+  Release();
+  return 0;
 }
 #else
 
