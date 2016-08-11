@@ -1,12 +1,14 @@
 ////
 #include <Windows.h>
 #include <io.h>
+#include <stdio.h>
+#include <stdlib.h>
 /// check Stdhandle
 bool IsUnderConsoleHost() {
   // HANDLE hStderr = fdtoh(STDERR_FILENO);
   //_isatty()
   // return (GetFileType(hStderr) == FILE_TYPE_CHAR);
-  return _isatty(STDERR_FILENO) != 0;
+  return _isatty(_fileno(stderr)) != 0;
 }
 
 int main() {
