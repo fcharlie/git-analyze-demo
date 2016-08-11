@@ -59,6 +59,34 @@ bool RollbackWithRealCommit(git_reference *ref, const git_oid *id) {
   return true;
 }
 
+bool RollbackWithRealRevision(git_repository *repo, git_reference *dref,
+                              int rev) {
+  git_commit *commit_{nullptr};
+  git_commit *parent_{nullptr};
+  auto target_ = git_reference_target(dref);
+  if (git_commit_lookup(&commit_, repo, target_) != 0) {
+    return false;
+  }
+  int i = 0;
+  do {
+    if (i == rev) {
+      auto id = git_commit_id(commit_);
+      auto result = RollbackWithRealCommit(dref, id);
+      git_commit_free(commit_);
+      return result;
+    }
+    if (git_commit_parent(&parent_, commit_, 0) != 0) {
+      break;
+    }
+    i++;
+    git_commit_free(commit_);
+    commit_ = parent_;
+  } while (true);
+  fprintf(stderr, "git-rollback: Over commit, rollback broken !\n");
+  git_commit_free(commit_);
+  return false;
+}
+
 bool RollbackDriver::RollbackWithCommit(const char *repodir,
                                         const char *refname, const char *hexid,
                                         bool forced) {
@@ -110,11 +138,11 @@ bool RollbackDriver::RollbackWithCommit(const char *repodir,
     fprintf(stderr, "rollback ref: %s to commit: %s success\n",
             git_reference_name(ref_), hexid);
     Release();
-    if (!GitGCInvoke(repodir, forced)) {
-      fprintf(stderr, "git-rollback: run git gc failed !\n");
-      return false;
+    if (GitGCInvoke(repodir, forced)) {
+      Release();
+      return true;
     }
-    return true;
+    fprintf(stderr, "git-rollback: run git gc failed !\n");
   }
   Release();
   return false;
@@ -130,10 +158,47 @@ bool RollbackDriver::RollbackWithRev(const char *repodir, const char *refname,
     return true;
   }
   git_repository *repo_{nullptr};
+  git_reference *ref_{nullptr};
+
+  auto Release = [&]() {
+    if (ref_) {
+      git_reference_free(ref_);
+    }
+    if (repo_) {
+      git_repository_free(repo_);
+    }
+  };
+
   if (git_repository_open(&repo_, repodir) != 0) {
-    ///
-    fprintf(stderr, "\n");
+    auto err = giterr_last();
+    fprintf(stderr, "open repository failed: %s\n", err->message);
+    return false;
+  }
+  git_reference *xref;
+  if (git_reference_lookup(&xref, repo_, refname) != 0) {
+    if (git_branch_lookup(&xref, repo_, refname, GIT_BRANCH_LOCAL) != 0) {
+      auto err = giterr_last();
+      fprintf(stderr, "%s\n", err->message);
+      Release();
+      return false;
+    }
+  }
+  if (git_reference_resolve(&ref_, xref) != 0) {
+    git_reference_free(xref);
+    Release();
+    return false;
+  }
+  git_reference_free(xref);
+
+  if (RollbackWithRealRevision(repo_, ref_, rev)) {
+    fprintf(stderr, "git-rollback: rollback success !\n");
+    if (GitGCInvoke(repodir, forced)) {
+      Release();
+      return true;
+    }
+    fprintf(stderr, "git-rollback: run git gc failed !\n");
   }
   ///////////////////////
-  return true;
+  Release();
+  return false;
 }

@@ -268,6 +268,7 @@ bool GitExecutePathSearchAuto(const char *cmd, std::string &gitbin) {
   auto path_ = getenv("PATH");
   for (; *path_; path_++) {
     if (*path_ == ':') {
+      gitbin.push_back('/');
       gitbin.append(cmd);
       struct stat st;
       if (stat(gitbin.c_str(), &st) == 0 && (st.st_mode & S_IFMT) == S_IFREG) {
