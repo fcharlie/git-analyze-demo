@@ -189,8 +189,8 @@ bool GitGCInvoke(const std::string &dir, bool forced) {
   std::wstring gitbin;
   if (!GitExecutePathSearchAuto(L"git.exe", gitbin)) {
     if (!SearchGitForWindowsInstall(gitbin)) {
-      fprintf(stderr, "Not Found any git install in your path or current "
-                      "dir,Not found git-for-windows install");
+      fprintf(stderr,
+              "Not Found git in your PATH environemnt variable and Registry !");
       return false;
     }
   }
@@ -223,7 +223,46 @@ bool GitGCInvoke(const std::string &dir, bool forced) {
 }
 
 #else
+#include <vector>
+#include <unistd.h>
+#include <sys/wait.h>
 #include <sys/stat.h>
+
+///////
+bool GitGCRealExecute(const char *dir, bool forced) {
+  int status;
+  int exitcode = 0;
+  auto pid = fork();
+  switch (pid) {
+  case 0: {
+    //// to change location to repository dir
+    if (chdir(dir) != 0) {
+      fprintf(stderr, "%s\n", strerror(errno));
+      exit(-1);
+    }
+    std::vector<char *> Argv_;
+    Argv_.push_back((char *)"git");
+    Argv_.push_back((char *)"gc");
+    if (forced) {
+      Argv_.push_back((char *)"--prune=now");
+      Argv_.push_back((char *)"--force");
+    }
+    Argv_.push_back(nullptr);
+    execvp("git", Argv_.data());
+    fprintf(stderr, "%s\n", strerror(errno));
+    exit(-1);
+  } break;
+  case -1:
+    return false;
+  default:
+    break;
+  }
+  waitpid(pid, &status, 0);
+  if (WIFEXITED(status)) {
+    exitcode = WEXITSTATUS(status);
+  }
+  return (exitcode == 0);
+}
 
 bool GitExecutePathSearchAuto(const char *cmd, std::string &gitbin) {
   auto path_ = getenv("PATH");
@@ -245,10 +284,10 @@ bool GitExecutePathSearchAuto(const char *cmd, std::string &gitbin) {
 bool GitGCInvoke(const std::string &dir, bool forced) {
   std::string gitbin;
   if (!GitExecutePathSearchAuto("git", gitbin)) {
-    fprintf(stderr, "Not Found git in your path !\n");
+    fprintf(stderr, "git not found\n");
     return false;
   }
-  return true;
+  return GitGCRealExecute(dir.c_str(), forced);
 }
 
 #endif

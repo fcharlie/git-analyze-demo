@@ -25,16 +25,16 @@ bool IsRelationshipCommit(git_repository *repo, git_reference *dref,
     return false;
   }
   do {
-	  if (memcmp(git_commit_id(commit_), oid, sizeof(git_oid)) == 0) {
-		  git_commit_free(parent_);
-		  git_commit_free(commit_);
-		  return true;
-	  }
-	  if (git_commit_parent(&parent_, commit_,0) != 0) {
-		  break;
-	  }
-	  git_commit_free(commit_);
-	  commit_ = parent_;
+    if (memcmp(git_commit_id(commit_), oid, sizeof(git_oid)) == 0) {
+      git_commit_free(parent_);
+      git_commit_free(commit_);
+      return true;
+    }
+    if (git_commit_parent(&parent_, commit_, 0) != 0) {
+      break;
+    }
+    git_commit_free(commit_);
+    commit_ = parent_;
   } while (true);
   git_commit_free(commit_);
   return false;
@@ -43,9 +43,9 @@ bool IsRelationshipCommit(git_repository *repo, git_reference *dref,
 bool RollbackWithRealCommit(git_reference *ref, const git_oid *id) {
   ///
   git_reference *newref_{nullptr};
-  if (git_oid_cmp(id, git_reference_target(ref))==0) {
-    printf("Rollback aborted, reference %s commit is %s\n", git_reference_name(ref),
-           git_oid_tostr_s(id));
+  if (git_oid_cmp(id, git_reference_target(ref)) == 0) {
+    printf("Rollback aborted, reference %s commit is %s\n",
+           git_reference_name(ref), git_oid_tostr_s(id));
     return false;
   }
   std::string log("rollback to old commit: ");
@@ -111,7 +111,7 @@ bool RollbackDriver::RollbackWithCommit(const char *repodir,
             git_reference_name(ref_), hexid);
     Release();
     if (!GitGCInvoke(repodir, forced)) {
-      fprintf(stderr, "Run GC failed\n");
+      fprintf(stderr, "git-rollback: run git gc failed !\n");
       return false;
     }
     return true;
@@ -123,7 +123,7 @@ bool RollbackDriver::RollbackWithCommit(const char *repodir,
 bool RollbackDriver::RollbackWithRev(const char *repodir, const char *refname,
                                      int rev, bool forced) {
   if (rev < 0) {
-    fprintf(stderr, "rollack version must large 0\n");
+    fprintf(stderr, "git-rollback: rollack revision rev must >0\n");
     return false;
   } else if (rev == 0) {
     printf("no rollback, rev=0 \n");
