@@ -10,6 +10,7 @@
 *.swp
 *.s
 build/
+build.wsl/
 CMakeFiles/
 CMakeCache.txt
 cpp/post-receive
