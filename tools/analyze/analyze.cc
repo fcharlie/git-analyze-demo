@@ -5,6 +5,7 @@
 * Date: 2016.08
 * Copyright (C) 2016. OSChina.NET. All Rights Reserved.
 */
+#include <Pal.hpp>
 #include <git2.h>
 #include "analyze.hpp"
 #include "analyze_internal.h"
@@ -117,7 +118,7 @@ bool RaiiRepository::refcommit(const char *refname) {
     //// second look branch to ref
     if (git_branch_lookup(&ref_, repo_, refname, GIT_BRANCH_LOCAL) != 0) {
       auto err = giterr_last();
-      fprintf(stderr, "Parse ref failed: %s\n", err->message);
+      BaseErrorMessagePrint("Parse ref failed: %s\n", err->message);
       return false;
     }
   }
@@ -125,7 +126,7 @@ bool RaiiRepository::refcommit(const char *refname) {
   if (git_reference_resolve(&dref_, ref_) != 0) {
     git_reference_free(ref_);
     auto err = giterr_last();
-    fprintf(stderr, "Resolve ref failed: %s\n", err->message);
+    BaseErrorMessagePrint("Resolve ref failed: %s\n", err->message);
     return false;
   }
   //// we check branch, but branch ref type should GIT_REF_OID
@@ -134,7 +135,7 @@ bool RaiiRepository::refcommit(const char *refname) {
     git_reference_free(ref_);
     git_reference_free(dref_);
     auto err = giterr_last();
-    fprintf(stderr, "Lookup commit: %s\n", err->message);
+    BaseErrorMessagePrint("Lookup commit: %s\n", err->message);
     return false;
   }
   git_reference_free(ref_);
@@ -191,7 +192,7 @@ bool RaiiRepository::foreachref() {
   git_branch_iterator *iter_{nullptr};
   if (git_branch_iterator_new(&iter_, repo_, GIT_BRANCH_LOCAL) != 0) {
     auto err = giterr_last();
-    fprintf(stderr, "git_branch_iterator_new: %s\n", err->message);
+    BaseErrorMessagePrint("git_branch_iterator_new: %s\n", err->message);
     return false;
   }
   git_reference *ref_{nullptr};
@@ -202,7 +203,7 @@ bool RaiiRepository::foreachref() {
     if (git_commit_lookup(&cur_commit_, repo_, oid) != 0) {
       git_reference_free(ref_);
       auto err = giterr_last();
-      fprintf(stderr, "Parse reference: %s\n", err->message);
+      BaseErrorMessagePrint("Parse reference: %s\n", err->message);
       return false;
     }
     printf("Parse ref: %s\n", git_reference_name(ref_));
@@ -221,7 +222,7 @@ bool RaiiRepository::foreachref() {
 bool RaiiRepository::load(const char *dir) {
   if (git_repository_open(&repo_, dir) != 0) {
     auto err = giterr_last();
-    fprintf(stderr, "ERROR: %s\n", err->message);
+    BaseErrorMessagePrint("git-analyze error: %s\n", err->message);
     return false;
   }
   return true;
@@ -236,7 +237,7 @@ public:
 bool ProcessAnalyzeTask(const AnalyzeArgs &analyzeArgs) {
   if (analyzeArgs.timeout != -1) {
     if (!InitializeTaskTimer(analyzeArgs.timeout)) {
-      fprintf(stderr, "create timer failed !\n");
+      BaseErrorMessagePrint("create timer failed !\n");
     }
   }
   LibgitHelper helper;

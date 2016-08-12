@@ -18,6 +18,7 @@ endif()
 
 
 target_link_libraries(git-rollback
+  Pal
   git2
 )
 

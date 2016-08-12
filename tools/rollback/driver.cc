@@ -6,6 +6,7 @@
 * Copyright (C) 2016. OSChina.NET. All Rights Reserved.
 */
 #include <vector>
+#include <Pal.hpp>
 #include <Argv.hpp>
 #include "rollback.hpp"
 
@@ -157,7 +158,7 @@ int main(int argc, char **argv) {
   if (result) {
     printf("git-rollback: Operation completed !\n");
   } else {
-    fprintf(stderr, "git-rollback: Operation aborted !\n");
+    BaseErrorMessagePrint("git-rollback: Operation aborted !\n");
   }
   //
   return 0;

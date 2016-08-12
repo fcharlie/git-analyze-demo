@@ -58,12 +58,18 @@ bool IsUnderConhost() {
 /// check env has 'TERM' TERM=xterm or LANG=zh_CN.UTF-8
 bool IsWindowsTTY() {
   ///
-  return false;
+  char *value{nullptr};
+  size_t len;
+  if (_dupenv_s(&value, &len, "TERM") != 0 || value == nullptr)
+    return false;
+  return true;
 }
 
 int BaseErrorWriteTTY(const char *buf, size_t len) {
-  ///
-  return 0;
+  fwrite("\e[1;31m", 1, sizeof("\e[1;31m") - 1, stderr);
+  auto l = fwrite(buf, 1, len, stderr);
+  fwrite("\e[0m", 1, sizeof("\e[0m") - 1, stderr);
+  return l;
 }
 
 int BaseErrorWriteConhost(const char *buf, size_t len) {
@@ -83,11 +89,15 @@ int BaseErrorWriteConhost(const char *buf, size_t len) {
 
 int BaseErrorMessagePrint(const char *format, ...) {
   static bool conhost_ = IsUnderConhost();
+  static bool wintty_ = IsWindowsTTY();
   char buf[16348];
   va_list ap;
   va_start(ap, format);
   auto l = vsnprintf(buf, 16348, format, ap);
   va_end(ap);
+  if (wintty_) {
+    return BaseErrorWriteTTY(buf, l);
+  }
   if (conhost_) {
     return BaseErrorWriteConhost(buf, l);
   }

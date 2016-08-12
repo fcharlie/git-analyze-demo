@@ -7,7 +7,7 @@
 */
 #include <string>
 #include <cstring>
-
+#include <Pal.hpp>
 /*
 * bool GitGCInvoke(const std::string &dir,bool forced);
 *
@@ -189,8 +189,8 @@ bool GitGCInvoke(const std::string &dir, bool forced) {
   std::wstring gitbin;
   if (!GitExecutePathSearchAuto(L"git.exe", gitbin)) {
     if (!SearchGitForWindowsInstall(gitbin)) {
-      fprintf(stderr,
-              "Not Found git in your PATH environemnt variable and Registry !");
+      BaseErrorMessagePrint(
+          "Not Found git in your PATH environemnt variable and Registry !");
       return false;
     }
   }
@@ -285,7 +285,7 @@ bool GitExecutePathSearchAuto(const char *cmd, std::string &gitbin) {
 bool GitGCInvoke(const std::string &dir, bool forced) {
   std::string gitbin;
   if (!GitExecutePathSearchAuto("git", gitbin)) {
-    fprintf(stderr, "git not found\n");
+    BaseErrorMessagePrint("git not found\n");
     return false;
   }
   return GitGCRealExecute(dir.c_str(), forced);

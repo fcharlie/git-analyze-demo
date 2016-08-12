@@ -9,7 +9,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <vector>
-#define ARGV_NO_LINK
+#include <Pal.hpp>
 #include <Argv.hpp>
 #include "analyze.hpp"
 
@@ -134,7 +134,7 @@ int wmain(int argc, wchar_t **argv) {
       Argv_.push_back(CopyToUtf8(argv[i]));
     }
   } catch (const std::exception &e) {
-    fprintf(stderr, "Exception: %s\n", e.what());
+    BaseErrorMessagePrint("Exception: %s\n", e.what());
     Release();
     return -1;
   }
@@ -143,7 +143,7 @@ int wmain(int argc, wchar_t **argv) {
   if (ProcessAnalyzeTask(analyzeArgs)) {
     printf("git-analyze: Operation completed !\n");
   } else {
-    fprintf(stderr, "git-analyze: Operation aborted !\n");
+    BaseErrorMessagePrint("git-analyze: Operation aborted !\n");
   }
   Release();
   return 0;
@@ -156,7 +156,7 @@ int main(int argc, char **argv) {
   if (ProcessAnalyzeTask(analyzeArgs)) {
     printf("git-analyze: Operation completed !\n");
   } else {
-    fprintf(stderr, "git-analyze: Operation aborted !\n");
+    BaseErrorMessagePrint("git-analyze: Operation aborted !\n");
   }
   return 0;
 }

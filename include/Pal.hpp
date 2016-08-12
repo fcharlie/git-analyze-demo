@@ -7,7 +7,19 @@
 */
 #ifndef GIT_ANALYZE_PAL_HPP
 #define GIT_ANALYZE_PAL_HPP
+#include <stdint.h>
+#include <stddef.h>
 
+#ifdef __GNUC__
+// int BaseBufferPrint(char *buf, size_t maxlen, const char *format, ...)
+//     __attribute__((format(printf, 3, 4)));
+int BaseErrorMessagePrint(const char *format, ...)
+    __attribute__((format(printf, 1, 2)));
+#elif defined(_MSC_VER) && _MSC_VER > 1600
+#include <Sal.h>
+int BaseErrorMessagePrint(_Printf_format_string_ const char *format, ...);
+#else
 int BaseErrorMessagePrint(const char *format, ...);
+#endif
 
 #endif

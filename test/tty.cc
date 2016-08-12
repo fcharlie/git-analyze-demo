@@ -4,6 +4,13 @@
 #include <string.h>
 #include <unistd.h>
 
+#ifdef __GNUC__
+int BaseErrorMessagePrint(const char *format, ...)
+    __attribute__((format(printf, 1, 2)));
+#else
+int BaseErrorMessagePrint(const char *format, ...);
+#endif
+
 int BaseErrorWriteTTY(const void *buf, size_t len) {
   fwrite("\e[1;31m", 1, sizeof("\e[1;31m") - 1, stderr);
   auto l = fwrite(buf, 1, len, stderr);
