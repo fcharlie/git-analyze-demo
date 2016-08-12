@@ -10,7 +10,7 @@
 #include <string>
 
 struct RollbackTaskArgs {
-  std::string gitdir;
+  std::string gitdir{"."};
   std::string hexid;
   std::string refname{"HEAD"};
   int rev{-1};

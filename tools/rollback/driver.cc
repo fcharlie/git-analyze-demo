@@ -23,7 +23,7 @@ Usage: git-rollback <options>...] [--] [<pathspec>...] [<refs|branches> ...]
 OPTIONS:
   -h [--help]      print usage and exit
   --git-dir        set rollback repository path
-  --backid       set rollback commit id
+  --backid         set rollback commit id
   --backrev        set rollback current back X rev
   --refname        set rollback current reference name
   --force          force gc prune

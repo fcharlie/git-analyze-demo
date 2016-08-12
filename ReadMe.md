@@ -14,7 +14,7 @@
 本项目依赖 CMake 构建, 在 Windows 上,你可以从 下载符合你系统版本的 [CMake](https://cmake.org/download/) , CMake 生成
 Visual Studio 项目文件需要在环境变量中识别 Visual C++ 编译器的环境变量,所以你可以新建一个类似于下面的批处理代码.
 
-```batch
+```bat
 @echo off
 ::Find CMake Path
 call "%VS140COMNTOOLS%\VsDevCmd.bat" 
@@ -50,8 +50,50 @@ Visual Studio 版本,然后点击 **Startup Env** 按钮即可.
 
 ## Analyze 工具
 
+git-analyze 命令行参数
+```sh
+OVERVIEW: GIT analyze tools
+Usage: git-analyze <options>...] [--] [<pathspec>...] [<refs|branches> ...]
+OPTIONS:
+  -h [--help]      print usage and exit
+  --limitsize      set analyze engine limit blob size
+  --warnsize       set analyze engine warn blob size
+  --timeout        set analyze engine lifycycle
+  --who            show who is commit author
+  --all            analyze will scanf all refs
+```
+
+默认情况下, git-analyze 扫描当前目录的仓库的 HEAD 指向的分支,如果要扫描其他目录或者其他分支需要额外的设置参数, 
+仓库目录可以是工作目录的根目录和裸仓库的目录, 分支名可以使用引用或者本地分支名,二者相对顺序必须与下相同.
+
+>git-analyze /path/to/repo master
+
+其中 limitsize warnsize 参数都是整数,单位是 MB, timeout 单位是秒,可以不设置, 这几个都可以使用 --limitsize=100 或者 --limitsize 100 这样的格式.
+
+who 这个参数是一个开关,单命令行参数中存在 --who 时, 扫描到大文件时将显示提交 作者 和 提交信息.
+
+all 这个开关如果开启时,将扫描所有的引用.
+
+这些参数没有顺序要求.
+
 ## Rollback 工具
+
+git-rollback 命令行参数
+
+```sh
+OVERVIEW: GIT rollback tools
+Usage: git-rollback <options>...] [--] [<pathspec>...] [<refs|branches> ...]
+OPTIONS:
+  -h [--help]      print usage and exit
+  --git-dir        set rollback repository path
+  --backid         set rollback commit id
+  --backrev        set rollback current back X rev
+  --refname        set rollback current reference name
+  --force          force gc prune
+```
+参数格式与 git-analyze 类似, --force 将强制运行 git gc 并清除悬空对象. 当 未指定 git-dir 时,为当前目录,未指定 refname 时,为 HEAD 指向的分支.
 
 ## Copyright
 
-
+Author: Force Charlie  
+Copyright &copy; 2016, OSChina.NET, All Rights Reserved.
