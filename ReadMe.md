@@ -14,7 +14,7 @@
 本项目依赖 CMake 构建, 在 Windows 上,你可以从 下载符合你系统版本的 [CMake](https://cmake.org/download/) , CMake 生成
 Visual Studio 项目文件需要在环境变量中识别 Visual C++ 编译器的环境变量,所以你可以新建一个类似于下面的批处理代码.
 
-```bat
+```batch
 @echo off
 ::Find CMake Path
 call "%VS140COMNTOOLS%\VsDevCmd.bat" 
