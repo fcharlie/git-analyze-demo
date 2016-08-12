@@ -97,6 +97,18 @@ OPTIONS:
 ```
 参数格式与 git-analyze 类似, --force 将强制运行 git gc 并清除悬空对象. 当 未指定 git-dir 时,为当前目录,未指定 refname 时,为 HEAD 指向的分支.
 
+## 与 GIT 整合
+
+git 支持使用 git subcommand 的格式运行特定命令,比如 git add 对应的命令就是 git-add , 当用户需要直接运行 git analyze 这种方式运行这些命令,
+有几种方法可以做到,第一种是将 git-analyze 加入环境变量,然后可以直接运行
+
+> git analyze . refs/heads/master
+
+> git rollback --backrev 1
+
+同样也可以使用软链接的方式将命令链接到系统目录, 在 POSIX 系统中,或者 Windows Subsystem for Linux 可以使用 ln -s , 在 Windows 中
+可以使用 mklink  /d .
+
 ## Copyright
 
 Author: Force Charlie  

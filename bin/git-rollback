@@ -1,0 +1,3 @@
+#!/bin/sh
+
+%INSTALL_PREFIX%/bin/git-rollback @
