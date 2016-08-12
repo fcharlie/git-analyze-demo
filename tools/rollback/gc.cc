@@ -249,7 +249,7 @@ bool GitGCRealExecute(const char *dir, bool forced) {
     }
     Argv_.push_back(nullptr);
     execvp("git", Argv_.data());
-    fprintf(stderr, "%s\n", strerror(errno));
+    BaseErrorMessagePrint("%s\n", strerror(errno));
     exit(-1);
   } break;
   case -1:
