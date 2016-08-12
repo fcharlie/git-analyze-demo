@@ -45,8 +45,8 @@ bool RollbackWithRealCommit(git_reference *ref, const git_oid *id) {
   ///
   git_reference *newref_{nullptr};
   if (git_oid_cmp(id, git_reference_target(ref)) == 0) {
-    printf("Rollback aborted, reference %s commit is %s\n",
-           git_reference_name(ref), git_oid_tostr_s(id));
+    BaseConsoleWrite("Rollback aborted, reference %s commit is %s\n",
+                     git_reference_name(ref), git_oid_tostr_s(id));
     return false;
   }
   std::string log("rollback to old commit: ");
@@ -110,14 +110,14 @@ bool RollbackDriver::RollbackWithCommit(const char *repodir,
   };
   if (git_repository_open(&repo_, repodir) != 0) {
     auto err = giterr_last();
-    fprintf(stderr, "%s\n", err->message);
+    BaseErrorMessagePrint("%s\n", err->message);
     return false;
   }
   git_reference *xref;
   if (git_reference_lookup(&xref, repo_, refname) != 0) {
     if (git_branch_lookup(&xref, repo_, refname, GIT_BRANCH_LOCAL) != 0) {
       auto err = giterr_last();
-      fprintf(stderr, "%s\n", err->message);
+      BaseErrorMessagePrint("%s\n", err->message);
       Release();
       return false;
     }
@@ -152,10 +152,10 @@ bool RollbackDriver::RollbackWithCommit(const char *repodir,
 bool RollbackDriver::RollbackWithRev(const char *repodir, const char *refname,
                                      int rev, bool forced) {
   if (rev < 0) {
-    fprintf(stderr, "git-rollback: rollack revision rev must >0\n");
+    BaseErrorMessagePrint("git-rollback: rollack revision rev must >0\n");
     return false;
   } else if (rev == 0) {
-    printf("no rollback, rev=0 \n");
+    BaseConsoleWrite("no rollback, rev=0 \n");
     return true;
   }
   git_repository *repo_{nullptr};
@@ -192,7 +192,7 @@ bool RollbackDriver::RollbackWithRev(const char *repodir, const char *refname,
   git_reference_free(xref);
 
   if (RollbackWithRealRevision(repo_, ref_, rev)) {
-    printf("git-rollback: rollback success !\n");
+    BaseConsoleWrite("git-rollback: rollback success !\n");
     if (GitGCInvoke(repodir, forced)) {
       Release();
       return true;

@@ -59,7 +59,7 @@ std::int64_t g_warnsize = 50 * MBSIZE;
 
 void print_commit_message(const git_commit *commit_) {
   auto sig = git_commit_author(commit_);
-  fprintf(stderr, "author: %s <%s>\nmessage: %s\n\n", sig->name, sig->email,
+  BaseConsoleWrite("author: %s <%s>\nmessage: %s\n\n", sig->name, sig->email,
           git_commit_message(commit_));
 }
 
@@ -207,7 +207,7 @@ bool RaiiRepository::foreachref() {
       BaseErrorMessagePrint("Lookup commit failed: %s\n", err->message);
       return false;
     }
-    printf("git-analyze> reference: %s\n", git_reference_name(ref_));
+    BaseConsoleWrite("git-analyze> reference: %s\n", git_reference_name(ref_));
     while (walk()) {
       /////
     }
@@ -243,7 +243,7 @@ bool ProcessAnalyzeTask(const AnalyzeArgs &analyzeArgs) {
   }
   LibgitHelper helper;
   RaiiRepository repository;
-  printf("git-analyze limit: %4.2f MB warning: %4.2f MB\n",
+  BaseConsoleWrite("git-analyze limit: %4.2f MB warning: %4.2f MB\n",
          ((double)g_limitsize / MBSIZE), ((double)g_warnsize / MBSIZE));
   if (!repository.load(analyzeArgs.repository.c_str())) {
     ////
@@ -254,7 +254,7 @@ bool ProcessAnalyzeTask(const AnalyzeArgs &analyzeArgs) {
   } else {
     if (!repository.refcommit(analyzeArgs.ref.c_str()))
       return false;
-    printf("git-analyze> ref (branch): %s\n", analyzeArgs.ref.c_str());
+    BaseConsoleWrite("git-analyze> ref (branch): %s\n", analyzeArgs.ref.c_str());
     while (repository.walk()) {
       ///
     }

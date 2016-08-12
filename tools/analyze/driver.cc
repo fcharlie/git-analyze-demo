@@ -141,7 +141,7 @@ int wmain(int argc, wchar_t **argv) {
   AnalyzeArgs analyzeArgs;
   ProcessArgv(Argv_.size(), Argv_.data(), analyzeArgs);
   if (ProcessAnalyzeTask(analyzeArgs)) {
-    printf("git-analyze: Operation completed !\n");
+    BaseConsoleWrite("git-analyze: Operation completed !\n");
   } else {
     BaseErrorMessagePrint("git-analyze: Operation aborted !\n");
   }
@@ -154,7 +154,7 @@ int main(int argc, char **argv) {
   AnalyzeArgs analyzeArgs;
   ProcessArgv(argc, argv, analyzeArgs);
   if (ProcessAnalyzeTask(analyzeArgs)) {
-    printf("git-analyze: Operation completed !\n");
+    BaseConsoleWrite("git-analyze: Operation completed !\n");
   } else {
     BaseErrorMessagePrint("git-analyze: Operation aborted !\n");
   }

@@ -66,16 +66,18 @@ bool IsWindowsTTY() {
 }
 
 int BaseErrorWriteTTY(const char *buf, size_t len) {
-  fwrite("\e[1;31m", 1, sizeof("\e[1;31m") - 1, stderr);
+  fwrite("\33[31m", 1, sizeof("\33[31m") - 1, stderr);
   auto l = fwrite(buf, 1, len, stderr);
-  fwrite("\e[0m", 1, sizeof("\e[0m") - 1, stderr);
+  fwrite("\33[0m", 1, sizeof("\33[0m") - 1, stderr);
   return l;
 }
 
 int BaseWriteConhost(const char *buf, size_t len) {
   HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
   WCharacters wstr(buf, len);
-  return WriteConsoleW(hConsole, wstr.Get(), wstr.Length(), &dwWrite, nullptr);
+  DWORD dwWrite;
+  WriteConsoleW(hConsole, wstr.Get(), wstr.Length(), &dwWrite, nullptr);
+  return dwWrite;
 }
 
 int BaseErrorWriteConhost(const char *buf, size_t len) {
@@ -85,12 +87,12 @@ int BaseErrorWriteConhost(const char *buf, size_t len) {
   GetConsoleScreenBufferInfo(hConsole, &csbi);
   WORD oldColor = csbi.wAttributes;
   WORD newColor = (oldColor & 0xF0) | FOREGROUND_INTENSITY | FOREGROUND_RED;
-  SetConsoleTextAttribute(hConsole, FOREGROUND_INTENSITY | FOREGROUND_RED);
+  SetConsoleTextAttribute(hConsole, newColor);
   DWORD dwWrite;
   WCharacters wstr(buf, len);
   WriteConsoleW(hConsole, wstr.Get(), wstr.Length(), &dwWrite, nullptr);
   SetConsoleTextAttribute(hConsole, oldColor);
-  return 0;
+  return dwWrite;
 }
 
 int BaseErrorMessagePrint(const char *format, ...) {
@@ -120,7 +122,9 @@ int BaseConsoleWrite(const char *format, ...) {
   if (conhost_) {
     return BaseWriteConhost(buf, l);
   }
-  return fwrite(buf, 1, l, stdout);
+  auto r = fwrite(buf, 1, l, stdout);
+  fflush(stdout);
+  return r;
 }
 
 #else

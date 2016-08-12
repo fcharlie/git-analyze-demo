@@ -156,7 +156,7 @@ int main(int argc, char **argv) {
                                     taskArgs.forced);
   }
   if (result) {
-    printf("git-rollback: Operation completed !\n");
+    BaseConsoleWrite("git-rollback: Operation completed !\n");
   } else {
     BaseErrorMessagePrint("git-rollback: Operation aborted !\n");
   }
