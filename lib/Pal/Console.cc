@@ -95,11 +95,11 @@ int BaseErrorMessagePrint(const char *format, ...) {
   va_start(ap, format);
   auto l = vsnprintf(buf, 16348, format, ap);
   va_end(ap);
-  if (wintty_) {
-    return BaseErrorWriteTTY(buf, l);
-  }
   if (conhost_) {
     return BaseErrorWriteConhost(buf, l);
+  }
+  if (wintty_) {
+    return BaseErrorWriteTTY(buf, l);
   }
   return fwrite(buf, 1, l, stderr);
 }
