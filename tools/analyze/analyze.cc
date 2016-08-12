@@ -42,7 +42,7 @@ bool InitializeTaskTimer(std::int64_t t_) {
 
 void TimerSignalEvent(int sig) {
   (void)sig;
-  fprintf(stderr, "git-analyze process timeout, exit !\n");
+  BaseErrorMessagePrint("git-analyze process timeout, exit !\n");
   exit(-1);
 }
 
@@ -60,7 +60,7 @@ std::int64_t g_warnsize = 50 * MBSIZE;
 void print_commit_message(const git_commit *commit_) {
   auto sig = git_commit_author(commit_);
   BaseConsoleWrite("author: %s <%s>\nmessage: %s\n\n", sig->name, sig->email,
-          git_commit_message(commit_));
+                   git_commit_message(commit_));
 }
 
 int git_treewalk_resolveblobs(const char *root, const git_tree_entry *entry,
@@ -244,7 +244,8 @@ bool ProcessAnalyzeTask(const AnalyzeArgs &analyzeArgs) {
   LibgitHelper helper;
   RaiiRepository repository;
   BaseConsoleWrite("git-analyze limit: %4.2f MB warning: %4.2f MB\n",
-         ((double)g_limitsize / MBSIZE), ((double)g_warnsize / MBSIZE));
+                   ((double)g_limitsize / MBSIZE),
+                   ((double)g_warnsize / MBSIZE));
   if (!repository.load(analyzeArgs.repository.c_str())) {
     ////
     return false;
@@ -254,7 +255,8 @@ bool ProcessAnalyzeTask(const AnalyzeArgs &analyzeArgs) {
   } else {
     if (!repository.refcommit(analyzeArgs.ref.c_str()))
       return false;
-    BaseConsoleWrite("git-analyze> ref (branch): %s\n", analyzeArgs.ref.c_str());
+    BaseConsoleWrite("git-analyze> ref (branch): %s\n",
+                     analyzeArgs.ref.c_str());
     while (repository.walk()) {
       ///
     }

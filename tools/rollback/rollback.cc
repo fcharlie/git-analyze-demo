@@ -136,8 +136,8 @@ bool RollbackDriver::RollbackWithCommit(const char *repodir,
   }
   auto result = RollbackWithRealCommit(ref_, &oid);
   if (result) {
-    printf("rollback ref: %s to commit: %s success\n", git_reference_name(ref_),
-           hexid);
+    BaseConsoleWrite("rollback ref: %s to commit: %s success\n",
+                     git_reference_name(ref_), hexid);
     Release();
     if (GitGCInvoke(repodir, forced)) {
       Release();

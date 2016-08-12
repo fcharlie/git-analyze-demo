@@ -103,7 +103,7 @@ int wmain(int argc, wchar_t **argv) {
       Argv_.push_back(CopyToUtf8(argv[i]));
     }
   } catch (const std::exception &e) {
-    fprintf(stderr, "ERROR: %s\n", e.what());
+    BaseConsoleWrite("Exception: %s\n", e.what());
     Release();
     return -1;
   }
@@ -112,9 +112,9 @@ int wmain(int argc, wchar_t **argv) {
   ProcessArgs(Argv_.size(), Argv_.data(), taskArgs);
   bool result = false;
   if (taskArgs.hexid.empty() && taskArgs.rev <= 0) {
-    fprintf(stderr, "usage: \ngit-rollback --git-dir=/path/to/repo "
-                    "--backrev=7 \ngit-rollback --git-dir=/path/to/repo "
-                    "--backid=commitid\n");
+    BaseConsoleWrite("usage: \ngit-rollback --git-dir=/path/to/repo "
+                     "--backrev=7 \ngit-rollback --git-dir=/path/to/repo "
+                     "--backid=commitid\n");
     return 1;
   }
   if (taskArgs.hexid.size() > 0) {
@@ -127,9 +127,9 @@ int wmain(int argc, wchar_t **argv) {
                                     taskArgs.forced);
   }
   if (result) {
-    printf("git-rollback: Operation completed !\n");
+    BaseConsoleWrite("git-rollback: Operation completed !\n");
   } else {
-    fprintf(stderr, "git-rollback: Operation aborted !\n");
+    BaseErrorMessagePrint("git-rollback: Operation aborted !\n");
   }
   Release();
   return 0;
@@ -141,9 +141,9 @@ int main(int argc, char **argv) {
   ProcessArgs(argc, argv, taskArgs);
   bool result = false;
   if (taskArgs.hexid.empty() && taskArgs.rev <= 0) {
-    fprintf(stderr, "usage: \ngit-rollback --git-dir=/path/to/repo "
-                    "--backrev=7\ngit-rollback --git-dir=/path/to/repo "
-                    "--backid=commitid\n");
+    BaseConsoleWrite("usage: \ngit-rollback --git-dir=/path/to/repo "
+                     "--backrev=7\ngit-rollback --git-dir=/path/to/repo "
+                     "--backid=commitid\n");
     return 1;
   }
   if (taskArgs.hexid.size() > 0) {
