@@ -72,6 +72,12 @@ int BaseErrorWriteTTY(const char *buf, size_t len) {
   return l;
 }
 
+int BaseWriteConhost(const char *buf, size_t len) {
+  HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+  WCharacters wstr(buf, len);
+  return WriteConsoleW(hConsole, wstr.Get(), wstr.Length(), &dwWrite, nullptr);
+}
+
 int BaseErrorWriteConhost(const char *buf, size_t len) {
   // TO set Foreground color
   HANDLE hConsole = GetStdHandle(STD_ERROR_HANDLE);
@@ -103,6 +109,20 @@ int BaseErrorMessagePrint(const char *format, ...) {
   }
   return fwrite(buf, 1, l, stderr);
 }
+//// To complete
+int BaseConsoleWrite(const char *format, ...) {
+  static bool conhost_ = IsUnderConhost();
+  static bool wintty_ = IsWindowsTTY();
+  char buf[16348];
+  va_list ap;
+  va_start(ap, format);
+  auto l = vsnprintf(buf, 16348, format, ap);
+  va_end(ap);
+  if (conhost_) {
+    return BaseWriteConhost(buf, l);
+  }
+  return fwrite(buf, 1, l, stdout);
+}
 
 #else
 #include <unistd.h>
@@ -124,6 +144,14 @@ int BaseErrorMessagePrint(const char *format, ...) {
     return BaseErrorWriteTTY(buf, l);
   }
   return fwrite(buf, 1, l, stderr);
+}
+
+int BaseConsoleWrite(const char *format, ...) {
+  va_list ap;
+  va_start(ap, format);
+  auto l = vfprintf(stdout, format, ap);
+  va_end(ap);
+  return l;
 }
 
 #endif
