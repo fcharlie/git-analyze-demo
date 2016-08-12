@@ -54,8 +54,20 @@ bool IsUnderConhost() {
 //   return _isatty(_fileno(stderr)) != 0;
 // }
 
+/// by default, Mintty and Cygwin Term ,console process  not run under conhost
+/// check env has 'TERM' TERM=xterm or LANG=zh_CN.UTF-8
+bool IsWindowsTTY() {
+  ///
+  return false;
+}
+
+int BaseErrorWriteTTY(const char *buf, size_t len) {
+  ///
+  return 0;
+}
+
 int BaseErrorWriteConhost(const char *buf, size_t len) {
-  //
+  // TO set Foreground color
   HANDLE hConsole = GetStdHandle(STD_ERROR_HANDLE);
   CONSOLE_SCREEN_BUFFER_INFO csbi;
   GetConsoleScreenBufferInfo(hConsole, &csbi);
@@ -79,7 +91,6 @@ int BaseErrorMessagePrint(const char *format, ...) {
   if (conhost_) {
     return BaseErrorWriteConhost(buf, l);
   }
-  /// check env has 'TERM' TERM=xterm or LANG=zh_CN.UTF-8
   return fwrite(buf, 1, l, stderr);
 }
 
@@ -87,19 +98,22 @@ int BaseErrorMessagePrint(const char *format, ...) {
 #include <unistd.h>
 
 int BaseErrorWriteTTY(const void *buf, size_t len) {
-  // echo -e "\e[1;31m This is red text \e[0m"
-  write(STDERR_FILENO, buf, len);
-  return 0;
-}
-
-int BaseErrorMessageWrite(const char *format, va_list ap) {
-  ////
-  return 0;
+  fwrite("\e[1;31m", 1, sizeof("\e[1;31m") - 1, stderr);
+  auto l = fwrite(buf, 1, len, stderr);
+  fwrite("\e[0m", 1, sizeof("\e[0m") - 1, stderr);
+  return l;
 }
 
 int BaseErrorMessagePrint(const char *format, ...) {
-  //
-  return 0;
+  char buf[8192];
+  va_list ap;
+  va_start(ap, format);
+  auto l = vsnprintf(buf, 8192, format, ap);
+  va_end(ap);
+  if (isatty(STDERR_FILENO)) {
+    return BaseErrorWriteTTY(buf, l);
+  }
+  return fwrite(buf, 1, l, stderr);
 }
 
 #endif

@@ -4,9 +4,30 @@
 #include <string.h>
 #include <unistd.h>
 
+int BaseErrorWriteTTY(const void *buf, size_t len) {
+  fwrite("\e[1;31m", 1, sizeof("\e[1;31m") - 1, stderr);
+  auto l = fwrite(buf, 1, len, stderr);
+  fwrite("\e[0m", 1, sizeof("\e[0m") - 1, stderr);
+  return l;
+}
+
+int BaseErrorMessagePrint(const char *format, ...) {
+  char buf[8192];
+  va_list ap;
+  va_start(ap, format);
+  auto l = vsnprintf(buf, 8192, format, ap);
+  va_end(ap);
+  if (isatty(STDERR_FILENO)) {
+    return BaseErrorWriteTTY(buf, l);
+  }
+  return fwrite(buf, 1, l, stderr);
+}
+
 int main(int argc, char **argv) {
-  char buf[4096];
-  auto l = snprintf(buf, 4096, "\e[1;31m %s \e[0m\n", argv[0]);
-  write(STDERR_FILENO, buf, l);
+  if (argc < 2) {
+    BaseErrorMessagePrint("Argv: %s Less 2\n", argv[0]);
+  } else {
+    BaseErrorMessagePrint("%s\n", argv[1]);
+  }
   return 0;
 }
