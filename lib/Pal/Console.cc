@@ -112,7 +112,6 @@ int BaseErrorMessagePrint(const char *format, ...) {
 //// To complete
 int BaseConsoleWrite(const char *format, ...) {
   static bool conhost_ = IsUnderConhost();
-  static bool wintty_ = IsWindowsTTY();
   char buf[16348];
   va_list ap;
   va_start(ap, format);

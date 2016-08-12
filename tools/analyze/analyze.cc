@@ -74,8 +74,8 @@ int git_treewalk_resolveblobs(const char *root, const git_tree_entry *entry,
       auto size = git_blob_rawsize(blob);
       if (size >= g_warnsize) {
         auto cstr = git_oid_tostr_s(git_commit_id(repo_->commit()));
-        fprintf(stderr, "commit: %s file: %s%s (%4.2f MB)\n", cstr, root,
-                git_tree_entry_name(entry), ((double)size / MBSIZE));
+        BaseConsoleWrite("commit: %s file: %s%s (%4.2f MB)\n", cstr, root,
+                         git_tree_entry_name(entry), ((double)size / MBSIZE));
         if (g_showcommitter) {
           print_commit_message(repo_->commit());
         }
@@ -101,8 +101,8 @@ int git_diff_callback(const git_diff_delta *delta, float progress,
     git_off_t size = git_blob_rawsize(blob);
     if (size > g_warnsize) {
       auto cstr = git_oid_tostr_s(git_commit_id(repo_->commit()));
-      fprintf(stderr, "commit: %s file: %s (%4.2f MB) \n", cstr,
-              delta->new_file.path, ((double)size / MBSIZE));
+      BaseConsoleWrite("commit: %s file: %s (%4.2f MB) \n", cstr,
+                       delta->new_file.path, ((double)size / MBSIZE));
       if (g_showcommitter) {
         print_commit_message(repo_->commit());
       }
@@ -118,7 +118,8 @@ bool RaiiRepository::refcommit(const char *refname) {
     //// second look branch to ref
     if (git_branch_lookup(&ref_, repo_, refname, GIT_BRANCH_LOCAL) != 0) {
       auto err = giterr_last();
-      BaseErrorMessagePrint("Parse ref failed: %s\n", err->message);
+      BaseErrorMessagePrint("Lookup reference and branch failed: %s\n",
+                            err->message);
       return false;
     }
   }
@@ -126,7 +127,7 @@ bool RaiiRepository::refcommit(const char *refname) {
   if (git_reference_resolve(&dref_, ref_) != 0) {
     git_reference_free(ref_);
     auto err = giterr_last();
-    BaseErrorMessagePrint("Resolve ref failed: %s\n", err->message);
+    BaseErrorMessagePrint("Resolve reference failed: %s\n", err->message);
     return false;
   }
   //// we check branch, but branch ref type should GIT_REF_OID
@@ -135,7 +136,7 @@ bool RaiiRepository::refcommit(const char *refname) {
     git_reference_free(ref_);
     git_reference_free(dref_);
     auto err = giterr_last();
-    BaseErrorMessagePrint("Lookup commit: %s\n", err->message);
+    BaseErrorMessagePrint("Lookup commit failed: %s\n", err->message);
     return false;
   }
   git_reference_free(ref_);
@@ -203,10 +204,10 @@ bool RaiiRepository::foreachref() {
     if (git_commit_lookup(&cur_commit_, repo_, oid) != 0) {
       git_reference_free(ref_);
       auto err = giterr_last();
-      BaseErrorMessagePrint("Parse reference: %s\n", err->message);
+      BaseErrorMessagePrint("Lookup commit failed: %s\n", err->message);
       return false;
     }
-    printf("Parse ref: %s\n", git_reference_name(ref_));
+    printf("git-analyze> reference: %s\n", git_reference_name(ref_));
     while (walk()) {
       /////
     }
@@ -242,8 +243,8 @@ bool ProcessAnalyzeTask(const AnalyzeArgs &analyzeArgs) {
   }
   LibgitHelper helper;
   RaiiRepository repository;
-  fprintf(stderr, "git-analyze limit: %4.2f MB warning: %4.2f MB\n",
-          ((double)g_limitsize / MBSIZE), ((double)g_warnsize / MBSIZE));
+  printf("git-analyze limit: %4.2f MB warning: %4.2f MB\n",
+         ((double)g_limitsize / MBSIZE), ((double)g_warnsize / MBSIZE));
   if (!repository.load(analyzeArgs.repository.c_str())) {
     ////
     return false;
@@ -253,7 +254,7 @@ bool ProcessAnalyzeTask(const AnalyzeArgs &analyzeArgs) {
   } else {
     if (!repository.refcommit(analyzeArgs.ref.c_str()))
       return false;
-    printf("branch/ref: %s\n\n", analyzeArgs.ref.c_str());
+    printf("git-analyze> ref (branch): %s\n", analyzeArgs.ref.c_str());
     while (repository.walk()) {
       ///
     }
