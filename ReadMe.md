@@ -17,23 +17,23 @@ Visual Studio 项目文件需要在环境变量中识别 Visual C++ 编译器的
 ```bat
 @echo off
 ::Find CMake Path
-call "%VS140COMNTOOLS%\VsDevCmd.bat" 
+call "%VS140COMNTOOLS%\VsDevCmd.bat"
 SET PATH=%PATH%;C:\Program Files\CMake\bin
 cmd /k
 ```
 
 其中 CMake 的安装路径可能有所差异.一切以实际为准.
 
-启动命令行后,运行 
+启动命令行后,运行
 >mkdir build
 
 >cd build
 
 >cmake -G "Visual Studio 14" ..
 
- 然后执行 
+ 然后执行
 
->msbuild git-analyze.sln /p:Configuration=Release 
+>msbuild git-analyze.sln /p:Configuration=Release
 
 >cpack
 
@@ -63,18 +63,22 @@ OPTIONS:
   --all            analyze will scanf all refs
 ```
 
-默认情况下, git-analyze 扫描当前目录的仓库的 HEAD 指向的分支,如果要扫描其他目录或者其他分支需要额外的设置参数, 
+默认情况下, git-analyze 扫描当前目录的仓库的 HEAD 指向的分支,如果要扫描其他目录或者其他分支需要额外的设置参数,
 仓库目录可以是工作目录的根目录和裸仓库的目录, 分支名可以使用引用或者本地分支名,二者相对顺序必须与下相同.
 
 >git-analyze /path/to/repo master
 
-其中 limitsize warnsize 参数都是整数,单位是 MB, timeout 单位是秒,可以不设置, 这几个都可以使用 --limitsize=100 或者 --limitsize 100 这样的格式.
+其中 limitsize warnsize 参数都是整数,单位是 MB 默认值为 100 MB 和 50 MB, timeout 单位是秒,可以不设置, 这几个都可以使用 --limitsize=100 或者 --limitsize 100 这样的格式.
 
 who 这个参数是一个开关,单命令行参数中存在 --who 时, 扫描到大文件时将显示提交 作者 和 提交信息.
 
 all 这个开关如果开启时,将扫描所有的引用.
 
 这些参数没有顺序要求.
+
+例图:
+
+![Analyze Example](./doc/images/analyze-001.png)
 
 ## Rollback 工具
 
