@@ -45,6 +45,8 @@ bool InitializeTaskTimer(int t_) {
   DWORD tid;
   HANDLE hThread = CreateThread(NULL, 0, AnalyzeTaskTimer, &t_, 0, &tid);
   if (hThread == NULL) {
+    BaseErrorMessagePrint("CreateThread() failed, LastErrorCode : %d",
+                          GetLastError());
     return false;
   }
   CloseHandle(hThread);
