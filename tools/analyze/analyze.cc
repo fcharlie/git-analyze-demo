@@ -24,7 +24,15 @@
 //   exit(-1);
 // }
 
-bool InitializeTaskTimer(std::int64_t t_) {
+DWORD WINAPI AnalyzeTaskTimer(LPVOID lParam) {
+  int t_ = *(reinterpret_cast<int *>(lParam));
+  Sleep(t_ * 1000);
+  BaseErrorMessagePrint("git-analyze process timeout, exit !\n");
+  exit(-1);
+  return 0;
+}
+
+bool InitializeTaskTimer(int t_) {
   //
   // auto hTimer = CreateWaitableTimer(NULL, FALSE, NULL);
   // LARGE_INTEGER dueTime;
@@ -34,12 +42,12 @@ bool InitializeTaskTimer(std::int64_t t_) {
   // if (!SetWaitableTimer(hTimer, &dueTime, 0, OnTimerAPCProc, NULL, FALSE)) {
   //   return false;
   // }
-  std::thread([t_] {
-    auto t = static_cast<DWORD>(t_);
-    Sleep(t * 1000);
-    BaseErrorMessagePrint("git-analyze process timeout, exit !\n");
-    exit(-1);
-  });
+  DWORD tid;
+  HANDLE hThread = CreateThread(NULL, 0, AnalyzeTaskTimer, &t_, 0, &tid);
+  if (hThread == NULL) {
+    return false;
+  }
+  CloseHandle(hThread);
   return true;
 }
 
@@ -53,7 +61,7 @@ void TimerSignalEvent(int sig) {
   exit(-1);
 }
 
-bool InitializeTaskTimer(std::int64_t t_) {
+bool InitializeTaskTimer(int t_) {
   signal(SIGALRM, TimerSignalEvent);
   alarm(static_cast<unsigned int>(t_));
   return true;

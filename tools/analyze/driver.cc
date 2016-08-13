@@ -139,7 +139,7 @@ int wmain(int argc, wchar_t **argv) {
     return -1;
   }
   AnalyzeArgs analyzeArgs;
-  ProcessArgv(Argv_.size(), Argv_.data(), analyzeArgs);
+  ProcessArgv((int)Argv_.size(), Argv_.data(), analyzeArgs);
   if (ProcessAnalyzeTask(analyzeArgs)) {
     BaseConsoleWrite("git-analyze: Operation completed !\n");
   } else {

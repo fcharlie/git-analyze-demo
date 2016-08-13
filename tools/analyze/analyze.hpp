@@ -16,18 +16,18 @@
 #define GIT_ANALYZE_LIMITSIZE "GIT_ANALYZE_LIMITSIZE"
 #define GIT_ANALYZE_WARNSIZE "GIT_ANALYZE_WARNSIZE"
 
-#define GIT_ANALYZE_TIMEOUT_INFINITE ((std::int64_t)-1)
+#define GIT_ANALYZE_TIMEOUT_INFINITE ((std::int32_t)-1)
 
 std::size_t EnvLimitSize();
 std::size_t EnvWarnSize();
-std::int64_t EnvTimeout();
+std::int32_t EnvTimeout();
 
 extern bool g_showcommitter;
 extern std::int64_t g_limitsize;
 extern std::int64_t g_warnsize;
 
 struct AnalyzeArgs {
-  std::int64_t timeout{-1};
+  std::int32_t timeout{-1};
   std::string repository;
   std::string ref;
   bool allrefs{false};

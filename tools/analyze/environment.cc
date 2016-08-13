@@ -40,7 +40,7 @@ std::size_t EnvWarnSize() {
   return 50 * MBSIZE;
 }
 
-std::int64_t EnvTimeout() {
+std::int32_t EnvTimeout() {
   auto str = getenv(GIT_ANALYZE_TIMEOUT);
   if (str) {
     char *c;
