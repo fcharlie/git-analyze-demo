@@ -13,26 +13,33 @@
 #include <inttypes.h>
 
 #ifdef _WIN32
+#include <thread>
 #include <Windows.h>
 
-VOID WINAPI OnTimerAPCProc(_In_opt_ LPVOID lpArgToCompletionRoutine,
-                           _In_ DWORD dwTimerLowValue,
-                           _In_ DWORD dwTimerHighValue) {
-  ////
-  fprintf(stderr, "git-analyze process timeout, exit !\n");
-  exit(-1);
-}
+// VOID WINAPI OnTimerAPCProc(_In_opt_ LPVOID lpArgToCompletionRoutine,
+//                            _In_ DWORD dwTimerLowValue,
+//                            _In_ DWORD dwTimerHighValue) {
+//   ////
+//   fprintf(stderr, "git-analyze process timeout, exit !\n");
+//   exit(-1);
+// }
 
 bool InitializeTaskTimer(std::int64_t t_) {
   //
-  auto hTimer = CreateWaitableTimer(NULL, FALSE, NULL);
-  LARGE_INTEGER dueTime;
-  dueTime.QuadPart = t_ * -10000000;
-  if (hTimer == nullptr)
-    return false;
-  if (!SetWaitableTimer(hTimer, &dueTime, 0, OnTimerAPCProc, NULL, FALSE)) {
-    return false;
-  }
+  // auto hTimer = CreateWaitableTimer(NULL, FALSE, NULL);
+  // LARGE_INTEGER dueTime;
+  // dueTime.QuadPart = t_ * -10000000;
+  // if (hTimer == nullptr)
+  //   return false;
+  // if (!SetWaitableTimer(hTimer, &dueTime, 0, OnTimerAPCProc, NULL, FALSE)) {
+  //   return false;
+  // }
+  std::thread([t_] {
+    auto t = static_cast<DWORD>(t_);
+    Sleep(t * 1000);
+    BaseErrorMessagePrint("git-analyze process timeout, exit !\n");
+    exit(-1);
+  });
   return true;
 }
 
