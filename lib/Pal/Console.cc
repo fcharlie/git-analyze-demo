@@ -45,8 +45,8 @@ public:
   }
 };
 
-bool IsUnderConhost() {
-  HANDLE hStderr = reinterpret_cast<HANDLE>(_get_osfhandle(_fileno(stderr)));
+bool IsUnderConhost(FILE *fp) {
+  HANDLE hStderr = reinterpret_cast<HANDLE>(_get_osfhandle(_fileno(fp)));
   return GetFileType(hStderr) == FILE_TYPE_CHAR;
 }
 
@@ -96,7 +96,7 @@ int BaseErrorWriteConhost(const char *buf, size_t len) {
 }
 
 int BaseErrorMessagePrint(const char *format, ...) {
-  static bool conhost_ = IsUnderConhost();
+  static bool conhost_ = IsUnderConhost(stderr);
   static bool wintty_ = IsWindowsTTY();
   char buf[16348];
   va_list ap;
@@ -113,7 +113,7 @@ int BaseErrorMessagePrint(const char *format, ...) {
 }
 //// To complete
 int BaseConsoleWrite(const char *format, ...) {
-  static bool conhost_ = IsUnderConhost();
+  static bool conhost_ = IsUnderConhost(stdout);
   char buf[16348];
   va_list ap;
   va_start(ap, format);
