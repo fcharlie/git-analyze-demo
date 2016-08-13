@@ -5,10 +5,10 @@
 * Date: 2016.08
 * Copyright (C) 2016. OSChina.NET. All Rights Reserved.
 */
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include <stdarg.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cstdint>
+#include <cstdarg>
 
 #ifdef _WIN32
 #include <Windows.h>

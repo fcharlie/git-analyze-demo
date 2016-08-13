@@ -6,6 +6,7 @@ add_executable(git-rollback
   rollback.cc
   gc.cc
   git-rollback.rc
+  git-rollback.manifest
 )
 else()
 add_executable(git-rollback

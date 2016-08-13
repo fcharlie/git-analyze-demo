@@ -6,6 +6,7 @@ add_executable(git-analyze
   analyze.cc
   environment.cc
   git-analyze.rc
+  git-analyze.manifest
 )
 else()
 add_executable(git-analyze
