@@ -18,6 +18,12 @@ endif()
 
 
 
+if(MINGW)
+    target_compile_options(git-rollback PRIVATE -municode)
+    set(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -municode")
+    #set_target_properties(git-rollback PROPERTIES COMPILE_FLAGS -municode)
+endif()
+
 target_link_libraries(git-rollback
   Pal
   git2

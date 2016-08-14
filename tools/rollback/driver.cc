@@ -79,7 +79,8 @@ int ProcessArgs(int Argc, char **Argv, RollbackTaskArgs &taskArgs) {
   return 0;
 }
 
-#ifdef _MSC_VER
+#if defined(_WIN32) && !defined(__CYGWIN__)
+#include <stdexcept>
 #include <Windows.h>
 //// To convert Utf8
 char *CopyToUtf8(const wchar_t *wstr) {

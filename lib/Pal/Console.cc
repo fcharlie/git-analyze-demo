@@ -58,10 +58,10 @@ bool IsUnderConhost(FILE *fp) {
 /// check env has 'TERM' TERM=xterm or LANG=zh_CN.UTF-8
 bool IsWindowsTTY() {
   ///
-  char *value{nullptr};
-  size_t len;
-  if (_dupenv_s(&value, &len, "TERM") != 0 || value == nullptr)
-    return false;
+  if (GetEnvironmentVariableW(L"TERM", NULL, 0) == 0) {
+    if (GetLastError() == ERROR_ENVVAR_NOT_FOUND)
+      return false;
+  }
   return true;
 }
 
