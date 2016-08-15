@@ -102,10 +102,10 @@ int ProcessArgv(int Argc, char **Argv, AnalyzeArgs &analyzeArgs) {
     analyzeArgs.timeout = env.Integer(GIT_ANALYZE_TIMEOUT, -1);
   }
   if (g_limitsize == 0) {
-    g_limitsize = env.Integer(GIT_ANALYZE_LIMITSIZE, (uint64_t)100 * MBSIZE);
+    g_limitsize = env.Integer(GIT_ANALYZE_LIMITSIZE, 100) * MBSIZE;
   }
   if (g_warnsize == 0) {
-    g_warnsize = env.Integer(GIT_ANALYZE_WARNSIZE, (uint64_t)50 * MBSIZE);
+    g_warnsize = env.Integer(GIT_ANALYZE_WARNSIZE, 50) * MBSIZE;
   }
 
   return 0;
