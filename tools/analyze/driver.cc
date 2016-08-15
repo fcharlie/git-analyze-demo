@@ -111,9 +111,8 @@ int ProcessArgv(int Argc, char **Argv, AnalyzeArgs &analyzeArgs) {
   return 0;
 }
 
-#if defined(_WIN32) &&                                                         \
-    !defined(                                                                  \
-        __CYGWIN__) //// When use Visual C++, Support convert encoding to UTF8
+#if defined(_WIN32) && !defined(__CYGWIN__)
+//// When use Visual C++, Support convert encoding to UTF8
 #include <stdexcept>
 #include <Windows.h>
 //// To convert Utf8
