@@ -29,6 +29,7 @@ DWORD WINAPI AnalyzeTaskTimer(LPVOID lParam) {
   Sleep(t_ * 1000);
   BaseErrorMessagePrint("git-analyze process timeout, exit !\n");
   exit(-1);
+  /// always noreturn
   return 0;
 }
 
