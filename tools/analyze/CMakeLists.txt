@@ -4,7 +4,7 @@ if(WIN32)
 add_executable(git-analyze
   driver.cc
   analyze.cc
-  environment.cc
+  #environment.cc
   git-analyze.rc
   git-analyze.manifest
 )
@@ -12,7 +12,7 @@ else()
 add_executable(git-analyze
   driver.cc
   analyze.cc
-  environment.cc
+  #environment.cc
 )
 endif()
 

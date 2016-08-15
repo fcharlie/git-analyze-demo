@@ -96,22 +96,24 @@ int ProcessArgv(int Argc, char **Argv, AnalyzeArgs &analyzeArgs) {
     analyzeArgs.repository.assign(".");
     analyzeArgs.ref.assign("HEAD");
   };
-
+  PalEnvironment env;
   //// To check default value
   if (analyzeArgs.timeout == -1) {
-    analyzeArgs.timeout = EnvTimeout();
+    analyzeArgs.timeout = env.Integer(GIT_ANALYZE_TIMEOUT, -1);
   }
   if (g_limitsize == 0) {
-    g_limitsize = EnvLimitSize();
+    g_limitsize = env.Integer(GIT_ANALYZE_LIMITSIZE, (uint64_t)100 * MBSIZE);
   }
   if (g_warnsize == 0) {
-    g_warnsize = EnvWarnSize();
+    g_warnsize = env.Integer(GIT_ANALYZE_WARNSIZE, (uint64_t)50 * MBSIZE);
   }
 
   return 0;
 }
 
-#if defined(_WIN32) && !defined(__CYGWIN__) //// When use Visual C++, Support convert encoding to UTF8
+#if defined(_WIN32) &&                                                         \
+    !defined(                                                                  \
+        __CYGWIN__) //// When use Visual C++, Support convert encoding to UTF8
 #include <stdexcept>
 #include <Windows.h>
 //// To convert Utf8

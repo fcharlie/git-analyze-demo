@@ -12,15 +12,17 @@
 
 #define MBSIZE (1UL << 20)
 
+#if defined(_WIN32) && !defined(__CYGWIN)
+#define GIT_ANALYZE_TIMEOUT L"GIT_ANALYZE_TIMEOUT"
+#define GIT_ANALYZE_LIMITSIZE L"GIT_ANALYZE_LIMITSIZE"
+#define GIT_ANALYZE_WARNSIZE L"GIT_ANALYZE_WARNSIZE"
+#else
 #define GIT_ANALYZE_TIMEOUT "GIT_ANALYZE_TIMEOUT"
 #define GIT_ANALYZE_LIMITSIZE "GIT_ANALYZE_LIMITSIZE"
 #define GIT_ANALYZE_WARNSIZE "GIT_ANALYZE_WARNSIZE"
+#endif
 
 #define GIT_ANALYZE_TIMEOUT_INFINITE ((std::int32_t)-1)
-
-std::size_t EnvLimitSize();
-std::size_t EnvWarnSize();
-std::int32_t EnvTimeout();
 
 extern bool g_showcommitter;
 extern std::int64_t g_limitsize;
