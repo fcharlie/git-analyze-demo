@@ -35,7 +35,7 @@ OPTIONS:
 
 template <class T> inline void ResolveInteger(const char *cstr, T &t) {
   char *c;
-  auto i = strtol(cstr, &c, 10);
+  auto i = std::strtol(cstr, &c, 10);
   if (i > 0) {
     t = static_cast<T>(i);
   }
@@ -79,7 +79,7 @@ int ProcessArgv(int Argc, char **Argv, AnalyzeArgs &analyzeArgs) {
       g_showcommitter = true;
     } else if (IsArg(arg, "-h", "--help")) {
       AnalyzeUsage();
-      exit(0);
+      std::exit(0);
     } else {
       Args.push_back(arg);
     }

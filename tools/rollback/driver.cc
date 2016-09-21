@@ -5,6 +5,9 @@
 * Date: 2016.08
 * Copyright (C) 2016. OSChina.NET. All Rights Reserved.
 */
+#include <cstdlib>
+#include <cstdio>
+#include <cstring>
 #include <vector>
 #include <Pal.hpp>
 #include <Argv.hpp>
@@ -33,7 +36,7 @@ OPTIONS:
 
 int ResolveInteger(const char *cstr) {
   char *c;
-  auto i = strtol(cstr, &c, 10);
+  auto i = std::strtol(cstr, &c, 10);
   if (i > 0) {
     return static_cast<int>(i);
   }
@@ -71,7 +74,7 @@ int ProcessArgs(int Argc, char **Argv, RollbackTaskArgs &taskArgs) {
 
     } else if (IsArg(Argv[i], "-h", "--help")) {
       RollbackUsage();
-      exit(0);
+      std::exit(0);
     } else {
       /// do some things
     }

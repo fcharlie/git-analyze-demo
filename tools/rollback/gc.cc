@@ -5,8 +5,10 @@
 * Date: 2016.08
 * Copyright (C) 2016. OSChina.NET. All Rights Reserved.
 */
-#include <string>
+#include <cstdlib>
 #include <cstring>
+#include <errno.h>
+#include <string>
 #include <Pal.hpp>
 /*
 * bool GitGCInvoke(const std::string &dir,bool forced);
