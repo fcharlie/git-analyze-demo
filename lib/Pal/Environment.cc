@@ -130,7 +130,6 @@ int64_t PalEnvironmentT<char>::Integer(const char *key, int64_t defva_) {
     return i;
   }
   return defva_;
-  return defva_;
 }
 
 template <>
@@ -141,7 +140,6 @@ uint64_t PalEnvironmentT<char>::Integer(const char *key, uint64_t defva_) {
     auto i = std::strtoull(env_, &c, 10);
     return i;
   }
-  return defva_;
   return defva_;
 }
 
