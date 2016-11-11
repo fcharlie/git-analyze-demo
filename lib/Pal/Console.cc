@@ -66,7 +66,7 @@ bool IsWindowsTTY() {
 }
 
 int BaseErrorWriteTTY(const char *buf, size_t len) {
-  fwrite("\33[1;31m", 1, sizeof("\33[31m") - 1, stderr);
+  fwrite("\33[31m", 1, sizeof("\33[31m") - 1, stderr);
   auto l = fwrite(buf, 1, len, stderr);
   fwrite("\33[0m", 1, sizeof("\33[0m") - 1, stderr);
   return l;
@@ -131,7 +131,7 @@ int BaseConsoleWrite(const char *format, ...) {
 #include <unistd.h>
 
 int BaseErrorWriteTTY(const void *buf, size_t len) {
-  fwrite("\e[1;31m", 1, sizeof("\e[1;31m") - 1, stderr);
+  fwrite("\e[31m", 1, sizeof("\e[31m") - 1, stderr);
   auto l = fwrite(buf, 1, len, stderr);
   fwrite("\e[0m", 1, sizeof("\e[0m") - 1, stderr);
   return l;
