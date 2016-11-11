@@ -16,14 +16,18 @@
 //     __attribute__((format(printf, 3, 4)));
 int BaseErrorMessagePrint(const char *format, ...)
     __attribute__((format(printf, 1, 2)));
+int BaseWarningMessagePrint(const char *format, ...)
+    __attribute__((format(printf, 1, 2)));
 int BaseConsoleWrite(const char *format, ...)
     __attribute__((format(printf, 1, 2)));
 #elif defined(_MSC_VER) && _MSC_VER > 1600
 #include <Sal.h>
 int BaseErrorMessagePrint(_Printf_format_string_ const char *format, ...);
+int BaseWarningMessagePrint(_Printf_format_string_ const char *format, ...);
 int BaseConsoleWrite(_Printf_format_string_ const char *format, ...);
 #else
 int BaseErrorMessagePrint(const char *format, ...);
+int BaseWarningMessagePrint(const char *format, ...);
 int BaseConsoleWrite(const char *format, ...);
 #endif
 

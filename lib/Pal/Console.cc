@@ -11,7 +11,7 @@
 #include <cstdarg>
 
 #ifdef _WIN32
-#include <Windows.h>
+#include <windows.h>
 #include <io.h>
 
 class WCharacters {
@@ -65,8 +65,12 @@ bool IsWindowsTTY() {
   return true;
 }
 
-int BaseErrorWriteTTY(const char *buf, size_t len) {
-  fwrite("\33[31m", 1, sizeof("\33[31m") - 1, stderr);
+int BaseWriteTTY(bool bold, int color, const char *buf, size_t len) {
+  if (bold) {
+    fprintf(stderr, "\33[1;%dm", color);
+  } else {
+    fprintf(stderr, "\33[%dm", color);
+  }
   auto l = fwrite(buf, 1, len, stderr);
   fwrite("\33[0m", 1, sizeof("\33[0m") - 1, stderr);
   return l;
@@ -80,13 +84,12 @@ int BaseWriteConhost(const char *buf, size_t len) {
   return dwWrite;
 }
 
-int BaseErrorWriteConhost(const char *buf, size_t len) {
-  // TO set Foreground color
+int BaseColorWriteConhost(WORD dColor, const char *buf, size_t len) {
   HANDLE hConsole = GetStdHandle(STD_ERROR_HANDLE);
   CONSOLE_SCREEN_BUFFER_INFO csbi;
   GetConsoleScreenBufferInfo(hConsole, &csbi);
   WORD oldColor = csbi.wAttributes;
-  WORD newColor = (oldColor & 0xF0) | FOREGROUND_INTENSITY | FOREGROUND_RED;
+  WORD newColor = (oldColor & 0xF0) | dColor;
   SetConsoleTextAttribute(hConsole, newColor);
   DWORD dwWrite;
   WCharacters wstr(buf, len);
@@ -104,10 +107,29 @@ int BaseErrorMessagePrint(const char *format, ...) {
   auto l = vsnprintf(buf, 16348, format, ap);
   va_end(ap);
   if (conhost_) {
-    return BaseErrorWriteConhost(buf, l);
+    WORD color = FOREGROUND_INTENSITY | FOREGROUND_RED;
+    return BaseColorWriteConhost(color, buf, l);
   }
   if (wintty_) {
-    return BaseErrorWriteTTY(buf, l);
+    return BaseWriteTTY(false, 31, buf, l);
+  }
+  return fwrite(buf, 1, l, stderr);
+}
+
+int BaseWarningMessagePrint(const char *format, ...) {
+  static bool conhost_ = IsUnderConhost(stderr);
+  static bool wintty_ = IsWindowsTTY();
+  char buf[16348];
+  va_list ap;
+  va_start(ap, format);
+  auto l = vsnprintf(buf, 16348, format, ap);
+  va_end(ap);
+  if (conhost_) {
+    WORD color = FOREGROUND_INTENSITY | FOREGROUND_RED | FOREGROUND_BLUE;
+    return BaseColorWriteConhost(color, buf, l);
+  }
+  if (wintty_) {
+    return BaseWriteTTY(true, 33, buf, l);
   }
   return fwrite(buf, 1, l, stderr);
 }
@@ -130,8 +152,12 @@ int BaseConsoleWrite(const char *format, ...) {
 #else
 #include <unistd.h>
 
-int BaseErrorWriteTTY(const void *buf, size_t len) {
-  fwrite("\e[31m", 1, sizeof("\e[31m") - 1, stderr);
+int BaseWriteTTY(bool bold, int color, const void *buf, size_t len) {
+  if (bold) {
+    fprintf(stderr, "\033[1;%dm", color);
+  } else {
+    fprintf(stderr, "\033[%dm", color);
+  }
   auto l = fwrite(buf, 1, len, stderr);
   fwrite("\e[0m", 1, sizeof("\e[0m") - 1, stderr);
   return l;
@@ -144,11 +170,21 @@ int BaseErrorMessagePrint(const char *format, ...) {
   auto l = vsnprintf(buf, 8192, format, ap);
   va_end(ap);
   if (isatty(STDERR_FILENO)) {
-    return BaseErrorWriteTTY(buf, l);
+    return BaseWriteTTY(false, 31, buf, l);
   }
   return fwrite(buf, 1, l, stderr);
 }
-
+int BaseWarningMessagePrint(const char *format, ...) {
+  char buf[8192];
+  va_list ap;
+  va_start(ap, format);
+  auto l = vsnprintf(buf, 8192, format, ap);
+  va_end(ap);
+  if (isatty(STDERR_FILENO)) {
+    return BaseWriteTTY(true, 33, buf, l);
+  }
+  return fwrite(buf, 1, l, stderr);
+}
 int BaseConsoleWrite(const char *format, ...) {
   va_list ap;
   va_start(ap, format);
