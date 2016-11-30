@@ -89,7 +89,7 @@ bool discover_commit(const char *gitdir, const char *branch,
 
 int main(int argc, char const *argv[]) {
   if (argc < 3) {
-    fprintf(stderr, "usage %s branch commitmessage\n", argv[0]);
+    fprintf(stderr, "usage %s branch message\n", argv[0]);
     return 1;
   }
   if (!discover_commit(".", argv[1], argv[2]))
