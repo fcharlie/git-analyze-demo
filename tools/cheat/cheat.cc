@@ -5,7 +5,7 @@
 #include <string>
 
 bool nullable_commit_create(git_repository *repo, const git_commit *commit,
-                            const char *ref, const char *message) {
+                            const char *branch, const char *message) {
   git_oid newoid;
   auto author = git_commit_author(commit);
   auto committer = git_commit_committer(commit);
@@ -15,16 +15,16 @@ bool nullable_commit_create(git_repository *repo, const git_commit *commit,
     fprintf(stderr, "git_commit_tree() %s\n", err->message);
     return false;
   }
-  if (git_commit_create(&newoid, repo, ref, author, committer, NULL, message,
-                        tree, 0, nullptr) != 0) {
+  std::string refname = std::string("refs/heads/") + branch;
+  if (git_commit_create(&newoid, repo, refname.c_str(), author, committer, NULL,
+                        message, tree, 0, nullptr) != 0) {
     auto err = giterr_last();
     fprintf(stderr, "git_commit_create() %s\n", err->message);
     git_tree_free(tree);
     return false;
   }
-  fprintf(stderr, "create branch: %s commit: %s\n", ref,
-          git_oid_tostr_s(&newoid));
-  /// git_commit_free(commit);
+  fprintf(stderr, "[%s %s]\ncommitter: %s\nemail: %s\nmessage: %s\n\n", branch,
+          git_oid_tostr_s(&newoid), committer->name, committer->email, message);
   git_tree_free(tree);
   return true;
 }
@@ -77,8 +77,8 @@ bool discover_commit(const char *gitdir, const char *branch,
     git_repository_free(repo);
     return false;
   }
-  std::string refname = std::string("refs/heads/") + branch;
-  auto result = nullable_commit_create(repo, commit, refname.c_str(), message);
+
+  auto result = nullable_commit_create(repo, commit, branch, message);
   git_commit_free(commit);
   git_reference_free(xref);
   git_reference_free(ref);
