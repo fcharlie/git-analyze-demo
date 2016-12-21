@@ -216,7 +216,7 @@ bool PrecommitExecute(const char *td) {
   if (info.filterfiles != 0 && info.ps.FilterBroken()) {
     BaseErrorMessagePrint("git commit has broken \n");
     BaseWarningMessagePrint("Your can use git rm --cached to remove filter "
-                            "files, and commit again !");
+                            "files, and commit again !\n");
     goto Success;
   }
   if (info.limitfiles == 0) {
