@@ -3,6 +3,8 @@
 if(WIN32)
 add_executable(pre-commit
   pre-commit.cc
+  pre-commit.manifest
+  pre-commit.rc
 )
 else()
 add_executable(pre-commit

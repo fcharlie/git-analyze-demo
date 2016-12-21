@@ -145,7 +145,7 @@ int git_diff_callback(const git_diff_delta *delta, float progress,
   (void)progress;
   if (delta->status == GIT_DELTA_ADDED || delta->status == GIT_DELTA_MODIFIED) {
     /* code */
-    // RaiiRepository *repo_ = static_cast<RaiiRepository *>(payload);
+    // why use git_blob_rawsize, delta->new_file.size is 0
     PrecommitInfo *info = static_cast<PrecommitInfo *>(payload);
     git_blob *blob = nullptr;
     if (git_blob_lookup(&blob, info->repo, &(delta->new_file.id)) != 0) {

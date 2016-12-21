@@ -3,6 +3,8 @@
 if(WIN32)
 add_executable(git-cheat
   cheat.cc
+  git-cheat.rc
+  git-cheat.manifest
 )
 else()
 add_executable(git-cheat

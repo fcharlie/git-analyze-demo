@@ -19,4 +19,5 @@ cpp/update
 go/post-receive
 go/pre-receive
 go/update
+.vs/
 *.VC.db*
