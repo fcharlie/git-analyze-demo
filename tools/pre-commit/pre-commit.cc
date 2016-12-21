@@ -195,7 +195,7 @@ bool PrecommitExecute(const char *td) {
     goto Cleanup;
   }
   if (git_reference_resolve(&dref, ref) != 0) {
-    errmsg = "resolve reference";
+    result = true;
     goto Cleanup;
   }
   if (git_commit_lookup(&commit, repo, git_reference_target(dref)) != 0) {
