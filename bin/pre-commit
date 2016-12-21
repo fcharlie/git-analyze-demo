@@ -1,0 +1,8 @@
+#!/bin/sh
+# pre-commit broken large file
+exec 1>&2
+
+LimitFileSize=104857600
+WarnFileSize=52428800
+
+mdfiles=$(git diff --cached --name-only --diff-filter=A -z|wc -l)
