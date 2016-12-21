@@ -158,12 +158,12 @@ int git_diff_callback(const git_diff_delta *delta, float progress,
     git_off_t size = git_blob_rawsize(blob);
     if (size > info->ps.LimitSize()) {
       ///
-      BaseErrorMessagePrint("%s size is %4.2f MB more than %4.2f\n",
+      BaseErrorMessagePrint("%s size is %4.2f MB more than %4.2f MB\n",
                             delta->new_file.path, (double)size / MBSIZE,
                             (double)lsize / MBSIZE);
       info->limitfiles++;
     } else if (size > info->ps.WarnSize()) {
-      BaseWarningMessagePrint("%s size %4.2f MB more than %4.2f\n",
+      BaseWarningMessagePrint("%s size %4.2f MB more than %4.2f MB\n",
                               delta->new_file.path, (double)size / MBSIZE,
                               (double)wsize / MBSIZE);
       info->warnfiles++;
