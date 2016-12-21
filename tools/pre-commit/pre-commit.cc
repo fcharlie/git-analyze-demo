@@ -156,13 +156,13 @@ int git_diff_callback(const git_diff_delta *delta, float progress,
     auto lsize = info->ps.LimitSize();
     auto wsize = info->ps.WarnSize();
     git_off_t size = git_blob_rawsize(blob);
-    if (size > info->ps.LimitSize()) {
+    if (size > lsize) {
       ///
       BaseErrorMessagePrint("%s size is %4.2f MB more than %4.2f MB\n",
                             delta->new_file.path, (double)size / MBSIZE,
                             (double)lsize / MBSIZE);
       info->limitfiles++;
-    } else if (size > info->ps.WarnSize()) {
+    } else if (size > wsize) {
       BaseWarningMessagePrint("%s size %4.2f MB more than %4.2f MB\n",
                               delta->new_file.path, (double)size / MBSIZE,
                               (double)wsize / MBSIZE);
@@ -170,6 +170,30 @@ int git_diff_callback(const git_diff_delta *delta, float progress,
     }
   }
   return 0;
+}
+
+bool PrecommitIndexScanf(PrecommitInfo &info, git_repository *repo,
+                         git_index *index) {
+  auto lsize = info.ps.LimitSize();
+  auto wsize = info.ps.WarnSize();
+  auto ecount = git_index_entrycount(index);
+  for (size_t i = 0; i < ecount; ++i) {
+    const git_index_entry *e = git_index_get_byindex(index, i);
+    auto size = e->file_size;
+    if (size > lsize) {
+      ///
+      BaseErrorMessagePrint("%s size is %4.2f MB more than %4.2f MB\n", e->path,
+                            (double)size / MBSIZE, (double)lsize / MBSIZE);
+      info.limitfiles++;
+    } else if (size > wsize) {
+      BaseWarningMessagePrint("%s size %4.2f MB more than %4.2f MB\n", e->path,
+                              (double)size / MBSIZE, (double)wsize / MBSIZE);
+      info.warnfiles++;
+    }
+  }
+  if (info.limitfiles != 0)
+    return false;
+  return true;
 }
 
 bool PrecommitExecute(const char *td) {
@@ -194,9 +218,13 @@ bool PrecommitExecute(const char *td) {
     errmsg = "lookup HEAD";
     goto Cleanup;
   }
-  if (git_reference_resolve(&dref, ref) != 0) {
-    result = true;
+  if (git_repository_index(&index, repo) != 0) {
+    errmsg = "repository index";
     goto Cleanup;
+  }
+  if (git_reference_resolve(&dref, ref) != 0) {
+    result = PrecommitIndexScanf(info, repo, index);
+    goto CheckValue;
   }
   if (git_commit_lookup(&commit, repo, git_reference_target(dref)) != 0) {
     errmsg = "look commit";
@@ -206,13 +234,10 @@ bool PrecommitExecute(const char *td) {
     errmsg = "commit tree";
     goto Cleanup;
   }
-  if (git_repository_index(&index, repo) != 0) {
-    errmsg = "repository index";
-    goto Cleanup;
-  }
   if (git_diff_tree_to_index(&diff, repo, tree, index, &opts) == 0) {
     git_diff_foreach(diff, git_diff_callback, NULL, NULL, NULL, &info);
   }
+CheckValue:
   if (info.filterfiles != 0 && info.ps.FilterBroken()) {
     BaseErrorMessagePrint("git commit has broken \n");
     BaseWarningMessagePrint("Your can use git rm --cached to remove filter "
