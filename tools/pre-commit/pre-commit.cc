@@ -13,7 +13,7 @@
 #include <Pal.hpp>
 
 #ifdef _MSC_VER
-#define strcasecmp stricmp
+#define strcasecmp _stricmp
 #endif
 #define KBSIZE (1UL << 10)
 #define MBSIZE (1UL << 20)
