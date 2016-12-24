@@ -99,6 +99,7 @@ int git_treewalk_resolveblobs(const char *root, const git_tree_entry *entry,
           print_commit_message(repo_->commit());
         }
       }
+      git_blob_free(blob);
     }
   }
   return 0;
@@ -126,6 +127,7 @@ int git_diff_callback(const git_diff_delta *delta, float progress,
         print_commit_message(repo_->commit());
       }
     }
+    git_blob_free(blob);
   }
   return 0;
 }
@@ -177,6 +179,7 @@ bool RaiiRepository::walk() {
       }
       git_tree_walk(new_tree, GIT_TREEWALK_PRE, git_treewalk_resolveblobs,
                     this);
+      git_tree_free(new_tree);
     }
 
     return false;

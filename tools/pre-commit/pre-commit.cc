@@ -168,6 +168,7 @@ int git_diff_callback(const git_diff_delta *delta, float progress,
                               (double)wsize / MBSIZE);
       info->warnfiles++;
     }
+    git_blob_free(blob);
   }
   return 0;
 }

@@ -8,6 +8,13 @@
 
 bool nullable_commit_create(git_repository *repo, const git_commit *commit,
                             const char *branch, const char *message) {
+  std::string refname = std::string("refs/heads/") + branch;
+  git_reference *ref = nullptr;
+  if (git_reference_lookup(&ref, repo, refname.c_str()) == 0) {
+    git_reference_free(ref);
+    BaseErrorMessagePrint("Branch %s is exists !\n", branch);
+    return false;
+  }
   git_oid newoid;
   auto author = git_commit_author(commit);
   auto committer = git_commit_committer(commit);
@@ -17,7 +24,7 @@ bool nullable_commit_create(git_repository *repo, const git_commit *commit,
     BaseErrorMessagePrint("git_commit_tree() %s\n", err->message);
     return false;
   }
-  std::string refname = std::string("refs/heads/") + branch;
+
   if (git_commit_create(&newoid, repo, refname.c_str(), author, committer, NULL,
                         message, tree, 0, nullptr) != 0) {
     auto err = giterr_last();
