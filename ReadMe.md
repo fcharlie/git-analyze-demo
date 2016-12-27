@@ -125,6 +125,14 @@ git config commit.filters '*.exe;*.lib;*.obj' # filter file ext
 git config commit.filterbroken true # filter broken when find
 ```
 
+## Git Complete 工具
+
+此工具创建 整整一年的提交
+
+```shell
+git-complete dir branch 'commit message' 2016
+```
+
 ## 与 GIT 整合
 
 git 支持使用 git subcommand 的格式运行特定命令,比如 git add 对应的命令就是 git-add , 当用户需要直接运行 git analyze 这种方式运行这些命令,
