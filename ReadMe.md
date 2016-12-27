@@ -11,7 +11,7 @@
 
 >git clone --recursive https://git.oschina.net/oscstudio/git-analyze.git
 
-本项目依赖 CMake 构建, 在 Windows 上,你可以从 cmake.org 下载符合你系统版本的 [CMake](https://cmake.org/download/) , 
+本项目依赖 CMake 构建, 在 Windows 上,你可以从 cmake.org 下载符合你系统版本的 [CMake](https://cmake.org/download/) ,
 使用 CMake 生成 Visual Studio 项目文件,在使用 CMake 生成 Visual Studio 项目文件之前,需要在环境变量中识别 Visual C++ 编译器的环境变量,
 所以你可以新建一个类似于下面的批处理代码.
 
@@ -97,6 +97,33 @@ OPTIONS:
   --force          force gc prune
 ```
 参数格式与 git-analyze 类似, --force 将强制运行 git gc 并清除悬空对象. 当 未指定 git-dir 时,为当前目录,未指定 refname 时,为 HEAD 指向的分支.
+
+## Cheat 工具
+
+git-cheat 可以基于当前分支创建一个只有一个 commit 的分支，此分支的提交信息，树对象等都与当前分支
+一致，但没有父提交。很容易看到的一个场景是，用户清理项目后，创建一个提交，然后在此提交的基础上
+使用 git-cheat 开源。
+
+命令格式：
+
+```shell
+git-cheat branch commit-message
+```
+
+## Pre-Commit 工具
+
+pre-commit 是 git 的一类钩子，当用户创建提交，也就是 git commit -m 后，如果存储库中有此类钩子，
+git-commit 就会执行 pre-commit 钩子，用户在创建提交时，很容易将大文件或者二进制文件提交到存储库，
+等到推送到代码托管平台被拒绝时撤销更改就非常麻烦了。使用 pre-commit 可以避免此类问题，
+用户将 pre-commit 软链到 `.git/hooks/pre-commit` 就行了，如果要修改配置，可以使用 git config 修改，
+git config 添加 --global 参数时修改全局设置。
+
+```shell
+git config commit.limitsize 100M # limit file size
+git config commit.warnsize 50M # report warning file size
+git config commit.filters '*.exe;*.lib;*.obj' # filter file ext
+git config commit.filterbroken true # filter broken when find
+```
 
 ## 与 GIT 整合
 
