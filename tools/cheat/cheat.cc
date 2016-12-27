@@ -1,3 +1,10 @@
+/*
+* cheat.cc
+* git-analyze
+* author: Force.Charlie
+* Date: 2016.12
+* Copyright (C) 2016. OSChina.NET. All Rights Reserved.
+*/
 ////No historical records branch
 #include <stdio.h>
 #include <stdlib.h>
