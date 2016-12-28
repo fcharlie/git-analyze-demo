@@ -45,16 +45,22 @@ public:
       return false;
     refs.assign(ref);
     message.assign(msgTemplate);
+    // #ifdef _WIN32
+    //     if (_get_timezone(&toffset) != 0) {
+    //       BaseErrorMessagePrint("Cannot Invoke _get_timezone");
+    //     }
+    // #else
+    // #endif
     return true;
   }
   bool FillYear(unsigned year) {
     auto t = time(nullptr);
-    auto p = gmtime(&t);
+    auto p = localtime(&t);
     unsigned my = year <= 1900 ? p->tm_year : year - 1900;
     struct tm mt;
     memset(&mt, 0, sizeof(tm));
     auto days = Days(my + 1900);
-    mt.tm_mday = 0;
+    mt.tm_mday = 1;
     mt.tm_mon = 0;
     mt.tm_hour = p->tm_hour;
     mt.tm_min = p->tm_min;
@@ -63,10 +69,10 @@ public:
 
     git_time gt;
     gt.time = mktime(&mt);
-    gt.offset = 8;
+    gt.offset = 0;
+    fprintf(stderr, "%s\n", p->tm_zone);
     FillFirstCommit(gt, message.c_str());
-    // gt.time += 3600 * 24 * 1000;
-    for (unsigned i = 1; i < days; i++) {
+    for (unsigned i = 2; i <= days; i++) {
       mt.tm_mday = i;
       mt.tm_mon = 0;
       mt.tm_hour = p->tm_hour;
