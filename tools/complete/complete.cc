@@ -45,12 +45,6 @@ public:
       return false;
     refs.assign(ref);
     message.assign(msgTemplate);
-    // #ifdef _WIN32
-    //     if (_get_timezone(&toffset) != 0) {
-    //       BaseErrorMessagePrint("Cannot Invoke _get_timezone");
-    //     }
-    // #else
-    // #endif
     return true;
   }
   bool FillYear(unsigned year) {
@@ -70,7 +64,6 @@ public:
     git_time gt;
     gt.time = mktime(&mt);
     gt.offset = 0;
-    fprintf(stderr, "%s\n", p->tm_zone);
     FillFirstCommit(gt, message.c_str());
     for (unsigned i = 2; i <= days; i++) {
       mt.tm_mday = i;
