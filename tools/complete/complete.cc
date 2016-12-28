@@ -38,19 +38,21 @@ public:
     if (git_repository_open(&repo, dir) != 0)
       return false;
     if (!DiscoverUsernameEmail()) {
-      fprintf(stderr, "Not Found configured name and email\n");
+      BaseErrorMessagePrint("Not Found configured name and email\n");
       return false;
     }
     if (!FindHead())
       return false;
     refs.assign(ref);
+    message.assign(msgTemplate);
     return true;
   }
   bool FillYear(unsigned year) {
     auto t = time(nullptr);
     auto p = gmtime(&t);
     unsigned my = year <= 1900 ? p->tm_year : year - 1900;
-    struct tm mt = {0};
+    struct tm mt;
+    memset(&mt, 0, sizeof(tm));
     auto days = Days(my + 1900);
     mt.tm_mday = 0;
     mt.tm_mon = 0;
@@ -62,9 +64,9 @@ public:
     git_time gt;
     gt.time = mktime(&mt);
     gt.offset = 8;
-    FillFirstCommit(gt, "no commit message");
+    FillFirstCommit(gt, message.c_str());
     // gt.time += 3600 * 24 * 1000;
-    for (int i = 1; i < days; i++) {
+    for (unsigned i = 1; i < days; i++) {
       mt.tm_mday = i;
       mt.tm_mon = 0;
       mt.tm_hour = p->tm_hour;
@@ -72,13 +74,14 @@ public:
       mt.tm_sec = p->tm_sec;
       mt.tm_year = my;
       gt.time = mktime(&mt);
-      FillDateCommit(gt, "no commit message");
+      FillDateCommit(gt, message.c_str());
     }
     return true;
   }
 
 private:
   std::string refs;
+  std::string message{"no commit message"};
   char name[256];
   char email[256];
   git_repository *repo{nullptr};
@@ -219,13 +222,15 @@ public:
 private:
 };
 
-int main(int argc, char **argv) {
+//// this is real main
+int Main(int argc, char **argv) {
   GitInit ginit;
   int year = 0;
   if (argc < 3) {
-    fprintf(stderr, "usage: %s  dir branch message year\nExample: git-complete "
-                    ". v2016 'no commit message' 2016 \n",
-            argv[0]);
+    BaseErrorMessagePrint(
+        "usage: %s  dir branch message year\nExample: git-complete "
+        ". v2016 'no commit message' 2016 \n",
+        argv[0]);
     return 1;
   }
 
@@ -240,3 +245,43 @@ int main(int argc, char **argv) {
   yearComplete.FillYear(year);
   return 0;
 }
+
+#if defined(_WIN32) && !defined(__CYGWIN__)
+//// When use Visual C++, Support convert encoding to UTF8
+#include <stdexcept>
+#include <Windows.h>
+//// To convert Utf8
+char *CopyToUtf8(const wchar_t *wstr) {
+  auto l = WideCharToMultiByte(CP_UTF8, 0, wstr, -1, NULL, 0, NULL, NULL);
+  char *buf = (char *)malloc(sizeof(char) * l + 1);
+  if (buf == nullptr)
+    throw std::runtime_error("Out of Memory ");
+  WideCharToMultiByte(CP_UTF8, 0, wstr, -1, buf, l, NULL, NULL);
+  return buf;
+}
+int wmain(int argc, wchar_t **argv) {
+  std::vector<char *> Argv_;
+  auto Release = [&]() {
+    for (auto &a : Argv_) {
+      free(a);
+    }
+  };
+  try {
+    for (int i = 0; i < argc; i++) {
+      Argv_.push_back(CopyToUtf8(argv[i]));
+    }
+  } catch (const std::exception &e) {
+    BaseErrorMessagePrint("Exception: %s\n", e.what());
+    Release();
+    return -1;
+  }
+  auto result = Main(Argv_.data(), Argv_.size());
+  Release();
+  return result;
+}
+#else
+int main(int argc, char **argv) {
+  /* code */
+  return Main(argc, argv);
+}
+#endif
