@@ -47,25 +47,28 @@ public:
     message.assign(msgTemplate);
     return true;
   }
-  bool FillYear(unsigned year) {
+  bool FillYear(unsigned year, bool nb) {
     auto t = time(nullptr);
     auto p = localtime(&t);
     unsigned my = year <= 1900 ? p->tm_year : year - 1900;
     struct tm mt;
     memset(&mt, 0, sizeof(tm));
     auto days = Days(my + 1900);
-    mt.tm_mday = 1;
-    mt.tm_mon = 0;
-    mt.tm_hour = p->tm_hour;
-    mt.tm_min = p->tm_min;
-    mt.tm_sec = p->tm_sec;
-    mt.tm_year = my;
-
     git_time gt;
-    gt.time = mktime(&mt);
-    gt.offset = 0;
-    FillFirstCommit(gt, message.c_str());
-    for (unsigned i = 2; i <= days; i++) {
+    if (nb) {
+      BaseConsoleWrite("create new ref: %s\n", refs.c_str());
+      mt.tm_mday = 1;
+      mt.tm_mon = 0;
+      mt.tm_hour = p->tm_hour;
+      mt.tm_min = p->tm_min;
+      mt.tm_sec = p->tm_sec;
+      mt.tm_year = my;
+      gt.time = mktime(&mt);
+      gt.offset = 0;
+      FillFirstCommit(gt, message.c_str());
+    }
+
+    for (unsigned i = 1; i <= days; i++) {
       mt.tm_mday = i;
       mt.tm_mon = 0;
       mt.tm_hour = p->tm_hour;
@@ -241,7 +244,11 @@ int Main(int argc, char **argv) {
     char *c = nullptr;
     year = strtol(argv[4], &c, 10);
   }
-  yearComplete.FillYear(year);
+  bool createNewbranch = false;
+  if (argc > 5) {
+    createNewbranch = (strcmp("--nb", argv[4]) == 0 || strcmp("--NB", argv[4]));
+  }
+  yearComplete.FillYear(year, createNewbranch);
   return 0;
 }
 
