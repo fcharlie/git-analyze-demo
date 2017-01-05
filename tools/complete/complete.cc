@@ -250,9 +250,11 @@ int Main(int argc, char **argv) {
   }
   bool createNewbranch = false;
   if (argc > 5) {
-    createNewbranch = (strcmp("--nb", argv[4]) == 0 || strcmp("--NB", argv[4]));
+    createNewbranch = (strcmp("--nb", argv[5]) == 0 || strcmp("--NB", argv[5]));
   }
-  yearComplete.FillYear(year, createNewbranch);
+  if (yearComplete.FillYear(year, createNewbranch)) {
+    BaseConsoleWrite("Has completed %d submitted this year !", year);
+  }
   return 0;
 }
 
