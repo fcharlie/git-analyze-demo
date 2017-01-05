@@ -253,7 +253,7 @@ int Main(int argc, char **argv) {
     createNewbranch = (strcmp("--nb", argv[5]) == 0 || strcmp("--NB", argv[5]));
   }
   if (yearComplete.FillYear(year, createNewbranch)) {
-    BaseConsoleWrite("Has completed %d submitted this year !", year);
+    BaseConsoleWrite("Has completed %d submitted this year !\n", year);
   }
   return 0;
 }
