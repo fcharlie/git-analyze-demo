@@ -35,8 +35,11 @@ public:
   }
   bool InitializeRepository(const char *dir, const char *ref,
                             const char *msgTemplate) {
-    if (git_repository_open(&repo, dir) != 0)
+    if (git_repository_open(&repo, dir) != 0) {
+      auto err = giterr_last();
+      BaseErrorMessagePrint("Open repository %s\n", err->message);
       return false;
+    }
     if (!DiscoverUsernameEmail()) {
       BaseErrorMessagePrint("Not Found configured name and email\n");
       return false;
@@ -239,7 +242,8 @@ int Main(int argc, char **argv) {
   YearComplete yearComplete;
   std::string ref("refs/heads/");
   ref.append(argv[2]);
-  yearComplete.InitializeRepository(argv[1], ref.c_str(), argv[3]);
+  if (!yearComplete.InitializeRepository(argv[1], ref.c_str(), argv[3]))
+    return 1;
   if (argc > 4) {
     char *c = nullptr;
     year = strtol(argv[4], &c, 10);
