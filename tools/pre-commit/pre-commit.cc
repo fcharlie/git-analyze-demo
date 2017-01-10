@@ -15,6 +15,7 @@
 #include <list>
 #include <map>
 #include <functional>
+#include <regex>
 #include <git2.h>
 #include <Pal.hpp>
 
@@ -28,11 +29,7 @@
 class PrecommitSwitch {
 public:
   PrecommitSwitch() {
-#ifdef _WIN32
-    filters = {"o", "a", "out", "exe", "lib", "pdb"};
-#else
-    filters = {"o", "a", "out"};
-#endif
+    ///
   }
   std::uint64_t FileSize(std::uint64_t dsize, const char *str) {
     char *c = nullptr;
@@ -50,17 +47,10 @@ public:
       return l;
     return dsize;
   }
-  bool FileFilter(const std::string &str) {
-    std::vector<std::string> v;
-    std::size_t start = 0, end = 0;
-    while ((end = str.find(';', start)) != std::string::npos) {
-      v.push_back(str.substr(start, end - start));
-      start = end + 1;
-    }
-    v.push_back(str.substr(start));
-    filters = std::move(v);
-    return true;
-  }
+  // bool FileFilter(const std::string &str) {
+  //   fregex = str;
+  //   return true;
+  // }
   bool Initialize(const char *gitdir) {
     ///
     git_config *config = nullptr;
@@ -76,7 +66,7 @@ public:
         git_config_entry_free(entry);
       }
       if (git_config_get_entry(&entry, config, "commit.filters") == 0) {
-        FileFilter(entry->value);
+        fregex.assign(entry->value);
         git_config_entry_free(entry);
       }
       int out;
@@ -99,7 +89,7 @@ public:
         git_config_entry_free(entry);
       }
       if (git_config_get_entry(&entry, config, "commit.filters") == 0) {
-        FileFilter(entry->value);
+        fregex.assign(entry->value);
         git_config_entry_free(entry);
       }
       int out;
@@ -115,13 +105,14 @@ public:
   /// git config  commit.warnsize 50M
   std::uint64_t WarnSize() const { return warnSize; }
   /// git config  commit.filters '.exe;.lb'
-  const std::vector<std::string> Filters() const { return filters; }
-  bool FilterBroken() { return filterBroken; }
+  const std::string &Filters() const { return fregex; }
+  bool FilterBroken() const { return filterBroken; }
 
 private:
   std::uint64_t limitSize{100 * MBSIZE};
   std::uint64_t warnSize{50 * MBSIZE};
-  std::vector<std::string> filters;
+  std::string fregex;
+  //
   bool filterBroken{false};
 };
 
@@ -149,15 +140,25 @@ struct PrecommitInfo {
 int git_diff_callback(const git_diff_delta *delta, float progress,
                       void *payload) {
   (void)progress;
-  if (delta->status == GIT_DELTA_ADDED || delta->status == GIT_DELTA_MODIFIED) {
+  if (delta->status == GIT_DELTA_ADDED || delta->status == GIT_DELTA_MODIFIED ||
+      delta->status == GIT_DELTA_CONFLICTED) {
     /* code */
     // why use git_blob_rawsize, delta->new_file.size is 0
     PrecommitInfo *info = static_cast<PrecommitInfo *>(payload);
     git_blob *blob = nullptr;
     if (git_blob_lookup(&blob, info->repo, &(delta->new_file.id)) != 0) {
+      BaseErrorMessagePrint("lookup blob failed: %s\n", delta->new_file.path);
       return 0;
     }
-    // if(strncmp(const char *__s1, const char *__s2, size_t __n))
+
+    if (!info->ps.Filters().empty()) {
+      if (std::regex_search(delta->new_file.path,
+                            std::regex(info->ps.Filters()))) {
+        BaseErrorMessagePrint("Introduced the exclude file: %s\n",
+                              delta->new_file.path);
+        info->filterfiles++;
+      }
+    }
     //// by default off_t is 8byte
     auto lsize = info->ps.LimitSize();
     auto wsize = info->ps.WarnSize();
@@ -184,8 +185,13 @@ bool PrecommitIndexScanf(PrecommitInfo &info, git_repository *repo,
   auto lsize = info.ps.LimitSize();
   auto wsize = info.ps.WarnSize();
   auto ecount = git_index_entrycount(index);
+  std::regex reg(info.ps.Filters());
   for (size_t i = 0; i < ecount; ++i) {
     const git_index_entry *e = git_index_get_byindex(index, i);
+    if (std::regex_search(e->path, reg)) {
+      BaseErrorMessagePrint("Introduced the exclude file: %s\n", e->path);
+      info.filterfiles++;
+    }
     auto size = e->file_size;
     if (size > lsize) {
       ///
