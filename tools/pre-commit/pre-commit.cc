@@ -3,7 +3,7 @@
 * git-analyze
 * author: Force.Charlie
 * Date: 2016.12
-* Copyright (C) 2016. OSChina.NET. All Rights Reserved.
+* Copyright (C) 2017. OSChina.NET. All Rights Reserved.
 */
 /// pre-commit limit file
 #include <cstdio>
