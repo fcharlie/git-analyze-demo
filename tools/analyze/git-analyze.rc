@@ -1,6 +1,6 @@
 #include "windows.h"
 
-#define GIT_ANALYZE_COPYRIGHT L"Copyright \x00a9 2016 The OSChina.NET .All Rights Reserved"
+#define GIT_ANALYZE_COPYRIGHT L"Copyright \x00a9 2017 The OSChina.NET .All Rights Reserved"
 
 
 VS_VERSION_INFO VERSIONINFO
