@@ -21,3 +21,4 @@ go/pre-receive
 go/update
 .vs/
 *.VC.db*
+CMakeSettings.json
