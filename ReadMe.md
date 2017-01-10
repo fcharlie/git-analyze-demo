@@ -9,7 +9,9 @@
 
 任意平台都需要克隆代码
 
->git clone --recursive https://git.oschina.net/oscstudio/git-analyze.git
+```
+git clone --recursive https://git.oschina.net/oscstudio/git-analyze.git
+```
 
 本项目依赖 CMake 构建, 在 Windows 上,你可以从 cmake.org 下载符合你系统版本的 [CMake](https://cmake.org/download/) ,
 使用 CMake 生成 Visual Studio 项目文件,在使用 CMake 生成 Visual Studio 项目文件之前,需要在环境变量中识别 Visual C++ 编译器的环境变量,
@@ -26,17 +28,19 @@ cmd /k
 其中 CMake 的安装路径可能有所差异.一切以实际为准.
 
 启动命令行后,运行
->mkdir build
 
->cd build
-
->cmake -G "Visual Studio 14" ..
+```bash
+mkdir build
+cd build
+cmake -G "Visual Studio 14" ..
+```
 
  然后执行
 
->msbuild git-analyze.sln /p:Configuration=Release
-
->cpack
+```bash
+msbuild git-analyze.sln /p:Configuration=Release
+cpack
+```
 
 然后运行安装程序安装即可.
 
@@ -118,10 +122,14 @@ git-commit 就会执行 pre-commit 钩子，用户在创建提交时，很容易
 用户将 pre-commit 软链到 `.git/hooks/pre-commit` 就行了，如果要修改配置，可以使用 git config 修改，
 git config 添加 --global 参数时修改全局设置。
 
+这里 limitsize 即限制文件大小，单位可以是 K M G 不区分大小写。warnsize 是警告提示大文件，大小为 limitszie 的一半就可以了。
+
+而 filters 是一个正则表达式，过滤后缀名的，一般网络上可以找到。filterbroken 是设置当存在过滤文件时是否终止提交。默认为 false。
+
 ```shell
 git config commit.limitsize 100M # limit file size
 git config commit.warnsize 50M # report warning file size
-git config commit.filters '*.exe;*.lib;*.obj' # filter file ext
+git config commit.filters "\.(exe|obj|pdb)$" # filter regex
 git config commit.filterbroken true # filter broken when find
 ```
 
@@ -138,9 +146,10 @@ git-complete dir branch 'commit message' 2016
 git 支持使用 git subcommand 的格式运行特定命令,比如 git add 对应的命令就是 git-add , 当用户需要直接运行 git analyze 这种方式运行这些命令,
 有几种方法可以做到,第一种是将 git-analyze 加入环境变量,然后可以直接运行
 
-> git analyze . refs/heads/master
-
-> git rollback --backrev 1
+```bash
+ git analyze . refs/heads/master
+ git rollback --backrev 1
+ ```
 
 同样也可以使用软链接的方式将命令链接到系统目录, 在 POSIX 系统中,或者 Windows Subsystem for Linux 可以使用 ln -s , 在 Windows 中
 可以使用 mklink  /d .
@@ -148,4 +157,4 @@ git 支持使用 git subcommand 的格式运行特定命令,比如 git add 对�
 ## Copyright
 
 Author: Force Charlie  
-Copyright &copy; 2016, OSChina.NET, All Rights Reserved.
+Copyright &copy; 2017, OSChina.NET, All Rights Reserved.

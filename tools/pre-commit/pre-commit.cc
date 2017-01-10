@@ -47,10 +47,7 @@ public:
       return l;
     return dsize;
   }
-  // bool FileFilter(const std::string &str) {
-  //   fregex = str;
-  //   return true;
-  // }
+
   bool Initialize(const char *gitdir) {
     ///
     git_config *config = nullptr;
