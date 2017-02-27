@@ -98,7 +98,7 @@ int BaseColorWriteConhost(WORD dColor, const char *buf, size_t len) {
   return dwWrite;
 }
 
-int BaseErrorMessagePrint(const char *format, ...) {
+int Printe(const char *format, ...) {
   static bool conhost_ = IsUnderConhost(stderr);
   static bool wintty_ = IsWindowsTTY();
   char buf[16348];
@@ -116,7 +116,7 @@ int BaseErrorMessagePrint(const char *format, ...) {
   return fwrite(buf, 1, l, stderr);
 }
 
-int BaseWarningMessagePrint(const char *format, ...) {
+int Printw(const char *format, ...) {
   static bool conhost_ = IsUnderConhost(stderr);
   static bool wintty_ = IsWindowsTTY();
   char buf[16348];
@@ -134,7 +134,7 @@ int BaseWarningMessagePrint(const char *format, ...) {
   return fwrite(buf, 1, l, stderr);
 }
 //// To complete
-int BaseConsoleWrite(const char *format, ...) {
+int Print(const char *format, ...) {
   static bool conhost_ = IsUnderConhost(stdout);
   char buf[16348];
   va_list ap;
@@ -163,7 +163,7 @@ int BaseWriteTTY(bool bold, int color, const void *buf, size_t len) {
   return l;
 }
 
-int BaseErrorMessagePrint(const char *format, ...) {
+int Printe(const char *format, ...) {
   char buf[8192];
   va_list ap;
   va_start(ap, format);
@@ -174,7 +174,7 @@ int BaseErrorMessagePrint(const char *format, ...) {
   }
   return fwrite(buf, 1, l, stderr);
 }
-int BaseWarningMessagePrint(const char *format, ...) {
+int Printw(const char *format, ...) {
   char buf[8192];
   va_list ap;
   va_start(ap, format);
@@ -185,7 +185,7 @@ int BaseWarningMessagePrint(const char *format, ...) {
   }
   return fwrite(buf, 1, l, stderr);
 }
-int BaseConsoleWrite(const char *format, ...) {
+int Print(const char *format, ...) {
   va_list ap;
   va_start(ap, format);
   auto l = vfprintf(stdout, format, ap);

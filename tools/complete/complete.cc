@@ -37,11 +37,11 @@ public:
                             const char *msgTemplate) {
     if (git_repository_open(&repo, dir) != 0) {
       auto err = giterr_last();
-      BaseErrorMessagePrint("Open repository %s\n", err->message);
+      Printe("Open repository %s\n", err->message);
       return false;
     }
     if (!DiscoverUsernameEmail()) {
-      BaseErrorMessagePrint("Not Found configured name and email\n");
+      Printe("Not Found configured name and email\n");
       return false;
     }
     if (!FindHead())
@@ -59,7 +59,7 @@ public:
     auto days = Days(my + 1900);
     git_time gt;
     if (nb) {
-      BaseConsoleWrite("create new ref: %s\n", refs.c_str());
+      Print("create new ref: %s\n", refs.c_str());
       mt.tm_mday = 1;
       mt.tm_mon = 0;
       mt.tm_hour = p->tm_hour;
@@ -129,14 +129,14 @@ private:
     git_reference *ref = nullptr;
     if (git_repository_head(&ref, repo) != 0) {
       auto err = giterr_last();
-      BaseErrorMessagePrint("cannot open head %s\n", err->message);
+      Printe("cannot open head %s\n", err->message);
       git_repository_free(repo);
       return false;
     }
     git_reference *xref{nullptr};
     if (git_reference_resolve(&xref, ref) != 0) {
       auto err = giterr_last();
-      BaseErrorMessagePrint("Resolve reference: %s\n", err->message);
+      Printe("Resolve reference: %s\n", err->message);
       git_reference_free(ref);
       git_repository_free(repo);
       return false;
@@ -144,14 +144,14 @@ private:
     auto oid = git_reference_target(xref);
     if (!oid) {
       auto err = giterr_last();
-      BaseErrorMessagePrint("Lookup commit: %s\n", err->message);
+      Printe("Lookup commit: %s\n", err->message);
       git_reference_free(xref);
       git_reference_free(ref);
       return false;
     }
     if (git_commit_lookup(&parent, repo, oid) != 0) {
       auto err = giterr_last();
-      BaseErrorMessagePrint("Lookup commit tree: %s\n", err->message);
+      Printe("Lookup commit tree: %s\n", err->message);
       git_reference_free(xref);
       git_reference_free(ref);
       return false;
@@ -169,14 +169,14 @@ private:
     git_tree *tree = nullptr;
     if (git_commit_tree(&tree, parent) != 0) {
       auto err = giterr_last();
-      BaseErrorMessagePrint("git_commit_tree() %s\n", err->message);
+      Printe("git_commit_tree() %s\n", err->message);
       return false;
     }
 
     if (git_commit_create(&newoid, repo, refs.c_str(), &sig, &sig, NULL, msg,
                           tree, 0, nullptr) != 0) {
       auto err = giterr_last();
-      BaseErrorMessagePrint("git_commit_create() %s\n", err->message);
+      Printe("git_commit_create() %s\n", err->message);
       git_tree_free(tree);
       return false;
     }
@@ -198,14 +198,14 @@ private:
     git_tree *tree = nullptr;
     if (git_commit_tree(&tree, parent) != 0) {
       auto err = giterr_last();
-      BaseErrorMessagePrint("git_commit_tree() %s\n", err->message);
+      Printe("git_commit_tree() %s\n", err->message);
       return false;
     }
     const git_commit *ps[] = {parent};
     if (git_commit_create(&newoid, repo, refs.c_str(), &sig, &sig, NULL, msg,
                           tree, 1, ps) != 0) {
       auto err = giterr_last();
-      BaseErrorMessagePrint("git_commit_create() %s\n", err->message);
+      Printe("git_commit_create() %s\n", err->message);
       git_tree_free(tree);
       return false;
     }
@@ -232,10 +232,9 @@ int Main(int argc, char **argv) {
   GitInit ginit;
   int year = 0;
   if (argc < 3) {
-    BaseErrorMessagePrint(
-        "usage: %s  dir branch message year\nExample: git-complete "
-        ". v2016 'no commit message' 2016 \n",
-        argv[0]);
+    Printe("usage: %s  dir branch message year\nExample: git-complete "
+           ". v2016 'no commit message' 2016 \n",
+           argv[0]);
     return 1;
   }
 
@@ -253,7 +252,7 @@ int Main(int argc, char **argv) {
     createNewbranch = (strcmp("--nb", argv[5]) == 0 || strcmp("--NB", argv[5]));
   }
   if (yearComplete.FillYear(year, createNewbranch)) {
-    BaseConsoleWrite("Has completed %d submitted this year !\n", year);
+    Print("Has completed %d submitted this year !\n", year);
   }
   return 0;
 }
@@ -283,7 +282,7 @@ int wmain(int argc, wchar_t **argv) {
       Argv_.push_back(CopyToUtf8(argv[i]));
     }
   } catch (const std::exception &e) {
-    BaseErrorMessagePrint("Exception: %s\n", e.what());
+    Printe("Exception: %s\n", e.what());
     Release();
     return -1;
   }

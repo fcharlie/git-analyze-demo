@@ -19,7 +19,7 @@ bool nullable_commit_create(git_repository *repo, const git_commit *commit,
   git_reference *ref = nullptr;
   if (git_reference_lookup(&ref, repo, refname.c_str()) == 0) {
     git_reference_free(ref);
-    BaseErrorMessagePrint("Branch %s is exists !\n", branch);
+    Printe("Branch %s is exists !\n", branch);
     return false;
   }
   git_oid newoid;
@@ -28,20 +28,19 @@ bool nullable_commit_create(git_repository *repo, const git_commit *commit,
   git_tree *tree = nullptr;
   if (git_commit_tree(&tree, commit) != 0) {
     auto err = giterr_last();
-    BaseErrorMessagePrint("git_commit_tree() %s\n", err->message);
+    Printe("git_commit_tree() %s\n", err->message);
     return false;
   }
 
   if (git_commit_create(&newoid, repo, refname.c_str(), author, committer, NULL,
                         message, tree, 0, nullptr) != 0) {
     auto err = giterr_last();
-    BaseErrorMessagePrint("git_commit_create() %s\n", err->message);
+    Printe("git_commit_create() %s\n", err->message);
     git_tree_free(tree);
     return false;
   }
-  BaseConsoleWrite("[%s %s]\ncommitter: %s\nemail: %s\nmessage: %s\n\n", branch,
-                   git_oid_tostr_s(&newoid), committer->name, committer->email,
-                   message);
+  Print("[%s %s]\ncommitter: %s\nemail: %s\nmessage: %s\n\n", branch,
+        git_oid_tostr_s(&newoid), committer->name, committer->email, message);
   git_tree_free(tree);
   return true;
 }
@@ -57,20 +56,20 @@ bool discover_commit(const char *gitdir, const char *branch,
   static LibgitHelper hepler;
   git_repository *repo = nullptr;
   if (git_repository_open(&repo, gitdir) != 0) {
-    BaseErrorMessagePrint("invaild git repository: %s\n", gitdir);
+    Printe("invaild git repository: %s\n", gitdir);
     return false;
   }
   git_reference *ref = nullptr;
   if (git_repository_head(&ref, repo) != 0) {
     auto err = giterr_last();
-    BaseErrorMessagePrint("cannot open head %s\n", err->message);
+    Printe("cannot open head %s\n", err->message);
     git_repository_free(repo);
     return false;
   }
   git_reference *xref{nullptr};
   if (git_reference_resolve(&xref, ref) != 0) {
     auto err = giterr_last();
-    BaseErrorMessagePrint("Resolve reference: %s\n", err->message);
+    Printe("Resolve reference: %s\n", err->message);
     git_reference_free(ref);
     git_repository_free(repo);
     return false;
@@ -78,7 +77,7 @@ bool discover_commit(const char *gitdir, const char *branch,
   auto oid = git_reference_target(xref);
   if (!oid) {
     auto err = giterr_last();
-    BaseErrorMessagePrint("Lookup commit: %s\n", err->message);
+    Printe("Lookup commit: %s\n", err->message);
     git_reference_free(xref);
     git_reference_free(ref);
     git_repository_free(repo);
@@ -87,7 +86,7 @@ bool discover_commit(const char *gitdir, const char *branch,
   git_commit *commit = nullptr;
   if (git_commit_lookup(&commit, repo, oid) != 0) {
     auto err = giterr_last();
-    BaseErrorMessagePrint("Lookup commit tree: %s\n", err->message);
+    Printe("Lookup commit tree: %s\n", err->message);
     git_reference_free(xref);
     git_reference_free(ref);
     git_repository_free(repo);
@@ -118,7 +117,7 @@ char *CopyToUtf8(const wchar_t *wstr) {
 }
 int wmain(int argc, wchar_t **argv) {
   if (argc < 3) {
-    BaseErrorMessagePrint("usage %s branch message\n", argv[0]);
+    Printe("usage %s branch message\n", argv[0]);
     return 1;
   }
   std::vector<char *> Argv_;
@@ -132,7 +131,7 @@ int wmain(int argc, wchar_t **argv) {
       Argv_.push_back(CopyToUtf8(argv[i]));
     }
   } catch (const std::exception &e) {
-    BaseErrorMessagePrint("Exception: %s\n", e.what());
+    Printe("Exception: %s\n", e.what());
     Release();
     return -1;
   }
@@ -144,7 +143,7 @@ int wmain(int argc, wchar_t **argv) {
 
 int main(int argc, char **argv) {
   if (argc < 3) {
-    BaseErrorMessagePrint("usage %s branch message\n", argv[0]);
+    Printe("usage %s branch message\n", argv[0]);
     return 1;
   }
   if (!discover_commit(".", argv[1], argv[2]))

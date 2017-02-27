@@ -5,10 +5,10 @@
 #include <unistd.h>
 
 #ifdef __GNUC__
-int BaseErrorMessagePrint(const char *format, ...)
+int Printe(const char *format, ...)
     __attribute__((format(printf, 1, 2)));
 #else
-int BaseErrorMessagePrint(const char *format, ...);
+int Printe(const char *format, ...);
 #endif
 
 int BaseErrorWriteTTY(const void *buf, size_t len) {
@@ -18,7 +18,7 @@ int BaseErrorWriteTTY(const void *buf, size_t len) {
   return l;
 }
 
-int BaseErrorMessagePrint(const char *format, ...) {
+int Printe(const char *format, ...) {
   char buf[8192];
   va_list ap;
   va_start(ap, format);
@@ -32,9 +32,9 @@ int BaseErrorMessagePrint(const char *format, ...) {
 
 int main(int argc, char **argv) {
   if (argc < 2) {
-    BaseErrorMessagePrint("Argv: %s Less 2\n", argv[0]);
+    Printe("Argv: %s Less 2\n", argv[0]);
   } else {
-    BaseErrorMessagePrint("%s\n", argv[1]);
+    Printe("%s\n", argv[1]);
   }
   return 0;
 }

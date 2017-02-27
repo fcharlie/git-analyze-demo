@@ -191,8 +191,7 @@ bool GitGCInvoke(const std::string &dir, bool forced) {
   std::wstring gitbin;
   if (!GitExecutePathSearchAuto(L"git.exe", gitbin)) {
     if (!SearchGitForWindowsInstall(gitbin)) {
-      BaseErrorMessagePrint(
-          "Not Found git in your PATH environemnt variable and Registry !");
+      Printe("Not Found git in your PATH environemnt variable and Registry !");
       return false;
     }
   }
@@ -251,7 +250,7 @@ bool GitGCRealExecute(const char *dir, bool forced) {
     }
     Argv_.push_back(nullptr);
     execvp("git", Argv_.data());
-    BaseErrorMessagePrint("%s\n", strerror(errno));
+    Printe("%s\n", strerror(errno));
     exit(-1);
   } break;
   case -1:
@@ -287,7 +286,7 @@ bool GitExecutePathSearchAuto(const char *cmd, std::string &gitbin) {
 bool GitGCInvoke(const std::string &dir, bool forced) {
   std::string gitbin;
   if (!GitExecutePathSearchAuto("git", gitbin)) {
-    BaseErrorMessagePrint("git not found\n");
+    Printe("git not found\n");
     return false;
   }
   return GitGCRealExecute(dir.c_str(), forced);

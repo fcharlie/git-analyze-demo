@@ -5,16 +5,16 @@
 * Date: 2016.08
 * Copyright (C) 2017. OSChina.NET. All Rights Reserved.
 */
-#include <Pal.hpp>
-#include <git2.h>
 #include "analyze.hpp"
 #include "analyze_internal.h"
+#include <Pal.hpp>
+#include <git2.h>
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
 
 #ifdef _WIN32
-#include <thread>
 #include <Windows.h>
+#include <thread>
 
 // VOID WINAPI OnTimerAPCProc(_In_opt_ LPVOID lpArgToCompletionRoutine,
 //                            _In_ DWORD dwTimerLowValue,
@@ -27,7 +27,7 @@
 DWORD WINAPI AnalyzeTaskTimer(LPVOID lParam) {
   int t_ = *(reinterpret_cast<int *>(lParam));
   Sleep(t_ * 1000);
-  BaseErrorMessagePrint("git-analyze process timeout, exit !\n");
+  Printe("git-analyze process timeout, exit !\n");
   exit(-1);
   /// always noreturn
   return 0;
@@ -46,8 +46,7 @@ bool InitializeTaskTimer(int t_) {
   DWORD tid;
   HANDLE hThread = CreateThread(NULL, 0, AnalyzeTaskTimer, &t_, 0, &tid);
   if (hThread == NULL) {
-    BaseErrorMessagePrint("CreateThread() failed, LastErrorCode : %d",
-                          GetLastError());
+    Printe("CreateThread() failed, LastErrorCode : %d", GetLastError());
     return false;
   }
   CloseHandle(hThread);
@@ -55,12 +54,12 @@ bool InitializeTaskTimer(int t_) {
 }
 
 #else
-#include <unistd.h>
 #include <sys/signal.h>
+#include <unistd.h>
 
 void TimerSignalEvent(int sig) {
   (void)sig;
-  BaseErrorMessagePrint("git-analyze process timeout, exit !\n");
+  Printe("git-analyze process timeout, exit !\n");
   exit(-1);
 }
 
@@ -77,8 +76,8 @@ std::int64_t g_warnsize = 50 * MBSIZE;
 
 void print_commit_message(const git_commit *commit_) {
   auto sig = git_commit_author(commit_);
-  BaseConsoleWrite("author: %s <%s>\nmessage: %s\n\n", sig->name, sig->email,
-                   git_commit_message(commit_));
+  Print("author: %s <%s>\nmessage: %s\n\n", sig->name, sig->email,
+        git_commit_message(commit_));
 }
 
 int git_treewalk_resolveblobs(const char *root, const git_tree_entry *entry,
@@ -92,9 +91,8 @@ int git_treewalk_resolveblobs(const char *root, const git_tree_entry *entry,
       auto size = git_blob_rawsize(blob);
       if (size >= g_warnsize) {
         auto cstr = git_oid_tostr_s(git_commit_id(repo_->commit()));
-        BaseWarningMessagePrint("commit: %s file: %s%s (%4.2f MB)\n", cstr,
-                                root, git_tree_entry_name(entry),
-                                ((double)size / MBSIZE));
+        Printw("commit: %s file: %s%s (%4.2f MB)\n", cstr, root,
+               git_tree_entry_name(entry), ((double)size / MBSIZE));
         if (g_showcommitter) {
           print_commit_message(repo_->commit());
         }
@@ -121,8 +119,8 @@ int git_diff_callback(const git_diff_delta *delta, float progress,
     git_off_t size = git_blob_rawsize(blob);
     if (size > g_warnsize) {
       auto cstr = git_oid_tostr_s(git_commit_id(repo_->commit()));
-      BaseWarningMessagePrint("commit: %s file: %s (%4.2f MB) \n", cstr,
-                              delta->new_file.path, ((double)size / MBSIZE));
+      Printw("commit: %s file: %s (%4.2f MB) \n", cstr, delta->new_file.path,
+             ((double)size / MBSIZE));
       if (g_showcommitter) {
         print_commit_message(repo_->commit());
       }
@@ -139,8 +137,7 @@ bool RaiiRepository::refcommit(const char *refname) {
     //// second look branch to ref
     if (git_branch_lookup(&ref_, repo_, refname, GIT_BRANCH_LOCAL) != 0) {
       auto err = giterr_last();
-      BaseErrorMessagePrint("Lookup reference and branch failed: %s\n",
-                            err->message);
+      Printe("Lookup reference and branch failed: %s\n", err->message);
       return false;
     }
   }
@@ -148,7 +145,7 @@ bool RaiiRepository::refcommit(const char *refname) {
   if (git_reference_resolve(&dref_, ref_) != 0) {
     git_reference_free(ref_);
     auto err = giterr_last();
-    BaseErrorMessagePrint("Resolve reference failed: %s\n", err->message);
+    Printe("Resolve reference failed: %s\n", err->message);
     return false;
   }
   //// we check branch, but branch ref type should GIT_REF_OID
@@ -157,7 +154,7 @@ bool RaiiRepository::refcommit(const char *refname) {
     git_reference_free(ref_);
     git_reference_free(dref_);
     auto err = giterr_last();
-    BaseErrorMessagePrint("Lookup commit failed: %s\n", err->message);
+    Printe("Lookup commit failed: %s\n", err->message);
     return false;
   }
   git_reference_free(ref_);
@@ -215,7 +212,7 @@ bool RaiiRepository::foreachref() {
   git_branch_iterator *iter_{nullptr};
   if (git_branch_iterator_new(&iter_, repo_, GIT_BRANCH_LOCAL) != 0) {
     auto err = giterr_last();
-    BaseErrorMessagePrint("git_branch_iterator_new: %s\n", err->message);
+    Printe("git_branch_iterator_new: %s\n", err->message);
     return false;
   }
   git_reference *ref_{nullptr};
@@ -226,10 +223,10 @@ bool RaiiRepository::foreachref() {
     if (git_commit_lookup(&cur_commit_, repo_, oid) != 0) {
       git_reference_free(ref_);
       auto err = giterr_last();
-      BaseErrorMessagePrint("Lookup commit failed: %s\n", err->message);
+      Printe("Lookup commit failed: %s\n", err->message);
       return false;
     }
-    BaseConsoleWrite("git-analyze> reference: %s\n", git_reference_name(ref_));
+    Print("git-analyze> reference: %s\n", git_reference_name(ref_));
     while (walk()) {
       /////
     }
@@ -245,7 +242,7 @@ bool RaiiRepository::foreachref() {
 bool RaiiRepository::load(const char *dir) {
   if (git_repository_open(&repo_, dir) != 0) {
     auto err = giterr_last();
-    BaseErrorMessagePrint("git-analyze error: %s\n", err->message);
+    Printe("git-analyze error: %s\n", err->message);
     return false;
   }
   return true;
@@ -260,14 +257,13 @@ public:
 bool ProcessAnalyzeTask(const AnalyzeArgs &analyzeArgs) {
   if (analyzeArgs.timeout != -1) {
     if (!InitializeTaskTimer(analyzeArgs.timeout)) {
-      BaseErrorMessagePrint("create timer failed !\n");
+      Printe("create timer failed !\n");
     }
   }
   LibgitHelper helper;
   RaiiRepository repository;
-  BaseConsoleWrite("git-analyze limit: %4.2f MB warning: %4.2f MB\n",
-                   ((double)g_limitsize / MBSIZE),
-                   ((double)g_warnsize / MBSIZE));
+  Print("git-analyze limit: %4.2f MB warning: %4.2f MB\n",
+        ((double)g_limitsize / MBSIZE), ((double)g_warnsize / MBSIZE));
   if (!repository.load(analyzeArgs.repository.c_str())) {
     ////
     return false;
@@ -277,8 +273,7 @@ bool ProcessAnalyzeTask(const AnalyzeArgs &analyzeArgs) {
   } else {
     if (!repository.refcommit(analyzeArgs.ref.c_str()))
       return false;
-    BaseConsoleWrite("git-analyze> ref (branch): %s\n",
-                     analyzeArgs.ref.c_str());
+    Print("git-analyze> ref (branch): %s\n", analyzeArgs.ref.c_str());
     while (repository.walk()) {
       ///
     }

@@ -9,8 +9,8 @@
 #include <cstdlib>
 #include <cstring>
 #include <vector>
-#include <Pal.hpp>
 #include <Argv.hpp>
+#include <Pal.hpp>
 #include "analyze.hpp"
 
 /*
@@ -113,8 +113,8 @@ int ProcessArgv(int Argc, char **Argv, AnalyzeArgs &analyzeArgs) {
 
 #if defined(_WIN32) && !defined(__CYGWIN__)
 //// When use Visual C++, Support convert encoding to UTF8
-#include <stdexcept>
 #include <Windows.h>
+#include <stdexcept>
 //// To convert Utf8
 char *CopyToUtf8(const wchar_t *wstr) {
   auto l = WideCharToMultiByte(CP_UTF8, 0, wstr, -1, NULL, 0, NULL, NULL);
@@ -136,16 +136,16 @@ int wmain(int argc, wchar_t **argv) {
       Argv_.push_back(CopyToUtf8(argv[i]));
     }
   } catch (const std::exception &e) {
-    BaseErrorMessagePrint("Exception: %s\n", e.what());
+    Printe("Exception: %s\n", e.what());
     Release();
     return -1;
   }
   AnalyzeArgs analyzeArgs;
   ProcessArgv((int)Argv_.size(), Argv_.data(), analyzeArgs);
   if (ProcessAnalyzeTask(analyzeArgs)) {
-    BaseConsoleWrite("git-analyze: Operation completed !\n");
+    Print("git-analyze: Operation completed !\n");
   } else {
-    BaseErrorMessagePrint("git-analyze: Operation aborted !\n");
+    Printe("git-analyze: Operation aborted !\n");
   }
   Release();
   return 0;
@@ -156,9 +156,9 @@ int main(int argc, char **argv) {
   AnalyzeArgs analyzeArgs;
   ProcessArgv(argc, argv, analyzeArgs);
   if (ProcessAnalyzeTask(analyzeArgs)) {
-    BaseConsoleWrite("git-analyze: Operation completed !\n");
+    Print("git-analyze: Operation completed !\n");
   } else {
-    BaseErrorMessagePrint("git-analyze: Operation aborted !\n");
+    Printe("git-analyze: Operation aborted !\n");
   }
   return 0;
 }

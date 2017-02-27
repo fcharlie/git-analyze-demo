@@ -11,24 +11,23 @@
 #include <cstddef>
 #include <string>
 
+//// Printe Print error
+/// Printw Print warning
+/// Print Print support Unicode fix
+
 #ifdef __GNUC__
-// int BaseBufferPrint(char *buf, size_t maxlen, const char *format, ...)
-//     __attribute__((format(printf, 3, 4)));
-int BaseErrorMessagePrint(const char *format, ...)
-    __attribute__((format(printf, 1, 2)));
-int BaseWarningMessagePrint(const char *format, ...)
-    __attribute__((format(printf, 1, 2)));
-int BaseConsoleWrite(const char *format, ...)
-    __attribute__((format(printf, 1, 2)));
+int Printe(const char *format, ...) __attribute__((format(printf, 1, 2)));
+int Printw(const char *format, ...) __attribute__((format(printf, 1, 2)));
+int Print(const char *format, ...) __attribute__((format(printf, 1, 2)));
 #elif defined(_MSC_VER) && _MSC_VER > 1600
 #include <Sal.h>
-int BaseErrorMessagePrint(_Printf_format_string_ const char *format, ...);
-int BaseWarningMessagePrint(_Printf_format_string_ const char *format, ...);
-int BaseConsoleWrite(_Printf_format_string_ const char *format, ...);
+int Printe(_Printf_format_string_ const char *format, ...);
+int Printw(_Printf_format_string_ const char *format, ...);
+int Print(_Printf_format_string_ const char *format, ...);
 #else
-int BaseErrorMessagePrint(const char *format, ...);
-int BaseWarningMessagePrint(const char *format, ...);
-int BaseConsoleWrite(const char *format, ...);
+int Printe(const char *format, ...);
+int Printw(const char *format, ...);
+int Print(const char *format, ...);
 #endif
 
 //// WIN32 use wchar_t ,buf

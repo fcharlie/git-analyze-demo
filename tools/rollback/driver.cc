@@ -107,7 +107,7 @@ int wmain(int argc, wchar_t **argv) {
       Argv_.push_back(CopyToUtf8(argv[i]));
     }
   } catch (const std::exception &e) {
-    BaseConsoleWrite("Exception: %s\n", e.what());
+    Print("Exception: %s\n", e.what());
     Release();
     return -1;
   }
@@ -116,9 +116,9 @@ int wmain(int argc, wchar_t **argv) {
   ProcessArgs(Argv_.size(), Argv_.data(), taskArgs);
   bool result = false;
   if (taskArgs.hexid.empty() && taskArgs.rev <= 0) {
-    BaseConsoleWrite("usage: \ngit-rollback --git-dir=/path/to/repo "
-                     "--backrev=7 \ngit-rollback --git-dir=/path/to/repo "
-                     "--backid=commitid\n");
+    Print("usage: \ngit-rollback --git-dir=/path/to/repo "
+          "--backrev=7 \ngit-rollback --git-dir=/path/to/repo "
+          "--backid=commitid\n");
     return 1;
   }
   if (taskArgs.hexid.size() > 0) {
@@ -131,9 +131,9 @@ int wmain(int argc, wchar_t **argv) {
                                     taskArgs.forced);
   }
   if (result) {
-    BaseConsoleWrite("git-rollback: Operation completed !\n");
+    Print("git-rollback: Operation completed !\n");
   } else {
-    BaseErrorMessagePrint("git-rollback: Operation aborted !\n");
+    Printe("git-rollback: Operation aborted !\n");
   }
   Release();
   return 0;
@@ -145,9 +145,9 @@ int main(int argc, char **argv) {
   ProcessArgs(argc, argv, taskArgs);
   bool result = false;
   if (taskArgs.hexid.empty() && taskArgs.rev <= 0) {
-    BaseConsoleWrite("usage: \ngit-rollback --git-dir=/path/to/repo "
-                     "--backrev=7\ngit-rollback --git-dir=/path/to/repo "
-                     "--backid=commitid\n");
+    Print("usage: \ngit-rollback --git-dir=/path/to/repo "
+          "--backrev=7\ngit-rollback --git-dir=/path/to/repo "
+          "--backid=commitid\n");
     return 1;
   }
   if (taskArgs.hexid.size() > 0) {
@@ -160,9 +160,9 @@ int main(int argc, char **argv) {
                                     taskArgs.forced);
   }
   if (result) {
-    BaseConsoleWrite("git-rollback: Operation completed !\n");
+    Print("git-rollback: Operation completed !\n");
   } else {
-    BaseErrorMessagePrint("git-rollback: Operation aborted !\n");
+    Printe("git-rollback: Operation aborted !\n");
   }
   //
   return 0;
