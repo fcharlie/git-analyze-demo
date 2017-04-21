@@ -3,12 +3,14 @@
 if(WIN32)
 add_executable(git-complete
   complete.cc
+  commit.cc
   complete.manifest
   complete.rc
 )
 else()
 add_executable(git-complete
   complete.cc
+  commit.cc
   #environment.cc
 )
 endif()
