@@ -25,18 +25,19 @@ private:
   std::string message{"no commit message"};
   char name[256];
   char email[256];
+  bool createbranch{false};
   git_repository *repo{nullptr};
-  git_commit *current{nullptr};
+  git_commit *parent{nullptr};
   bool InitializeRoot();
   bool Userinfo();
-  bool CommitBuilder(git_time when, git_commit *parent);
-  bool RoundYear(int year, git_commit *parent);
+  bool CommitBuilder(git_time when);
+  bool RoundYear(int year);
 
 public:
   Demolisher() { git_libgit2_init(); }
   ~Demolisher() {
-    if (current) {
-      git_commit_free(current);
+    if (parent) {
+      git_commit_free(parent);
     }
     if (repo) {
       git_repository_free(repo);

@@ -65,7 +65,7 @@ bool Demolisher::InitializeRoot() {
     git_reference_free(ref);
     return false;
   }
-  if (git_commit_lookup(&current, repo, oid) != 0) {
+  if (git_commit_lookup(&parent, repo, oid) != 0) {
     auto err = giterr_last();
     Printe("Lookup commit tree: %s\n", err->message);
     git_reference_free(xref);
@@ -104,7 +104,7 @@ bool Demolisher::Initialize(const char *dir, const char *ref,
   return true;
 }
 
-bool Demolisher::CommitBuilder(git_time when, git_commit *parent) {
+bool Demolisher::CommitBuilder(git_time when) {
   git_signature sig;
   sig.name = name;
   sig.email = email;
@@ -116,7 +116,7 @@ bool Demolisher::CommitBuilder(git_time when, git_commit *parent) {
     Printe("git_commit_tree() %s\n", err->message);
     return false;
   }
-  if (parent) {
+  if (!createbranch) {
     const git_commit *ps[] = {parent};
     if (git_commit_create(&newoid, repo, refs.c_str(), &sig, &sig, NULL,
                           message.data(), tree, 1, ps) != 0) {
@@ -127,25 +127,31 @@ bool Demolisher::CommitBuilder(git_time when, git_commit *parent) {
     }
   } else {
     if (git_commit_create(&newoid, repo, refs.c_str(), &sig, &sig, NULL,
-                          message.data(), tree, 1, nullptr) != 0) {
+                          message.data(), tree, 0, nullptr) != 0) {
       auto err = giterr_last();
       Printe("git_commit_create() %s\n", err->message);
       git_tree_free(tree);
       return false;
     }
   }
-
+  createbranch = false;
   git_tree_free(tree);
-  if (current)
-    git_commit_free(current);
-  current = nullptr;
-  if (git_commit_lookup(&current, repo, &newoid)) {
+  if (parent)
+    git_commit_free(parent);
+  parent = nullptr;
+  if (git_commit_lookup(&parent, repo, &newoid)) {
     return false;
   }
   return true;
 }
 
-bool Demolisher::RoundYear(int year, git_commit *parent) {
+static unsigned int Random() {
+  static unsigned int g_seed = 0;
+  g_seed = (214013 * g_seed + 2531011);
+  return (g_seed >> 16) & 0x7FFF;
+}
+
+bool Demolisher::RoundYear(int year) {
   auto t = time(nullptr);
   auto p = localtime(&t);
   unsigned my = year <= 1900 ? p->tm_year : year - 1900;
@@ -156,25 +162,26 @@ bool Demolisher::RoundYear(int year, git_commit *parent) {
   for (unsigned i = 1; i <= days; i++) {
     mt.tm_mday = i;
     mt.tm_mon = 0;
-    mt.tm_hour = p->tm_hour;
-    mt.tm_min = p->tm_min;
-    mt.tm_sec = p->tm_sec;
-    mt.tm_year = my;
-    gt.time = mktime(&mt);
-    CommitBuilder(gt, parent);
-    parent = current;
+    auto N = Random() % 5 + 1;
+    for (unsigned k = 0; k < N; k++) {
+      mt.tm_hour = p->tm_hour;
+      mt.tm_min = p->tm_min + k;
+      mt.tm_sec = p->tm_sec;
+      mt.tm_year = my;
+      gt.time = mktime(&mt);
+      CommitBuilder(gt);
+    }
   }
   return true;
 }
 
 bool Demolisher::IntervalFill(unsigned sy, unsigned ey, bool newref) {
   Print("Year: %d~%d\n", sy, ey);
-  git_commit *parent = nullptr;
-  if (!newref)
-    parent = current;
+
+  if (newref)
+    createbranch = true;
   for (auto i = sy; i <= ey; i++) {
-    RoundYear(i, parent);
-    parent = current;
+    RoundYear(i);
   }
   return true;
 }
