@@ -169,7 +169,9 @@ bool Demolisher::RoundYear(int year) {
       mt.tm_sec = p->tm_sec;
       mt.tm_year = my;
       gt.time = mktime(&mt);
-      CommitBuilder(gt);
+      if (!CommitBuilder(gt)) {
+        return false;
+      }
     }
   }
   return true;
@@ -181,7 +183,10 @@ bool Demolisher::IntervalFill(unsigned sy, unsigned ey, bool newref) {
   if (newref)
     createbranch = true;
   for (auto i = sy; i <= ey; i++) {
-    RoundYear(i);
+    if (!RoundYear(i)) {
+      return false;
+    }
+    printf("Fill %d done\n", i);
   }
   return true;
 }
