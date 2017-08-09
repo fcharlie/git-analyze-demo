@@ -91,7 +91,7 @@ int git_treewalk_resolveblobs(const char *root, const git_tree_entry *entry,
       auto size = git_blob_rawsize(blob);
       if (size >= g_warnsize) {
         auto cstr = git_oid_tostr_s(git_commit_id(repo_->commit()));
-        Printw("commit: %s file: %s%s (%4.2f MB)\n", cstr, root,
+        Printw("\b\rcommit: %s file: %s%s (%4.2f MB)\n", cstr, root,
                git_tree_entry_name(entry), ((double)size / MBSIZE));
         if (g_showcommitter) {
           print_commit_message(repo_->commit());
@@ -119,8 +119,8 @@ int git_diff_callback(const git_diff_delta *delta, float progress,
     git_off_t size = git_blob_rawsize(blob);
     if (size > g_warnsize) {
       auto cstr = git_oid_tostr_s(git_commit_id(repo_->commit()));
-      Printw("commit: %s file: %s (%4.2f MB) \n", cstr, delta->new_file.path,
-             ((double)size / MBSIZE));
+      Printw("\b\rcommit: %s file: %s (%4.2f MB) \n", cstr,
+             delta->new_file.path, ((double)size / MBSIZE));
       if (g_showcommitter) {
         print_commit_message(repo_->commit());
       }
@@ -274,8 +274,12 @@ bool ProcessAnalyzeTask(const AnalyzeArgs &analyzeArgs) {
     if (!repository.refcommit(analyzeArgs.ref.c_str()))
       return false;
     Print("git-analyze> ref (branch): %s\n", analyzeArgs.ref.c_str());
+    int i = 0;
     while (repository.walk()) {
-      ///
+      i++;
+      putc('\b', stdout);
+      printf("\rcompleted: %d", i);
+      fflush(stdout);
     }
   }
   ////
