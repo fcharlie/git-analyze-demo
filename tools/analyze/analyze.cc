@@ -84,7 +84,7 @@ int git_treewalk_resolveblobs(const char *root, const git_tree_entry *entry,
                               void *payload) {
   //
   if (git_tree_entry_type(entry) == GIT_OBJ_BLOB) {
-    RaiiRepository *repo_ = reinterpret_cast<RaiiRepository *>(payload);
+    GitRepository *repo_ = reinterpret_cast<GitRepository *>(payload);
     git_object *obj{nullptr};
     if (git_tree_entry_to_object(&obj, repo_->repository(), entry) == 0) {
       auto blob = reinterpret_cast<git_blob *>(obj);
@@ -109,7 +109,7 @@ int git_diff_callback(const git_diff_delta *delta, float progress,
   (void)progress;
   if (delta->status == GIT_DELTA_ADDED || delta->status == GIT_DELTA_MODIFIED) {
     /* code */
-    RaiiRepository *repo_ = static_cast<RaiiRepository *>(payload);
+    GitRepository *repo_ = static_cast<GitRepository *>(payload);
     git_blob *blob = nullptr;
     if (git_blob_lookup(&blob, repo_->repository(), &(delta->new_file.id)) !=
         0) {
@@ -131,7 +131,7 @@ int git_diff_callback(const git_diff_delta *delta, float progress,
 }
 
 //// because git_reference_name_to_id require refs
-bool RaiiRepository::refcommit(const char *refname) {
+bool GitRepository::refcommit(const char *refname) {
   git_reference *ref_{nullptr};
   if (git_reference_lookup(&ref_, repo_, refname) != 0) {
     //// second look branch to ref
@@ -162,7 +162,7 @@ bool RaiiRepository::refcommit(const char *refname) {
   return true;
 }
 
-bool RaiiRepository::walk() {
+bool GitRepository::walk() {
   git_commit *parent = nullptr;
   git_tree *old_tree = nullptr;
   git_tree *new_tree = nullptr;
@@ -208,7 +208,7 @@ bool RaiiRepository::walk() {
   return true;
 }
 
-bool RaiiRepository::foreachref() {
+bool GitRepository::foreachref() {
   git_branch_iterator *iter_{nullptr};
   if (git_branch_iterator_new(&iter_, repo_, GIT_BRANCH_LOCAL) != 0) {
     auto err = giterr_last();
@@ -227,19 +227,25 @@ bool RaiiRepository::foreachref() {
       return false;
     }
     Print("git-analyze> reference: %s\n", git_reference_name(ref_));
+    int i = 0;
     while (walk()) {
-      /////
+      i++;
+      putc('\b', stdout);
+      printf("\rcompleted: %d", i);
+      fflush(stdout);
     }
+    printf("\rresolve %s %d commits done\n", git_reference_name(ref_), i + 1);
     if (cur_commit_) {
       git_commit_free(cur_commit_);
       cur_commit_ = nullptr;
     }
     git_reference_free(ref_);
   }
+  git_branch_iterator_free(iter_);
   return true;
 }
 
-bool RaiiRepository::load(const char *dir) {
+bool GitRepository::load(const char *dir) {
   if (git_repository_open(&repo_, dir) != 0) {
     auto err = giterr_last();
     Printe("git-analyze error: %s\n", err->message);
@@ -261,7 +267,7 @@ bool ProcessAnalyzeTask(const AnalyzeArgs &analyzeArgs) {
     }
   }
   LibgitHelper helper;
-  RaiiRepository repository;
+  GitRepository repository;
   Print("git-analyze limit: %4.2f MB warning: %4.2f MB\n",
         ((double)g_limitsize / MBSIZE), ((double)g_warnsize / MBSIZE));
   if (!repository.load(analyzeArgs.repository.c_str())) {
@@ -281,6 +287,9 @@ bool ProcessAnalyzeTask(const AnalyzeArgs &analyzeArgs) {
       printf("\rcompleted: %d", i);
       fflush(stdout);
     }
+    printf(
+        "\rresolve %d commits done (git rev-list --first-parent --count %s) \n",
+        i + 1, analyzeArgs.ref.c_str());
   }
   ////
   return true;

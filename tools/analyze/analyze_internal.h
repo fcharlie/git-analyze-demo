@@ -1,10 +1,10 @@
 // internal don't include this
 #include <git2.h>
 
-class RaiiRepository {
+class GitRepository {
 public:
-  RaiiRepository() : repo_(nullptr), cur_commit_(nullptr) {}
-  ~RaiiRepository() {
+  GitRepository() : repo_(nullptr), cur_commit_(nullptr) {}
+  ~GitRepository() {
     if (cur_commit_) {
       git_commit_free(cur_commit_);
     }
