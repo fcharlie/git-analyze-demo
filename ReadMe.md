@@ -10,7 +10,7 @@
 任意平台都需要克隆代码
 
 ```
-git clone --recursive https://git.oschina.net/oscstudio/git-analyze.git
+git clone --recursive https://gitee.com/oscstudio/git-analyze.git
 ```
 
 本项目依赖 CMake 构建, 在 Windows 上,你可以从 cmake.org 下载符合你系统版本的 [CMake](https://cmake.org/download/) ,
@@ -83,7 +83,7 @@ all 这个开关如果开启时,将扫描所有的引用.
 
 例图:
 
-![Analyze Example](./doc/images/analyze-001.png)
+![Analyze Example](./docs/images/analyze-001.png)
 
 ## Rollback 工具
 
