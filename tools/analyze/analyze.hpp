@@ -3,7 +3,7 @@
 * git-analyze
 * author: Force.Charlie
 * Date: 2016.08
-* Copyright (C) 2017. OSChina.NET. All Rights Reserved.
+* Copyright (C) 2017. GITEE.COM. All Rights Reserved.
 */
 #ifndef GIT_ANALYZE_HPP
 #define GIT_ANALYZE_HPP

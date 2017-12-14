@@ -1,4 +1,4 @@
-# Copyright (c) 2016 OSChina.NET All Rights Reserved.
+# Copyright (c) 2017 GITEE.COM All Rights Reserved.
 # CMake Required version
 cmake_minimum_required (VERSION 2.8)
 project(git-analyze)
@@ -54,7 +54,7 @@ endif()
 set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 
 set(CPACK_PACKAGE_NAME "git-analyze")
-set(CPACK_PACKAGE_VENDOR "OSChina.NET")
+set(CPACK_PACKAGE_VENDOR "GITEE.COM")
 set(CPACK_PACKAGE_DESCRIPTION "This is git analyze tools")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "GIT Analyze")
 set(CPACK_PACKAGE_INSTALL_DIRECTORY "git-analyze")
