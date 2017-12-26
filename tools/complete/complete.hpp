@@ -3,7 +3,7 @@
 * git-analyze
 * author: Force.Charlie
 * Date: 2017.04
-* Copyright (C) 2017. GITEE.COM. All Rights Reserved.
+* Copyright (C) 2018. GITEE.COM. All Rights Reserved.
 */
 #ifndef COMPLETE_HPP
 #define COMPLETE_HPP

@@ -3,7 +3,7 @@
 * git-analyze
 * author: Force.Charlie
 * Date: 2016.12
-* Copyright (C) 2017. GITEE.COM. All Rights Reserved.
+* Copyright (C) 2018. GITEE.COM. All Rights Reserved.
 */
 ////No historical records branch
 #include <stdio.h>

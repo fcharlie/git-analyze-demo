@@ -3,7 +3,7 @@
 * git-analyze(git-author)
 * author: Force.Charlie
 * Date: 2017.06
-* Copyright (C) 2017. GITEE.COM. All Rights Reserved.
+* Copyright (C) 2018. GITEE.COM. All Rights Reserved.
 */
 /// to create total year commits
 #include <ctime>
