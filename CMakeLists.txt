@@ -1,4 +1,4 @@
-# Copyright (c) 2017 GITEE.COM All Rights Reserved.
+# Copyright (c) 2018 GITEE.COM All Rights Reserved.
 # CMake Required version
 cmake_minimum_required (VERSION 2.8)
 project(git-analyze)
@@ -49,7 +49,6 @@ if (NOT PACKAGE_VERSION)
   set(PACKAGE_VERSION
     "${GITANALYZE_VERSION_MAJOR}.${GITANALYZE_VERSION_MINOR}.${GITANALYZE_VERSION_PATCH}")
 endif()
-#set(CMAKE_INSTALL_PREFIX "/usr/local")
 
 set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 
@@ -81,23 +80,23 @@ endif()
 include(CPack)
 
 if(WIN32)
-include(InstallRequiredSystemLibraries)
-endif()
-
-include(CheckCXXCompilerFlag)
-CHECK_CXX_COMPILER_FLAG("-std=c++14" COMPILER_SUPPORTS_CXX14)
-CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
-if(COMPILER_SUPPORTS_CXX14)
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
-elseif(COMPILER_SUPPORTS_CXX11)
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-else()
-        message(STATUS "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.")
+  include(InstallRequiredSystemLibraries)
 endif()
 
 if (MSVC)
     add_compile_options("-D_CRT_SECURE_NO_WARNINGS=1")
+  	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:c++17")
 else()
+  include(CheckCXXCompilerFlag)
+  CHECK_CXX_COMPILER_FLAG("-std=c++17" COMPILER_SUPPORTS_CXX17)
+  CHECK_CXX_COMPILER_FLAG("-std=c++14" COMPILER_SUPPORTS_CXX14)
+  if(COMPILER_SUPPORTS_CXX14)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
+  elseif(COMPILER_SUPPORTS_CXX11)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
+  else()
+    message(STATUS "The compiler ${CMAKE_CXX_COMPILER} has no C++14 support. Please use a different C++ compiler.")
+  endif()
     add_compile_options("-g")
     add_compile_options("-Wall")
     add_compile_options("-Wextra")
