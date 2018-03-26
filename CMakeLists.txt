@@ -115,6 +115,7 @@ include_directories(
 
 
 add_subdirectory(lib/Pal)
+OPTION(BUILD_CLAR "Enable build clar" OFF)
 add_subdirectory(vendor/libgit2)
 add_subdirectory(tools/analyze)
 add_subdirectory(tools/rollback)
