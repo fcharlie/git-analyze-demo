@@ -7,52 +7,37 @@
 
 ## 构建
 
-任意平台都需要克隆代码
+Windows 依赖：
++   Visual Studio 2017 15.7 or Later
++   CMake 3.10 or Later
+
+Unix 依赖：
++   GCC 7.3 or Later (Best GCC 8)
++   CMake 3.10 or Later
 
 ```
 git clone --recursive https://gitee.com/oscstudio/git-analyze.git
 ```
 
-本项目依赖 CMake 构建, 在 Windows 上,你可以从 cmake.org 下载符合你系统版本的 [CMake](https://cmake.org/download/) ,
-使用 CMake 生成 Visual Studio 项目文件,在使用 CMake 生成 Visual Studio 项目文件之前,需要在环境变量中识别 Visual C++ 编译器的环境变量,
-所以你可以新建一个类似于下面的批处理代码.
+Windows 构建：
 
-```bat
-@echo off
-::Find CMake Path
-call "%VS140COMNTOOLS%\VsDevCmd.bat"
-SET PATH=%PATH%;C:\Program Files\CMake\bin
-cmd /k
-```
-
-其中 CMake 的安装路径可能有所差异.一切以实际为准.
-
-启动命令行后,运行
-
-```bash
+```sh
 mkdir build
 cd build
-cmake -G "Visual Studio 15" ..
-```
-
- 然后执行
-
-```bash
-msbuild git-analyze.sln /p:Configuration=Release
+cmake -DCMAKE_BUILD_TYPE=Release ..
 cpack
 ```
+然后打开安装包即可。
 
-然后运行安装程序安装即可.
+Unix 构建：
 
-或者可以使用 Visual Studio 打开项目文件.
-
-对于 CMake 的集成, 你同样可以使用作者的 [Clangbuilder](https://github.com/fstudio/clangbuilder) ,只需要在 ClangbuilderUI 中选择相应的
-Visual Studio 版本,然后点击 **Startup Env** 按钮即可.
-
-在 Linux 或者 Windows Subsystem for Linux (Bash on Windows) 中,你需要先安装 GCC G++ CMake 等工具.
-
->mkdir build &&cd build &&cmake -DCMAKE_BUILD_TYPE=Release .. -DCMAKE_INSTALL_PREFIX=/opt/oscstudio &&make &&make install
-
+```sh
+mkdir build
+cd build
+cmake -DCMAKE_BUILD_TYPE=Release .. -DCMAKE_INSTALL_PREFIX=/opt/oscstudio
+make
+make install
+```
 ## Analyze 工具
 
 git-analyze 命令行参数
@@ -138,7 +123,7 @@ git config commit.filterbroken true # filter broken when find
 此工具创建 整整一年的提交
 
 ```shell
-git-complete dir branch 'commit message' 2016
+git-complete dir branch 'commit message' 2018
 ```
 
 ## 与 GIT 整合
