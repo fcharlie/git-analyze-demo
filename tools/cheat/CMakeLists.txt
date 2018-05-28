@@ -2,12 +2,16 @@
 
 if(WIN32)
 add_executable(git-cheat
+  ../cmd_main.cc
+  driver.cc
   cheat.cc
   git-cheat.rc
   git-cheat.manifest
 )
 else()
 add_executable(git-cheat
+  ../cmd_main.cc
+  driver.cc
   cheat.cc
   #environment.cc
 )

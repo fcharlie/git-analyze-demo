@@ -10,6 +10,7 @@ namespace ax {
 struct ErrorResult {
   std::string message;
   int errorcode{0};
+  operator bool() { return errorcode == 0; }
 };
 
 inline unsigned char _Digit_from_char(const char _Ch) noexcept // strengthened

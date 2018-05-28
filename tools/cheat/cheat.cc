@@ -1,153 +1,126 @@
-/*
-* cheat.cc
-* git-analyze
-* author: Force.Charlie
-* Date: 2016.12
-* Copyright (C) 2018. GITEE.COM. All Rights Reserved.
-*/
-////No historical records branch
-#include <stdio.h>
-#include <stdlib.h>
-#include <string>
-#include <vector>
-#include <Pal.hpp>
-#include <git2.h>
+/////
+#include <git.hpp>
+#include "cheat.hpp"
 
-bool nullable_commit_create(git_repository *repo, const git_commit *commit,
-                            const char *branch, const char *message) {
-  std::string refname = std::string("refs/heads/") + branch;
-  git_reference *ref = nullptr;
-  if (git_reference_lookup(&ref, repo, refname.c_str()) == 0) {
-    git_reference_free(ref);
-    Printe("Branch %s is exists !\n", branch);
-    return false;
-  }
+namespace git {
+
+bool duplicate_new_branch(git_repository *repo, git_commit *commit,
+                          git_tree *tree, const std::string &branch) {
   git_oid newoid;
-  auto author = git_commit_author(commit);
-  auto committer = git_commit_committer(commit);
-  git_tree *tree = nullptr;
-  if (git_commit_tree(&tree, commit) != 0) {
-    auto err = giterr_last();
-    Printe("git_commit_tree() %s\n", err->message);
+  std::string refname = std::string("refs/heads/") + branch;
+  auto au = git_commit_author(commit);
+  auto cu = git_commit_committer(commit);
+  auto msg = git_commit_message(commit);
+  if (git_commit_create(&newoid, repo, refname.c_str(), au, cu, NULL, msg, tree,
+                        0, nullptr) != 0) {
+    auto e = giterr_last();
+    fprintf(stderr, "create new branch %s failed: %s\n", branch.c_str(),
+            e->message);
     return false;
   }
-
-  if (git_commit_create(&newoid, repo, refname.c_str(), author, committer, NULL,
-                        message, tree, 0, nullptr) != 0) {
-    auto err = giterr_last();
-    Printe("git_commit_create() %s\n", err->message);
-    git_tree_free(tree);
-    return false;
-  }
-  Print("[%s %s]\ncommitter: %s\nemail: %s\nmessage: %s\n\n", branch,
-        git_oid_tostr_s(&newoid), committer->name, committer->email, message);
-  git_tree_free(tree);
+  fprintf(stderr, "[%s %s]\ncommitter: %s\nemail: %s\nmessage: %s\n\n",
+          branch.c_str(), git_oid_tostr_s(&newoid), cu->name, cu->email, msg);
   return true;
 }
 
-class LibgitHelper {
-public:
-  LibgitHelper() { git_libgit2_init(); }
-  ~LibgitHelper() { git_libgit2_shutdown(); }
-};
-
-bool discover_commit(const char *gitdir, const char *branch,
-                     const char *message) {
-  static LibgitHelper hepler;
-  git_repository *repo = nullptr;
-  if (git_repository_open(&repo, gitdir) != 0) {
-    Printe("invaild git repository: %s\n", gitdir);
-    return false;
-  }
-  git_reference *ref = nullptr;
-  if (git_repository_head(&ref, repo) != 0) {
-    auto err = giterr_last();
-    Printe("cannot open head %s\n", err->message);
-    git_repository_free(repo);
-    return false;
-  }
-  git_reference *xref{nullptr};
-  if (git_reference_resolve(&xref, ref) != 0) {
-    auto err = giterr_last();
-    Printe("Resolve reference: %s\n", err->message);
-    git_reference_free(ref);
-    git_repository_free(repo);
-    return false;
-  }
-  auto oid = git_reference_target(xref);
-  if (!oid) {
-    auto err = giterr_last();
-    Printe("Lookup commit: %s\n", err->message);
-    git_reference_free(xref);
-    git_reference_free(ref);
-    git_repository_free(repo);
-    return false;
-  }
-  git_commit *commit = nullptr;
-  if (git_commit_lookup(&commit, repo, oid) != 0) {
-    auto err = giterr_last();
-    Printe("Lookup commit tree: %s\n", err->message);
-    git_reference_free(xref);
-    git_reference_free(ref);
-    git_repository_free(repo);
-    return false;
-  }
-
-  auto result = nullable_commit_create(repo, commit, branch, message);
-  git_commit_free(commit);
-  git_reference_free(xref);
-  git_reference_free(ref);
-  git_repository_free(repo);
-  // git_reference_target(const git_reference *ref)
-  return result;
-}
-
-#if defined(_WIN32) && !defined(__CYGWIN__)
-//// When use Visual C++, Support convert encoding to UTF8
-#include <stdexcept>
-#include <Windows.h>
-//// To convert Utf8
-char *CopyToUtf8(const wchar_t *wstr) {
-  auto l = WideCharToMultiByte(CP_UTF8, 0, wstr, -1, NULL, 0, NULL, NULL);
-  char *buf = (char *)malloc(sizeof(char) * l + 1);
-  if (buf == nullptr)
-    throw std::runtime_error("Out of Memory ");
-  WideCharToMultiByte(CP_UTF8, 0, wstr, -1, buf, l, NULL, NULL);
-  return buf;
-}
-int wmain(int argc, wchar_t **argv) {
-  if (argc < 3) {
-    Printe("usage %s branch message\n", argv[0]);
-    return 1;
-  }
-  std::vector<char *> Argv_;
-  auto Release = [&]() {
-    for (auto &a : Argv_) {
-      free(a);
+bool hack_new_branch(git_repository *repo, git_tree *tree,
+                     const cheat_options &opt) {
+  git_signature *au;
+  git_signature *cu;
+  int result = 0;
+  if (!opt.author.empty() && !opt.authoremail.empty()) {
+    if (opt.date == 0) {
+      result =
+          git_signature_now(&au, opt.author.c_str(), opt.authoremail.c_str());
+    } else {
+      result =
+          git_signature_new(&au, opt.author.c_str(), opt.authoremail.c_str(),
+                            opt.date, opt.timeoff);
     }
-  };
-  try {
-    for (int i = 0; i < argc; i++) {
-      Argv_.push_back(CopyToUtf8(argv[i]));
+  } else {
+    result = git_signature_default(&au, repo);
+  }
+  if (result != 0) {
+    return false;
+  }
+  if (!opt.committer.empty() && !opt.commiteremail.empty()) {
+    if (opt.date == 0) {
+      result =
+          git_signature_now(&cu, opt.author.c_str(), opt.authoremail.c_str());
+    } else {
+      result =
+          git_signature_new(&cu, opt.author.c_str(), opt.authoremail.c_str(),
+                            opt.date, opt.timeoff);
     }
-  } catch (const std::exception &e) {
-    Printe("Exception: %s\n", e.what());
-    Release();
-    return -1;
+  } else {
+    result = git_signature_default(&cu, repo);
   }
-  auto result = discover_commit(".", Argv_[1], Argv_[2]);
-  Release();
-  return result ? 0 : 1;
+  if (result != 0) {
+    git_signature_free(au);
+    return false;
+  }
+  git_oid newoid;
+  std::string refname = std::string("refs/heads/") + opt.branch;
+  if (git_commit_create(&newoid, repo, refname.c_str(), au, cu, NULL,
+                        opt.message.c_str(), tree, 0, nullptr) != 0) {
+    auto e = giterr_last();
+    fprintf(stderr, "create new branch %s failed: %s\n", opt.branch.c_str(),
+            e->message);
+    git_signature_free(au);
+    git_signature_free(cu);
+    return false;
+  }
+  fprintf(stderr, "[%s %s]\ncommitter: %s\nemail: %s\nmessage: %s\n\n",
+          opt.branch.c_str(), git_oid_tostr_s(&newoid), cu->name, cu->email,
+          opt.message.c_str());
+  git_signature_free(au);
+  git_signature_free(cu);
+  return true;
 }
-#else
 
-int main(int argc, char **argv) {
-  if (argc < 3) {
-    Printe("usage %s branch message\n", argv[0]);
-    return 1;
+bool cheat_execute(cheat_options &opt) {
+  if (opt.branch.empty()) {
+    fprintf(stderr, "New branch name cannot be empty.\n");
+    return false;
   }
-  if (!discover_commit(".", argv[1], argv[2]))
-    return 1;
-  return 0;
+  // TODO initialize libgit2 thread safe.
+  Initializer initializer_;
+  if (opt.gitdir.empty()) {
+    opt.gitdir = ".";
+  }
+  if (opt.parent.empty()) {
+    opt.parent = "HEAD"; /// current head
+  }
+  Repository r;
+  if (!r.open(opt.gitdir)) {
+    auto e = giterr_last();
+    fprintf(stderr, "Error: %s\n", e->message);
+    return false;
+  }
+  if (r.branch_exists(opt.branch)) {
+    fprintf(stderr, "Branch '%s' exists, please create other name branch.\n",
+            opt.branch.c_str());
+    return false;
+  }
+  Commit c;
+  if (!c.open(r.pointer(), opt.parent)) {
+    auto e = giterr_last();
+    fprintf(stderr, "Error: %s\n", e->message);
+    return false;
+  }
+  Tree tree;
+  if (!tree.open(r.pointer(), c.pointer(), opt.treedir)) {
+    auto e = giterr_last();
+    fprintf(stderr, "Error: %s\n", e->message);
+    return false;
+  }
+  if (opt.kauthor) {
+    return duplicate_new_branch(r.pointer(), c.pointer(), tree.pointer(),
+                                opt.branch);
+  }
+  if (opt.message.empty()) {
+    opt.message = git_commit_message(c.pointer());
+  }
+  return hack_new_branch(r.pointer(), tree.pointer(), opt);
 }
-#endif
+} // namespace git
