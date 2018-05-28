@@ -27,7 +27,6 @@ SWITCH:
 
 example:
   git-cheat . tool "new tools branch" --tree tools #new branch tool base subtree tools.
-
 )";
   printf("%s\n", ua);
 }
@@ -38,6 +37,10 @@ ax::ErrorResult Fromwchars(std::string_view sv_, Integer &iv) {
 }
 
 bool cmd_options(int argc, char **argv, git::cheat_options &opt) {
+  if (argc == 1) {
+    usage();
+    return false;
+  }
   std::vector<ax::ParseArgv::option> opts = {
       {"git-dir", ax::ParseArgv::required_argument, 'g'},
       {"branch", ax::ParseArgv::required_argument, 'b'},
