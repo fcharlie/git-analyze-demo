@@ -8,7 +8,7 @@ void usage() {
   const char *ua = R"(OVERVIEW: Make a special git branch: git-cheat
 Usage: git-cheat [options] <input>
 OPTIONS:
-  -g,--git-dir          Git repository dir, when not set, open current repo. pos 0
+  -g,--git-dir          Git repository dir,default open pwd, pos 0
   -b,--branch           New branch name, pos 1
   -m,--message          New commit message, pos 2
   -p,--parent           The new branch tree is based on which commit/branch.
@@ -20,7 +20,7 @@ OPTIONS:
   -E,--committer-email  Committer email.
 
 SWITCH:
-  -k,--keep             Keep commit message.
+  -k,--keep             Keep commit signature.
   -v,--version          Print version information and exit.
   -V,--verbose          Print verbose message.
   -h,--help             Print help information and exit.
