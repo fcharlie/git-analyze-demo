@@ -99,15 +99,47 @@ if(ADDRESS_SANITIZER)
   set(CMAKE_EXE_LINKER_FLAGS "-fsanitize=address ")
 endif()
 
+set(ANALYZE_CLEANROOT "${CMAKE_BINARY_DIR}/cleanroot")
+include(ExternalProject)
+
+ExternalProject_Add(libgit2
+  URL https://github.com/libgit2/libgit2/archive/v0.27.4.tar.gz
+  URL_HASH SHA256=0b7ca31cb959ff1b22afa0da8621782afe61f99242bf716c403802ffbdb21d51
+  CMAKE_ARGS
+    -DCMAKE_PROJECT_libgit2_INCLUDE=${CMAKE_CURRENT_SOURCE_DIR}/cmake/libgit2.cmake
+    -DCMAKE_INSTALL_PREFIX:PATH=${ANALYZE_CLEANROOT}
+    -DCMAKE_BUILD_TYPE:STRING=Release
+    BUILD_COMMAND make
+    INSTALL_COMMAND make install
+)
+
 include_directories(
-    ./include
-    ./vendor/libgit2/include
+  ${ANALYZE_CLEANROOT}/include
+  ./include
+  ./vendor/libgit2/include
+)
+
+link_directories(
+  ${ANALYZE_CLEANROOT}/lib
 )
 
 
+if(WIN32)
+  install(FILES "${ANALYZE_CLEANROOT}/lib/git2.dll"
+    DESTINATION bin
+  )
+else()
+  install(FILES "${ANALYZE_CLEANROOT}/lib/libgit2.so"
+    DESTINATION lib
+  )
+endif()
+
+install(FILES "${ANALYZE_CLEANROOT}/share/libgit2/COPYING"
+  DESTINATION share/libgit2
+  RENAME copyright
+)
+
 add_subdirectory(lib/Pal)
-OPTION(BUILD_CLAR "Enable build clar" OFF)
-add_subdirectory(vendor/libgit2)
 add_subdirectory(tools/analyze)
 add_subdirectory(tools/rollback)
 add_subdirectory(tools/cheat)
