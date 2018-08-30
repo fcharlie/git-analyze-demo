@@ -1,2 +1,2 @@
 -Iinclude
--Ivendor/libgit2/include
+-Ibuild/cleanroot/include

@@ -117,9 +117,9 @@ public:
     git_reference_free(ref);
     return true;
   }
-  bool open(git_repository *repo, std::string &rbo) {
+  bool open(git_repository *repo, const std::string &rbo) {
     git_oid oid;
-    if (git_oid_fromstr(&oid, rbo.c_str())) {
+    if (git_oid_fromstr(&oid, rbo.c_str()) == 0) {
       if (open_oid(repo, &oid)) {
         return true;
       }
@@ -181,6 +181,10 @@ public:
 private:
   git_tree *tree{nullptr};
 };
+
+inline void PrintError() {
+  fprintf(stderr, "Last Error:%s\n", giterr_last()->message);
+}
 
 } // namespace git
 
