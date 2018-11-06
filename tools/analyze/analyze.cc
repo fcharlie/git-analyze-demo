@@ -1,10 +1,10 @@
 /*
-* analyze.cc
-* git-analyze
-* author: Force.Charlie
-* Date: 2016.08
-* Copyright (C) 2018. GITEE.COM. All Rights Reserved.
-*/
+ * analyze.cc
+ * git-analyze
+ * author: Force.Charlie
+ * Date: 2016.08
+ * Copyright (C) 2018. GITEE.COM. All Rights Reserved.
+ */
 #include "analyze.hpp"
 #include "analyze_internal.h"
 #include <Pal.hpp>
@@ -110,13 +110,7 @@ int git_diff_callback(const git_diff_delta *delta, float progress,
   if (delta->status == GIT_DELTA_ADDED || delta->status == GIT_DELTA_MODIFIED) {
     /* code */
     GitRepository *repo_ = static_cast<GitRepository *>(payload);
-    git_blob *blob = nullptr;
-    if (git_blob_lookup(&blob, repo_->repository(), &(delta->new_file.id)) !=
-        0) {
-      return 0;
-    }
-    //// by default off_t is 8byte
-    git_off_t size = git_blob_rawsize(blob);
+    const auto size = delta->new_file.size;
     if (size > g_warnsize) {
       auto cstr = git_oid_tostr_s(git_commit_id(repo_->commit()));
       Printw("\b\rcommit: %s file: %s (%4.2f MB) \n", cstr,
@@ -125,7 +119,6 @@ int git_diff_callback(const git_diff_delta *delta, float progress,
         print_commit_message(repo_->commit());
       }
     }
-    git_blob_free(blob);
   }
   return 0;
 }
