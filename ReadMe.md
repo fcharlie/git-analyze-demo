@@ -142,4 +142,4 @@ git 支持使用 git subcommand 的格式运行特定命令,比如 git add 对�
 ## Copyright
 
 Author: Force Charlie  
-Copyright &copy; 2018, GITEE.COM, All Rights Reserved.
+Copyright &copy; 2019, GITEE.COM, All Rights Reserved.

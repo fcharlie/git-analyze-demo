@@ -3,7 +3,7 @@
 * git-analyze
 * author: Force.Charlie
 * Date: 2016.12
-* Copyright (C) 2018. GITEE.COM. All Rights Reserved.
+* Copyright (C) 2019. GITEE.COM. All Rights Reserved.
 */
 /// pre-commit limit file
 #include <cstdio>

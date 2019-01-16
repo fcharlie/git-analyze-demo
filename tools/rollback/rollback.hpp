@@ -3,7 +3,7 @@
 * git-rollback
 * author: Force.Charlie
 * Date: 2016.08
-* Copyright (C) 2018. GITEE.COM. All Rights Reserved.
+* Copyright (C) 2019. GITEE.COM. All Rights Reserved.
 */
 #ifndef GIT_ANALYZE_ROLLBACK_HPP
 #define GIT_ANALYZE_ROLLBACK_HPP
