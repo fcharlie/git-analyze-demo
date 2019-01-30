@@ -103,8 +103,8 @@ set(ANALYZE_CLEANROOT "${CMAKE_BINARY_DIR}/cleanroot")
 include(ExternalProject)
 
 ExternalProject_Add(libgit2
-  URL https://github.com/libgit2/libgit2/archive/v0.27.7.tar.gz
-  URL_HASH SHA256=1a5435a483759b1cd96feb12b11abb5231b0688016db506ce5947178f6ba2531
+  URL https://github.com/libgit2/libgit2/archive/v0.27.8.tar.gz
+  URL_HASH SHA256=8313873d49dc01e8b880ec334d7430ae67496a89aaa8c6e7bbd3affb47a00c76
   CMAKE_ARGS
     -DCMAKE_PROJECT_libgit2_INCLUDE=${CMAKE_CURRENT_SOURCE_DIR}/cmake/libgit2.cmake
     -DCMAKE_INSTALL_PREFIX:PATH=${ANALYZE_CLEANROOT}
