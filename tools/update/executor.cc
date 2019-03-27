@@ -100,6 +100,15 @@ int git_diff_callback(const git_diff_delta *delta, float progress,
   return 0;
 }
 
+struct diff_t {
+  ~diff_t() {
+    if (p != nullptr) {
+      git_diff_free(p);
+    }
+  }
+  git_diff *p{nullptr};
+};
+
 bool Executor::Execute(std::string_view path, std::string_view oldrev,
                        std::string_view newrev) {
   if (!base->open(path)) {
@@ -126,13 +135,13 @@ bool Executor::Execute(std::string_view path, std::string_view oldrev,
   if (!newcommit.lookup(base->repo(), &noid)) {
     return false;
   }
-  git_diff *diff = nullptr;
+  diff_t diff;
   git_diff_options opts;
   git_diff_init_options(&opts, GIT_DIFF_OPTIONS_VERSION);
-  if (git_diff_tree_to_tree(&diff, base->repo(), oldcommit.tree, newcommit.tree,
-                            &opts) != 0) {
+  if (git_diff_tree_to_tree(&diff.p, base->repo(), oldcommit.tree,
+                            newcommit.tree, &opts) != 0) {
     return false;
   }
-  return git_diff_foreach(diff, git_diff_callback, nullptr, nullptr, nullptr,
+  return git_diff_foreach(diff.p, git_diff_callback, nullptr, nullptr, nullptr,
                           this) == 0;
 }
