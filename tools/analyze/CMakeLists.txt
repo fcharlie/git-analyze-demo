@@ -2,6 +2,7 @@
 
 if(WIN32)
 add_executable(git-analyze
+  ../cmd_main.cc
   driver.cc
   analyze.cc
   #environment.cc
@@ -10,6 +11,7 @@ add_executable(git-analyze
 )
 else()
 add_executable(git-analyze
+  ../cmd_main.cc
   driver.cc
   analyze.cc
   #environment.cc

@@ -1,10 +1,10 @@
 /*
-* driver.cc
-* git-analyze
-* author: Force.Charlie
-* Date: 2016.08
-* Copyright (C) 2019. GITEE.COM. All Rights Reserved.
-*/
+ * driver.cc
+ * git-analyze
+ * author: Force.Charlie
+ * Date: 2016.08
+ * Copyright (C) 2019. GITEE.COM. All Rights Reserved.
+ */
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -14,9 +14,9 @@
 #include "analyze.hpp"
 
 /*
-* git-analyze argument
-* git-analyze [<options>...] [--] [<pathspec>...] [<refs|branches>...]
-*/
+ * git-analyze argument
+ * git-analyze [<options>...] [--] [<pathspec>...] [<refs|branches>...]
+ */
 
 void AnalyzeUsage() {
   const char *kUsage =
@@ -111,48 +111,7 @@ int ProcessArgv(int Argc, char **Argv, AnalyzeArgs &analyzeArgs) {
   return 0;
 }
 
-#if defined(_WIN32) && !defined(__CYGWIN__)
-//// When use Visual C++, Support convert encoding to UTF8
-#include <Windows.h>
-#include <stdexcept>
-//// To convert Utf8
-char *CopyToUtf8(const wchar_t *wstr) {
-  auto l = WideCharToMultiByte(CP_UTF8, 0, wstr, -1, NULL, 0, NULL, NULL);
-  char *buf = (char *)malloc(sizeof(char) * l + 1);
-  if (buf == nullptr)
-    throw std::runtime_error("Out of Memory ");
-  WideCharToMultiByte(CP_UTF8, 0, wstr, -1, buf, l, NULL, NULL);
-  return buf;
-}
-int wmain(int argc, wchar_t **argv) {
-  std::vector<char *> Argv_;
-  auto Release = [&]() {
-    for (auto &a : Argv_) {
-      free(a);
-    }
-  };
-  try {
-    for (int i = 0; i < argc; i++) {
-      Argv_.push_back(CopyToUtf8(argv[i]));
-    }
-  } catch (const std::exception &e) {
-    Printe("Exception: %s\n", e.what());
-    Release();
-    return -1;
-  }
-  AnalyzeArgs analyzeArgs;
-  ProcessArgv((int)Argv_.size(), Argv_.data(), analyzeArgs);
-  if (ProcessAnalyzeTask(analyzeArgs)) {
-    Print("git-analyze: Operation completed !\n");
-  } else {
-    Printe("git-analyze: Operation aborted !\n");
-  }
-  Release();
-  return 0;
-}
-#else
-
-int main(int argc, char **argv) {
+int cmd_main(int argc, char **argv) {
   AnalyzeArgs analyzeArgs;
   ProcessArgv(argc, argv, analyzeArgs);
   if (ProcessAnalyzeTask(analyzeArgs)) {
@@ -162,4 +121,3 @@ int main(int argc, char **argv) {
   }
   return 0;
 }
-#endif
