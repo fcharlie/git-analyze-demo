@@ -2,6 +2,7 @@
 
 if(WIN32)
 add_executable(git-complete
+  ../cmd_main.cc
   complete.cc
   commit.cc
   complete.manifest
@@ -9,6 +10,7 @@ add_executable(git-complete
 )
 else()
 add_executable(git-complete
+  ../cmd_main.cc
   complete.cc
   commit.cc
   #environment.cc
