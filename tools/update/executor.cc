@@ -111,6 +111,10 @@ struct diff_t {
 
 bool Executor::Execute(std::string_view path, std::string_view oldrev,
                        std::string_view newrev) {
+  if (engine.Empty()) {
+    // Engine rules empty so return
+    return true;
+  }
   if (!base->open(path)) {
     return false;
   }

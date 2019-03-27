@@ -23,6 +23,7 @@ public:
   bool AddRegex(std::string_view rx);
   bool FullMatch(std::string_view path);
   bool PreInitialize(std::string_view jf, std::string_view branch);
+  bool Empty() const { return prefix.empty() && rules.empty(); }
 
 private:
   std::vector<std::string> prefix;
