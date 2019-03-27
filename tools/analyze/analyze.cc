@@ -9,6 +9,7 @@
 #include "analyze_internal.h"
 #include <Pal.hpp>
 #include <git2.h>
+#include <cstring>
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
 
@@ -184,7 +185,9 @@ bool GitRepository::walk() {
     git_commit_free(parent);
     return false;
   }
-  git_diff_options opts = GIT_DIFF_OPTIONS_INIT;
+  git_diff_options opts;
+  git_diff_init_options(&opts, GIT_DIFF_OPTIONS_VERSION); //
+
   git_diff *diff = nullptr; ////
   if (git_diff_tree_to_tree(&diff, repo_, old_tree, new_tree, &opts) != 0) {
     git_tree_free(old_tree);
