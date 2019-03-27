@@ -107,6 +107,10 @@ bool RulesEngine::PreInitialize(std::string_view jf, std::string_view branch) {
     auto it = obj.find("dirs");
     if (it != obj.end() && it->is_array()) {
       auto av = it.value();
+      if (av.size() > 256) {
+        fprintf(stderr, "readonly prefix size over 256: %zu\n", av.size());
+        return false;
+      }
       for (const auto a : av) {
         if (!a.is_string()) {
           continue;
@@ -118,6 +122,10 @@ bool RulesEngine::PreInitialize(std::string_view jf, std::string_view branch) {
     it = obj.find("regex");
     if (it != obj.end() && it->is_array()) {
       auto av = it.value();
+      if (av.size() > 64) {
+        fprintf(stderr, "readonly regex size over 64: %zu\n", av.size());
+        return false;
+      }
       for (const auto a : av) {
         if (!a.is_string()) {
           continue;
