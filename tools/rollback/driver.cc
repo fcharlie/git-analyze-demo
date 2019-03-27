@@ -1,10 +1,10 @@
 /*
-* driver.cc
-* git-rollback
-* author: Force.Charlie
-* Date: 2016.08
-* Copyright (C) 2019. GITEE.COM. All Rights Reserved.
-*/
+ * driver.cc
+ * git-rollback
+ * author: Force.Charlie
+ * Date: 2016.08
+ * Copyright (C) 2019. GITEE.COM. All Rights Reserved.
+ */
 #include <cstdlib>
 #include <cstdio>
 #include <cstring>
@@ -14,10 +14,10 @@
 #include "rollback.hpp"
 
 /*
-* git-rollback --git-dir=/path/to/repo --backrev=7
-* git-rollback --git-dir /path/to/repo --backrev 7
-* git-rollback --git-dir=/path/to/repo --backid=a59a9bb06a
-*/
+ * git-rollback --git-dir=/path/to/repo --backrev=7
+ * git-rollback --git-dir /path/to/repo --backrev 7
+ * git-rollback --git-dir=/path/to/repo --backid=a59a9bb06a
+ */
 
 void RollbackUsage() {
   const char *kUsage =
@@ -82,64 +82,7 @@ int ProcessArgs(int Argc, char **Argv, RollbackTaskArgs &taskArgs) {
   return 0;
 }
 
-#if defined(_WIN32) && !defined(__CYGWIN__)
-#include <stdexcept>
-#include <Windows.h>
-//// To convert Utf8
-char *CopyToUtf8(const wchar_t *wstr) {
-  auto l = WideCharToMultiByte(CP_UTF8, 0, wstr, -1, NULL, 0, NULL, NULL);
-  char *buf = (char *)malloc(sizeof(char) * l + 1);
-  if (buf == nullptr)
-    throw std::runtime_error("Out of Memory ");
-  WideCharToMultiByte(CP_UTF8, 0, wstr, -1, buf, l, NULL, NULL);
-  return buf;
-}
-
-int wmain(int argc, wchar_t **argv) {
-  std::vector<char *> Argv_;
-  auto Release = [&]() {
-    for (auto &a : Argv_) {
-      free(a);
-    }
-  };
-  try {
-    for (int i = 0; i < argc; i++) {
-      Argv_.push_back(CopyToUtf8(argv[i]));
-    }
-  } catch (const std::exception &e) {
-    Print("Exception: %s\n", e.what());
-    Release();
-    return -1;
-  }
-  RollbackTaskArgs taskArgs;
-  RollbackDriver driver;
-  ProcessArgs(Argv_.size(), Argv_.data(), taskArgs);
-  bool result = false;
-  if (taskArgs.hexid.empty() && taskArgs.rev <= 0) {
-    Print("usage: \ngit-rollback --git-dir=/path/to/repo "
-          "--backrev=7 \ngit-rollback --git-dir=/path/to/repo "
-          "--backid=commitid\n");
-    return 1;
-  }
-  if (taskArgs.hexid.size() > 0) {
-    result = driver.RollbackWithCommit(taskArgs.gitdir.c_str(),
-                                       taskArgs.refname.c_str(),
-                                       taskArgs.hexid.c_str(), taskArgs.forced);
-  } else {
-    result = driver.RollbackWithRev(taskArgs.gitdir.c_str(),
-                                    taskArgs.refname.c_str(), taskArgs.rev,
-                                    taskArgs.forced);
-  }
-  if (result) {
-    Print("git-rollback: Operation completed !\n");
-  } else {
-    Printe("git-rollback: Operation aborted !\n");
-  }
-  Release();
-  return 0;
-}
-#else
-int main(int argc, char **argv) {
+int cmd_main(int argc, char **argv) {
   RollbackTaskArgs taskArgs;
   RollbackDriver driver;
   ProcessArgs(argc, argv, taskArgs);
@@ -159,13 +102,11 @@ int main(int argc, char **argv) {
                                     taskArgs.refname.c_str(), taskArgs.rev,
                                     taskArgs.forced);
   }
-  if (result) {
-    Print("git-rollback: Operation completed !\n");
-  } else {
+
+  if (!result) {
     Printe("git-rollback: Operation aborted !\n");
+    return 1;
   }
-  //
+  Print("git-rollback: Operation completed !\n");
   return 0;
 }
-
-#endif

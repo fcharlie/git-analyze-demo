@@ -1,19 +1,19 @@
 /*
-* gc.cc
-* git-rollback
-* author: Force.Charlie
-* Date: 2016.08
-* Copyright (C) 2019. GITEE.COM. All Rights Reserved.
-*/
+ * gc.cc
+ * git-rollback
+ * author: Force.Charlie
+ * Date: 2016.08
+ * Copyright (C) 2019. GITEE.COM. All Rights Reserved.
+ */
 #include <cstdlib>
 #include <cstring>
 #include <errno.h>
 #include <string>
 #include <Pal.hpp>
 /*
-* bool GitGCInvoke(const std::string &dir,bool forced);
-*
-*/
+ * bool GitGCInvoke(const std::string &dir,bool forced);
+ *
+ */
 #ifdef _WIN32
 #include <Windows.h>
 
@@ -231,8 +231,18 @@ bool GitGCInvoke(const std::string &dir, bool forced) {
 
 ///////
 bool GitGCRealExecute(const char *dir, bool forced) {
+  std::vector<char *> Argv_;
+  Argv_.push_back((char *)"git");
+  Argv_.push_back((char *)"gc");
+  if (forced) {
+    Argv_.push_back((char *)"--prune=now");
+    Argv_.push_back((char *)"--force");
+  }
+  Argv_.push_back(nullptr);
+
+  ////////////////
   int status;
-  int exitcode = 0;
+  int exitcode = -1;
   auto pid = fork();
   switch (pid) {
   case 0: {
@@ -241,14 +251,6 @@ bool GitGCRealExecute(const char *dir, bool forced) {
       fprintf(stderr, "%s\n", strerror(errno));
       exit(-1);
     }
-    std::vector<char *> Argv_;
-    Argv_.push_back((char *)"git");
-    Argv_.push_back((char *)"gc");
-    if (forced) {
-      Argv_.push_back((char *)"--prune=now");
-      Argv_.push_back((char *)"--force");
-    }
-    Argv_.push_back(nullptr);
     execvp("git", Argv_.data());
     Printe("%s\n", strerror(errno));
     exit(-1);

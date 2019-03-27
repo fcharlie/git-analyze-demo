@@ -1,10 +1,10 @@
 /*
-* pre-commit.cc
-* git-analyze
-* author: Force.Charlie
-* Date: 2016.12
-* Copyright (C) 2019. GITEE.COM. All Rights Reserved.
-*/
+ * pre-commit.cc
+ * git-analyze
+ * author: Force.Charlie
+ * Date: 2016.12
+ * Copyright (C) 2019. GITEE.COM. All Rights Reserved.
+ */
 /// pre-commit limit file
 #include <cstdio>
 #include <cstdlib>
@@ -159,12 +159,12 @@ int git_diff_callback(const git_diff_delta *delta, float progress,
     auto lsize = info->ps.LimitSize();
     auto wsize = info->ps.WarnSize();
     git_off_t size = git_blob_rawsize(blob);
-    if (size > lsize) {
+    if (size > (git_off_t)lsize) {
       ///
       Printe("%s size is %4.2f MB more than %4.2f MB\n", delta->new_file.path,
              (double)size / MBSIZE, (double)lsize / MBSIZE);
       info->limitfiles++;
-    } else if (size > wsize) {
+    } else if (size > (git_off_t)wsize) {
       Printw("%s size %4.2f MB more than %4.2f MB\n", delta->new_file.path,
              (double)size / MBSIZE, (double)wsize / MBSIZE);
       info->warnfiles++;
@@ -176,6 +176,7 @@ int git_diff_callback(const git_diff_delta *delta, float progress,
 
 bool PrecommitIndexScanf(PrecommitInfo &info, git_repository *repo,
                          git_index *index) {
+  (void)repo;
   auto lsize = info.ps.LimitSize();
   auto wsize = info.ps.WarnSize();
   auto ecount = git_index_entrycount(index);
@@ -214,7 +215,8 @@ bool PrecommitExecute(const char *td) {
   git_commit *commit = nullptr;
   const char *errmsg = nullptr;
   bool result = false;
-  git_diff_options opts = GIT_DIFF_OPTIONS_INIT;
+  git_diff_options opts;
+  git_diff_init_options(&opts, GIT_DIFF_OPTIONS_VERSION);
   if (git_repository_open(&repo, td ? td : ".") != 0) {
     errmsg = "open repository";
     goto Cleanup;

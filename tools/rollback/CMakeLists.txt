@@ -2,6 +2,7 @@
 
 if(WIN32)
 add_executable(git-rollback
+  ../cmd_main.cc
   driver.cc
   rollback.cc
   gc.cc
@@ -10,6 +11,7 @@ add_executable(git-rollback
 )
 else()
 add_executable(git-rollback
+  ../cmd_main.cc
   driver.cc
   rollback.cc
   gc.cc
