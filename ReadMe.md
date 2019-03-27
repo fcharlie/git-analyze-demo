@@ -123,8 +123,12 @@ git config commit.filterbroken true # filter broken when find
 此工具创建 整整一年的提交
 
 ```shell
-git-complete dir branch 'commit message' 2018
+git-complete dir branch 'commit message' 2018～2100
 ```
+
+## Update 钩子
+
+Update 钩子是一个实验性的钩子用户实现 git 只读目录功能，相关的原理可以查看 [https://forcemz.net](https://forcemz.net) 的相关博客，虽然目前博客还没有写。
 
 ## 与 GIT 整合
 
