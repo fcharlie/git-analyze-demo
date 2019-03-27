@@ -27,7 +27,10 @@ inline bool PathRemoveFileSpec(std::string &path) {
 }
 
 constexpr const char PathSeparator = '\\';
-
+std::string Getwd() {
+  // NOTIMPL
+  return ".";
+}
 } // namespace os
 
 #endif

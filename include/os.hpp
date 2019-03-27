@@ -6,6 +6,7 @@
 namespace os {
 bool Executable(std::string &exe);
 bool PathRemoveFileSpec(std::string &path);
+std::string Getwd();
 } // namespace os
 
 #ifdef _WIN32

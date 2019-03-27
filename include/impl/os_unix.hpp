@@ -121,6 +121,15 @@ inline bool PathRemoveFileSpec(std::string &path) {
   return false;
 }
 constexpr const char PathSeparator = '/';
+
+std::string Getwd() {
+  char buffer[PATH_MAX];
+  auto cwd_ = getcwd(buffer, PATH_MAX);
+  if (cwd_ != nullptr) {
+    return std::string(cwd_);
+  }
+  return "";
+}
 }; // namespace os
 
 #endif

@@ -28,7 +28,7 @@ int main(int argc, char const *argv[]) {
   if (!e.InitializeRules(rf, argv[1])) {
     return 1;
   }
-  if (!e.Execute(".", argv[2], argv[3])) {
+  if (!e.Execute(os::Getwd(), argv[2], argv[3])) {
     ///// BAD
     return 1;
   }
