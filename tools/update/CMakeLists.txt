@@ -20,6 +20,21 @@ else()
 endif()
 
 
+add_executable(update_test
+  update_test.cc
+  engine.cc
+)
+if(WIN32)
+  target_link_libraries(update_test
+    re2
+  )
+else()
+  target_link_libraries(update_test
+    re2
+    pthread
+  )
+endif()
+
 install(TARGETS update
     DESTINATION bin
 )

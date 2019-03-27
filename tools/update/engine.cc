@@ -26,6 +26,7 @@ inline std::vector<std::string_view> PathSplit(std::string_view sv) {
   return output;
 }
 
+/// NOTLIKE Unix Path ---> Git  not start root '/'
 std::string PathClean(std::string_view p) {
   std::string s;
   auto sv = PathSplit(p);
