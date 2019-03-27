@@ -113,6 +113,22 @@ ExternalProject_Add(libgit2
     INSTALL_COMMAND make install
 )
 
+# RE2
+# https://github.com/google/re2/archive/2019-03-01.tar.gz
+
+ExternalProject_Add(libre2
+  URL https://github.com/google/re2/archive/2019-03-01.tar.gz
+  URL_HASH SHA256=05dc21aafc1fa21161214c6145aeed8a6d108bde390584c762aa3e64df557d6d
+  CMAKE_ARGS
+    -DCMAKE_BUILD_TYPE:STRING=Release
+    -DCMAKE_INSTALL_PREFIX:PATH=${ANALYZE_CLEANROOT}
+    -DBUILD_SHARED_LIBS=OFF
+    -DRE2_BUILD_TESTING=OFF
+    BUILD_COMMAND make
+    INSTALL_COMMAND make install
+)
+
+
 include_directories(
   ${ANALYZE_CLEANROOT}/include
   ./include
@@ -147,4 +163,5 @@ add_subdirectory(tools/pre-commit)
 add_subdirectory(tools/complete)
 add_subdirectory(tools/git-bareinit)
 add_subdirectory(tools/graft)
+add_subdirectory(tools/update)
 add_subdirectory(test)
