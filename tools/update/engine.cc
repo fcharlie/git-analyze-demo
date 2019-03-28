@@ -98,7 +98,7 @@ bool RulesEngine::PreInitialize(std::string_view jf, std::string_view branch) {
     auto j = nlohmann::json::parse(f.handle);
     auto ki = j.find(branch);
     if (ki == j.end()) {
-      ki = j.find("$all");
+      ki = j.find(".all");
       if (ki == j.end()) {
         return true;
       }
