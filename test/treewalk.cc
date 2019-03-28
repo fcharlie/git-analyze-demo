@@ -1,93 +1,134 @@
-//// Tree walk test
+////////////////
 #include <cstdio>
+#include <string>
+#include <string_view>
 #include <git2.h>
-#include <stdexcept>
 
-class RaiiRepository {
-public:
-  RaiiRepository(const char *repodir, const char *branch)
-      : repo_(nullptr), commit_(nullptr) {
-    ///
-    if (git_repository_open(&repo_, repodir) != 0) {
-      auto err = giterr_last();
-      throw std::runtime_error(err->message);
+struct treebase_t {
+  ~treebase_t() {
+    if (tree != nullptr) {
+      git_tree_free(tree);
     }
+    if (commit != nullptr) {
+      git_commit_free(commit);
+    }
+  }
+  git_commit *commit{nullptr};
+  git_tree *tree{nullptr};
+
+  git_commit *fromoid(git_repository *repo, std::string_view rev) {
+    git_commit *c = nullptr;
+    git_oid oid;
+    if (git_oid_fromstrn(&oid, rev.data(), rev.size()) != 0) {
+      return c;
+    }
+    if (git_commit_lookup(&c, repo, &oid) != 0) {
+      return c;
+    }
+    return c;
+  }
+
+  git_commit *frombranch(git_repository *repo, std::string_view branch) {
+    git_commit *c = nullptr;
     git_reference *ref_{nullptr};
-    if (git_reference_lookup(&ref_, repo_, branch) != 0) {
+    if (git_reference_lookup(&ref_, repo, branch.data()) != 0) {
       //// second look branch to ref
-      if (git_branch_lookup(&ref_, repo_, branch, GIT_BRANCH_LOCAL) != 0) {
-        auto err = giterr_last();
-        throw std::runtime_error(err->message);
+      if (git_branch_lookup(&ref_, repo, branch.data(), GIT_BRANCH_LOCAL) !=
+          0) {
+        return nullptr;
       }
     }
     auto id = git_reference_target(ref_);
-    if (git_commit_lookup(&commit_, repo_, id) != 0) {
-      auto err = giterr_last();
+    if (git_commit_lookup(&c, repo, id) != 0) {
       git_reference_free(ref_);
-      throw std::runtime_error(err->message);
+      return nullptr;
     }
-    /////
+    git_reference_free(ref_);
+    return c;
   }
-  ~RaiiRepository() {
-    if (commit_) {
-      git_commit_free(commit_);
-    }
-    if (repo_) {
-      git_repository_free(repo_);
-    }
-  }
-  bool Treewarlk();
-  git_commit *commit() { return commit_; }
-  git_repository *repository() { return repo_; }
 
-private:
-  git_repository *repo_;
-  git_commit *commit_;
+  bool lookup(git_repository *repo, std::string_view rev) {
+    commit = fromoid(repo, rev);
+    if (commit == nullptr && (commit = frombranch(repo, rev)) == nullptr) {
+      fprintf(stderr, "rev: '%s' not commit and not branch\n", rev.data());
+      return false;
+    }
+    if (git_commit_tree(&tree, commit) != 0) {
+      auto ec = giterr_last();
+      fprintf(stderr, "unable open commit  tree'%s'\n", rev.data());
+      if (ec != nullptr) {
+        fprintf(stderr, "last error: %s\n", ec->message);
+      }
+      return false;
+    }
+    return true;
+  }
 };
 
-int git_treewalk_resolveblobs(const char *root, const git_tree_entry *entry,
-                              void *payload) {
-  //
-  if (git_tree_entry_type(entry) == GIT_OBJ_BLOB) {
-    fprintf(stderr, "%s%s\n", root, git_tree_entry_name(entry));
+class treewalk_base {
+public:
+  treewalk_base() {
+    //
+    git_libgit2_init();
   }
-  return 0;
-}
+  ~treewalk_base() {
+    if (repo_ != nullptr) {
+      git_repository_free(repo_);
+    }
+    git_libgit2_shutdown();
+  }
+  bool open(std::string_view dir);
+  bool walk(std::string_view rev);
+  git_repository *repo() const { return repo_; }
 
-bool RaiiRepository::Treewarlk() {
-  git_tree *tree{nullptr};
-  if (git_commit_tree(&tree, commit_) != 0) {
+private:
+  git_repository *repo_{nullptr};
+};
+
+bool treewalk_base::open(std::string_view dir) {
+  if (git_repository_open(&repo_, dir.data()) != 0) {
+    auto ec = giterr_last();
+    fprintf(stderr, "unable open repository '%s'\n", dir.data());
+    if (ec != nullptr) {
+      fprintf(stderr, "last error: %s\n", ec->message);
+    }
     return false;
   }
-  git_tree_walk(tree, GIT_TREEWALK_PRE, git_treewalk_resolveblobs, this);
-  git_tree_free(tree);
   return true;
 }
 
-bool treewalk(const char *repodir, const char *branch) {
-  //
-  try {
-    RaiiRepository repo(repodir, branch);
-    repo.Treewarlk();
-  } catch (const std::exception &e) {
-    fprintf(stderr, "Exception:%s\n", e.what());
+int git_treewalk_impl(const char *root, const git_tree_entry *entry,
+                      void *payload) {
+  (void)payload;
+  std::string name = root;
+  name.append(git_tree_entry_name(entry));
+  fprintf(stderr, "%s\n", name.data());
+  return 0;
+}
+
+bool treewalk_base::walk(std::string_view rev) {
+  treebase_t tb;
+  if (!tb.lookup(repo_, rev)) {
+    return false;
+  }
+  if (git_tree_walk(tb.tree, GIT_TREEWALK_PRE, git_treewalk_impl, nullptr) !=
+      0) {
     return false;
   }
   return true;
 }
 
 int main(int argc, char const *argv[]) {
-  /* code */
   if (argc < 3) {
-    fprintf(stderr, "usage %s repodir branch\n", argv[0]);
+    fprintf(stderr, "usage: %s gitdir commit\n", argv[0]);
     return 1;
   }
-  git_libgit2_init();
-  if (!treewalk(argv[1], argv[2])) {
-    fprintf(stderr, "Parse failed \n");
-  } else {
-    fprintf(stderr, "Parse completed\n");
+  treewalk_base base;
+  if (!base.open(argv[1])) {
+    return 1;
   }
-  git_libgit2_shutdown();
+  if (!base.walk(argv[2])) {
+    return 1;
+  }
   return 0;
 }

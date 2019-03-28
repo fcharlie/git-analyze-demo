@@ -13,23 +13,23 @@ add_executable(palenv
 
   target_link_libraries(palenv
     Pal
-    git2
+    ${LIBGIT2}
   )
 
 if(WIN32)
   target_link_libraries(aze
-    git2
+    ${LIBGIT2}
   )
   target_link_libraries(treewalk
-    git2
+    ${LIBGIT2}
   )
 else()
 target_link_libraries(aze
-  git2
+  ${LIBGIT2}
   pthread
 )
 target_link_libraries(treewalk
-  git2
+  ${LIBGIT2}
   pthread
 )
 endif()
