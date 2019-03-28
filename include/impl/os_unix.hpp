@@ -9,6 +9,9 @@
 #include <cstdlib>
 #include <cstring>
 #include <string>
+#include <vector>
+#include <string_view>
+#include <optional>
 #include <pwd.h>
 #include <dirent.h>
 #include <fcntl.h>
@@ -122,7 +125,7 @@ inline bool PathRemoveFileSpec(std::string &path) {
 }
 constexpr const char PathSeparator = '/';
 
-std::string Getwd() {
+inline std::string Getwd() {
   char buffer[PATH_MAX];
   auto cwd_ = getcwd(buffer, PATH_MAX);
   if (cwd_ != nullptr) {
@@ -130,6 +133,7 @@ std::string Getwd() {
   }
   return "";
 }
+
 }; // namespace os
 
 #endif

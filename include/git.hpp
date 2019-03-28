@@ -1,53 +1,30 @@
-////
-#ifndef GIT_ANALYZE_HPP
-#define GIT_ANALYZE_HPP
+//// GIT BASE HEAD
+#ifndef AZE_GIT_BASE_HPP
+#define AZE_GIT_BASE_HPP
 #include <string>
-#include <cstring>
 #include <vector>
+#include "string.hpp"
 #include <git2.h>
 
 namespace git {
-
-inline bool StartsWith(const std::string &lhs, const char *str,
-                       std::size_t len) {
-  if (len > lhs.size() || len == 0) {
-    return false;
-  }
-  return (memcmp(lhs.data(), str, len) == 0);
-}
-inline bool StartsWith(const std::string &lhs, const char *str) {
-  if (str == nullptr) {
-    return false;
-  }
-  auto len = strlen(str);
-  return StartsWith(lhs, str, len);
-}
-inline bool StartsWith(const std::string &lhs, const std::string &rhs) {
-  return StartsWith(lhs, rhs.data(), rhs.size());
-}
-
-class Initializer {
+// libgit2 initialize helper
+class global_initializer_t {
 public:
-  Initializer(const Initializer &) = delete;
-  Initializer &operator=(const Initializer &) = delete;
-  Initializer() {
-    /// to init
-    git_libgit2_init();
-  }
-  ~Initializer() {
-    //
-    git_libgit2_shutdown();
-  }
+  global_initializer_t() { git_libgit2_init(); }
+  ~global_initializer_t() { git_libgit2_shutdown(); }
+  global_initializer_t(const global_initializer_t &) = delete;
+  global_initializer_t &operator=(const global_initializer_t &) = delete;
 
 private:
 };
 
-class Repository {
+// repository helper
+class git_repo_t {
 public:
-  Repository() = default;
-  Repository(const Repository &) = delete;
-  Repository &operator=(const Repository &) = delete;
-  ~Repository() {
+  git_repo_t() = default;
+  git_repo_t(const git_repo_t &) = delete;
+  git_repo_t &operator=(const git_repo_t &) = delete;
+  ~git_repo_t() {
     if (repo != nullptr) {
       git_repository_free(repo);
     }
@@ -72,10 +49,10 @@ private:
   ::git_repository *repo{nullptr};
 };
 
-class Commit {
+class git_commit_t {
 public:
-  Commit() = default;
-  ~Commit() {
+  git_commit_t() = default;
+  ~git_commit_t() {
     if (commit != nullptr) {
       git_commit_free(commit);
     }
@@ -124,7 +101,7 @@ public:
         return true;
       }
     }
-    if (StartsWith(rbo, "refs/heads/") || rbo.compare("HEAD") == 0) {
+    if (aze::starts_with(rbo, "refs/heads/") || rbo.compare("HEAD") == 0) {
       return open_ref(repo, rbo);
     }
     std::string refname("refs/heads/");
@@ -138,10 +115,10 @@ private:
   ::git_commit *commit;
 };
 
-class Tree {
+class git_tree_t {
 public:
-  Tree() = default;
-  ~Tree() {
+  git_tree_t() = default;
+  ~git_tree_t() {
     if (tree != nullptr) {
       git_tree_free(tree);
     }

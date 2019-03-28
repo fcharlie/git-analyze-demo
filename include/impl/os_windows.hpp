@@ -2,6 +2,9 @@
 #ifndef GA_OS_WINDOWS_HPP
 #define GA_OS_WINDOWS_HPP
 #include <string>
+#include <string_view>
+#include <optional>
+#include <vector>
 
 namespace os {
 inline bool Executable(std::string &exe) {
@@ -27,10 +30,17 @@ inline bool PathRemoveFileSpec(std::string &path) {
 }
 
 constexpr const char PathSeparator = '\\';
-std::string Getwd() {
+
+inline std::string Getwd() {
   // NOTIMPL
   return ".";
 }
+
+inline std::optional<std::string> Gitdir(std::string_view sv) {
+  /// NOTIMPL
+  return std::make_optional(std::string(sv));
+}
+
 } // namespace os
 
 #endif

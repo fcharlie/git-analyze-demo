@@ -91,7 +91,9 @@ int git_diff_callback(const git_diff_delta *delta, float progress,
   auto e = reinterpret_cast<Executor *>(payload);
   switch (delta->status) {
   case GIT_DELTA_ADDED:
+    /*fallthrough*/
   case GIT_DELTA_MODIFIED:
+  /*fallthrough*/
   case GIT_DELTA_COPIED: // copy to new path
     if (e->FullMatch(delta->new_file.path)) {
       fprintf(stderr, "Path '%s' is readonly\n", delta->old_file.path);

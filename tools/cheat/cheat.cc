@@ -79,19 +79,20 @@ bool hack_new_branch(git_repository *repo, git_tree *tree,
 }
 
 bool cheat_execute(cheat_options &opt) {
+  // TODO initialize libgit2 thread safe.
+  git::global_initializer_t gi;
   if (opt.branch.empty()) {
     fprintf(stderr, "New branch name cannot be empty.\n");
     return false;
   }
-  // TODO initialize libgit2 thread safe.
-  Initializer initializer_;
+
   if (opt.gitdir.empty()) {
     opt.gitdir = ".";
   }
   if (opt.parent.empty()) {
     opt.parent = "HEAD"; /// current head
   }
-  Repository r;
+  git_repo_t r;
   if (!r.open(opt.gitdir)) {
     auto e = giterr_last();
     fprintf(stderr, "Error: %s\n", e->message);
@@ -102,13 +103,13 @@ bool cheat_execute(cheat_options &opt) {
             opt.branch.c_str());
     return false;
   }
-  Commit c;
+  git::git_commit_t c;
   if (!c.open(r.pointer(), opt.parent)) {
     auto e = giterr_last();
     fprintf(stderr, "Error: %s\n", e->message);
     return false;
   }
-  Tree tree;
+  git::git_tree_t tree;
   if (!tree.open(r.pointer(), c.pointer(), opt.treedir)) {
     auto e = giterr_last();
     fprintf(stderr, "Error: %s\n", e->message);

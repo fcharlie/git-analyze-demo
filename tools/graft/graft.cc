@@ -28,7 +28,7 @@ Example:
   printf("%s", ua);
 }
 
-bool ParseArgv(int argc, char **argv, graft_info_t &gf) {
+bool parse_argv(int argc, char **argv, graft_info_t &gf) {
   std::vector<ax::ParseArgv::option> opts = {
       {"help", ax::ParseArgv::no_argument, 'h'},
       {"git-dir", ax::ParseArgv::required_argument, 'd'},
@@ -125,14 +125,14 @@ std::optional<std::string> Refernece(git_repository *repo,
   return std::make_optional(name);
 }
 
-bool GraftCommit(const graft_info_t &gf) {
-  git::Initializer initializer;
-  git::Repository repo;
+bool graft_commit(const graft_info_t &gf) {
+
+  git::git_repo_t repo;
   if (!repo.open(gf.gitdir)) {
     git::PrintError();
     return false;
   }
-  git::Commit commit;
+  git::git_commit_t commit;
   if (!commit.open(repo.pointer(), gf.commitid)) {
     fprintf(stderr, "open commit: %s ", gf.commitid.c_str());
     git::PrintError();
@@ -143,7 +143,7 @@ bool GraftCommit(const graft_info_t &gf) {
     fprintf(stderr, "cannot found ref\n");
     return false;
   }
-  git::Commit parent;
+  git::git_commit_t parent;
   if (!parent.open_ref(repo.pointer(), *ref)) {
     fprintf(stderr, "open par commit: %s ", ref->c_str());
     git::PrintError();
@@ -176,11 +176,12 @@ bool GraftCommit(const graft_info_t &gf) {
 }
 
 int cmd_main(int argc, char **argv) {
+  git::global_initializer_t gi;
   graft_info_t gf;
-  if (!ParseArgv(argc, argv, gf)) {
+  if (!parse_argv(argc, argv, gf)) {
     return 1;
   }
-  if (!GraftCommit(gf)) {
+  if (!graft_commit(gf)) {
     return 1;
   }
   return 0;
