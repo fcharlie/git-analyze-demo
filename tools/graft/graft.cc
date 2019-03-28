@@ -126,25 +126,25 @@ std::optional<std::string> Refernece(git_repository *repo,
 }
 
 bool graft_commit(const graft_info_t &gf) {
-
-  git::repository repo;
-  if (!repo.open(gf.gitdir)) {
-    git::PrintError();
+  git::error_code ec;
+  auto repo = git::repository::make_repository(gf.gitdir, ec);
+  if (!repo) {
+    fprintf(stderr, "Error: %s\n", ec.message.data());
     return false;
   }
   git::commit commit;
-  if (!commit.open(repo.pointer(), gf.commitid)) {
+  if (!commit.open(repo->pointer(), gf.commitid)) {
     fprintf(stderr, "open commit: %s ", gf.commitid.c_str());
     git::PrintError();
     return false;
   }
-  auto ref = Refernece(repo.pointer(), gf.branch);
+  auto ref = Refernece(repo->pointer(), gf.branch);
   if (!ref) {
     fprintf(stderr, "cannot found ref\n");
     return false;
   }
   git::commit parent;
-  if (!parent.open_ref(repo.pointer(), *ref)) {
+  if (!parent.open_ref(repo->pointer(), *ref)) {
     fprintf(stderr, "open par commit: %s ", ref->c_str());
     git::PrintError();
     return false;
@@ -164,8 +164,9 @@ bool graft_commit(const graft_info_t &gf) {
   const git_commit *parents[] = {parent.pointer(), commit.pointer()};
   fprintf(stderr, "New commit, message: '%s'\n", msg.c_str());
   git_oid oid;
-  if (git_commit_create(&oid, repo.pointer(), ref->c_str(), &author, &committer,
-                        nullptr, msg.c_str(), tree, 2, parents) != 0) {
+  if (git_commit_create(&oid, repo->pointer(), ref->c_str(), &author,
+                        &committer, nullptr, msg.c_str(), tree, 2,
+                        parents) != 0) {
     git::PrintError();
     git_tree_free(tree);
     return false;

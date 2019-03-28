@@ -89,35 +89,35 @@ bool cheat_execute(cheat_options &opt) {
   if (opt.parent.empty()) {
     opt.parent = "HEAD"; /// current head
   }
-  git::repository r;
-  if (!r.open(opt.gitdir)) {
-    auto e = giterr_last();
-    fprintf(stderr, "Error: %s\n", e->message);
+  git::error_code ec;
+  auto r = git::repository::make_repository(opt.gitdir, ec);
+  if (!r) {
+    fprintf(stderr, "Error: %s\n", ec.message.data());
     return false;
   }
-  if (r.branch_exists(opt.branch)) {
+  if (r->branch_exists(opt.branch)) {
     fprintf(stderr, "Branch '%s' exists, please create other name branch.\n",
             opt.branch.c_str());
     return false;
   }
   git::commit c;
-  if (!c.open(r.pointer(), opt.parent)) {
+  if (!c.open(r->pointer(), opt.parent)) {
     auto e = giterr_last();
     fprintf(stderr, "Error: %s\n", e->message);
     return false;
   }
   git::tree tree;
-  if (!tree.open(r.pointer(), c.pointer(), opt.treedir)) {
+  if (!tree.open(r->pointer(), c.pointer(), opt.treedir)) {
     auto e = giterr_last();
     fprintf(stderr, "Error: %s\n", e->message);
     return false;
   }
   if (opt.kauthor) {
-    return duplicate_new_branch(r.pointer(), c.pointer(), tree.pointer(),
+    return duplicate_new_branch(r->pointer(), c.pointer(), tree.pointer(),
                                 opt.branch);
   }
   if (opt.message.empty()) {
     opt.message = git_commit_message(c.pointer());
   }
-  return hack_new_branch(r.pointer(), tree.pointer(), opt);
+  return hack_new_branch(r->pointer(), tree.pointer(), opt);
 }
