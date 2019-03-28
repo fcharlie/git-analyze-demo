@@ -87,15 +87,34 @@ bool Executor::ExecuteTreeWalk(std::string_view rev) {
 
 int git_diff_callback(const git_diff_delta *delta, float progress,
                       void *payload) {
-  auto e = reinterpret_cast<Executor *>(payload);
   (void)progress;
-  if (e->FullMatch(delta->old_file.path)) {
-    fprintf(stderr, "Path '%s' is readonly\n", delta->old_file.path);
-    return 1;
-  }
-  if (e->FullMatch(delta->new_file.path)) {
-    fprintf(stderr, "Path '%s' is readonly\n", delta->old_file.path);
-    return 1;
+  auto e = reinterpret_cast<Executor *>(payload);
+  switch (delta->status) {
+  case GIT_DELTA_ADDED:
+  case GIT_DELTA_MODIFIED:
+  case GIT_DELTA_COPIED: // copy to new path
+    if (e->FullMatch(delta->new_file.path)) {
+      fprintf(stderr, "Path '%s' is readonly\n", delta->old_file.path);
+      return 1;
+    }
+    break;
+  case GIT_DELTA_DELETED:
+    if (e->FullMatch(delta->old_file.path)) {
+      fprintf(stderr, "Path '%s' is readonly\n", delta->old_file.path);
+      return 1;
+    }
+    break;
+  default:
+    // ex. GIT_DELTA_RENAMED
+    if (e->FullMatch(delta->new_file.path)) {
+      fprintf(stderr, "Path '%s' is readonly\n", delta->old_file.path);
+      return 1;
+    }
+    if (e->FullMatch(delta->old_file.path)) {
+      fprintf(stderr, "Path '%s' is readonly\n", delta->old_file.path);
+      return 1;
+    }
+    break;
   }
   return 0;
 }

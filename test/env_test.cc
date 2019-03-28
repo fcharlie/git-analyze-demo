@@ -3,7 +3,7 @@
 #include <cstdlib>
 #include <Pal.hpp>
 
-int main(int argc, char **argv) {
+int main() {
   PalEnvironment env;
   auto pwd = env.Strings("PWD");
   fprintf(stderr, "PWD: %s\n", pwd.c_str());

@@ -110,7 +110,8 @@ public:
       git_commit_free(parent);
       return false;
     }
-    git_diff_options opts = GIT_DIFF_OPTIONS_INIT;
+    git_diff_options opts;
+    git_diff_init_options(&opts, GIT_DIFF_OPTIONS_VERSION);
     // opts.progress_cb = diff_compare;
     // git_diff_init_options(&opts, GIT_DIFF_OPTIONS_VERSION);
     git_diff *diff = nullptr; ////
