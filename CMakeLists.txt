@@ -1,4 +1,5 @@
-# Copyright (c) 2018 GITEE.COM All Rights Reserved.
+# Copyright (c) 2019 GITEE.COM All Rights Reserved.
+
 cmake_minimum_required (VERSION 3.10)
 project(git-analyze)
 
@@ -28,7 +29,7 @@ set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
 set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
 
 if(NOT DEFINED GITANALYZE_VERSION_MAJOR)
-  set(GITANALYZE_VERSION_MAJOR 2)
+  set(GITANALYZE_VERSION_MAJOR 3)
 endif()
 if(NOT DEFINED GITANALYZE_VERSION_MINOR)
   set(GITANALYZE_VERSION_MINOR 0)
@@ -85,6 +86,7 @@ endif()
 # Need CMake 3.10 or Later https://cmake.org/cmake/help/v3.10/prop_tgt/CXX_STANDARD.html#prop_tgt:CXX_STANDARD
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
+
 if (MSVC)
   add_compile_options("-D_CRT_SECURE_NO_WARNINGS=1")
 else()
@@ -100,9 +102,25 @@ if(ADDRESS_SANITIZER)
 endif()
 
 set(ANALYZE_CLEANROOT "${CMAKE_BINARY_DIR}/cleanroot")
+
 include(ExternalProject)
 
+
+ExternalProject_Add(http-parser
+  URL https://github.com/nodejs/http-parser/archive/v2.9.0.tar.gz
+  URL_HASH SHA256=ef26268c54c8084d17654ba2ed5140bffeffd2a040a895ffb22a6cca3f6c613f
+  PATCH_COMMAND patch -Nbp1 -i ${CMAKE_CURRENT_SOURCE_DIR}/patch/http-parser.patch
+  CMAKE_ARGS
+    -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+    -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+    -DCMAKE_INSTALL_PREFIX:PATH=${ANALYZE_CLEANROOT}
+    -DCMAKE_BUILD_TYPE:STRING=Release
+  BUILD_COMMAND make
+  INSTALL_COMMAND make install
+)
+
 ExternalProject_Add(libgit2
+  DEPENDS http-parser
   URL https://github.com/libgit2/libgit2/archive/v0.28.1.tar.gz
   URL_HASH SHA256=0ca11048795b0d6338f2e57717370208c2c97ad66c6d5eac0c97a8827d13936b
   CMAKE_ARGS
@@ -111,6 +129,11 @@ ExternalProject_Add(libgit2
     -DCMAKE_BUILD_TYPE:STRING=Release
     BUILD_COMMAND make
     INSTALL_COMMAND make install
+)
+
+set(LIBGIT2
+  git2
+  http_parser
 )
 
 # RE2

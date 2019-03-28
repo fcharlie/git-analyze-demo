@@ -8,12 +8,12 @@ add_executable(update
 
 if(WIN32)
   target_link_libraries(update
-    git2
+    ${LIBGIT2}
     re2
   )
 else()
   target_link_libraries(update
-    git2
+    ${LIBGIT2}
     re2
     pthread
   )

@@ -28,7 +28,7 @@ endif()
 
 target_link_libraries(git-rollback
   Pal
-  git2
+  ${LIBGIT2}
 )
 
 install(TARGETS git-rollback

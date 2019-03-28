@@ -20,7 +20,7 @@ endif()
 
 target_link_libraries(git-bareinit
   Pal
-  git2
+  ${LIBGIT2}
 )
 
 install(TARGETS git-bareinit

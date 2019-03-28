@@ -21,7 +21,7 @@ endif()
 
 target_link_libraries(pre-commit
   Pal
-  git2
+  ${LIBGIT2}
 )
 
 install(TARGETS pre-commit

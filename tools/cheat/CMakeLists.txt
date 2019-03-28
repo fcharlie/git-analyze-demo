@@ -25,7 +25,7 @@ endif()
 
 target_link_libraries(git-cheat
   Pal
-  git2
+  ${LIBGIT2}
 )
 
 install(TARGETS git-cheat

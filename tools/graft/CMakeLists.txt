@@ -19,7 +19,7 @@ if(MINGW)
 endif()
 
 target_link_libraries(git-graft
-  git2
+  ${LIBGIT2}
 )
 
 install(TARGETS git-graft

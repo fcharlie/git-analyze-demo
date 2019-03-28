@@ -25,7 +25,7 @@ endif()
 
 target_link_libraries(git-complete
   Pal
-  git2
+  ${LIBGIT2}
 )
 
 install(TARGETS git-complete

@@ -1,0 +1,22 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+new file mode 100644
+index 0000000..c9e4d70
+--- /dev/null
++++ b/CMakeLists.txt
+@@ -0,0 +1,16 @@
++cmake_minimum_required (VERSION 3.10)
++project(http_parser)
++
++
++
++add_library(http_parser STATIC
++  http_parser.c
++)
++
++install(TARGETS http_parser
++  DESTINATION lib
++)
++
++install(FILES http_parser.h
++  DESTINATION include
++)
