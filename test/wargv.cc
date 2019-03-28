@@ -1,5 +1,3 @@
-////
-#if defined(_WIN32) && !defined(__CYGWIN__)
 
 #include <string>
 #include <string_view>
@@ -48,19 +46,14 @@ private:
   std::vector<char *> argv_;
 };
 
-#endif
+int cmd_main(int argc, char **argv) {
+  for (int i = 0; i < argc; i++) {
+    fprintf(stderr, "%s\n", argv[i]);
+  }
+  return 0;
+}
 
-int cmd_main(int argc, char **argv);
-
-#if defined(_WIN32) && !defined(__CYGWIN__)
 int wmain(int argc, wchar_t **argv) {
   auto avc = argv_container::make(argc, argv);
   return cmd_main(avc.argc(), avc.argv());
 }
-#else
-
-int main(int argc, char **argv) {
-  //
-  return cmd_main(argc, argv);
-}
-#endif
