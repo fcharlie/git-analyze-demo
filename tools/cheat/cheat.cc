@@ -1,9 +1,6 @@
 /////
 #include <git.hpp>
 #include "cheat.hpp"
-
-namespace git {
-
 bool duplicate_new_branch(git_repository *repo, git_commit *commit,
                           git_tree *tree, const std::string &branch) {
   git_oid newoid;
@@ -92,7 +89,7 @@ bool cheat_execute(cheat_options &opt) {
   if (opt.parent.empty()) {
     opt.parent = "HEAD"; /// current head
   }
-  git_repo_t r;
+  git::repository r;
   if (!r.open(opt.gitdir)) {
     auto e = giterr_last();
     fprintf(stderr, "Error: %s\n", e->message);
@@ -103,13 +100,13 @@ bool cheat_execute(cheat_options &opt) {
             opt.branch.c_str());
     return false;
   }
-  git::git_commit_t c;
+  git::commit c;
   if (!c.open(r.pointer(), opt.parent)) {
     auto e = giterr_last();
     fprintf(stderr, "Error: %s\n", e->message);
     return false;
   }
-  git::git_tree_t tree;
+  git::tree tree;
   if (!tree.open(r.pointer(), c.pointer(), opt.treedir)) {
     auto e = giterr_last();
     fprintf(stderr, "Error: %s\n", e->message);
@@ -124,4 +121,3 @@ bool cheat_execute(cheat_options &opt) {
   }
   return hack_new_branch(r.pointer(), tree.pointer(), opt);
 }
-} // namespace git

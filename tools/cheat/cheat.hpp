@@ -3,7 +3,6 @@
 #define GIT_CHEAT_HPP
 #include <string>
 #include <ctime>
-namespace git {
 
 struct cheat_options {
   std::string gitdir;        // gitdir pos 0
@@ -22,6 +21,5 @@ struct cheat_options {
 };
 
 bool cheat_execute(cheat_options &opt);
-}; // namespace git
 
 #endif

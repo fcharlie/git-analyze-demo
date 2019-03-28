@@ -19,21 +19,18 @@ private:
 };
 
 // repository helper
-class git_repo_t {
+class repository {
 public:
-  git_repo_t() = default;
-  git_repo_t(const git_repo_t &) = delete;
-  git_repo_t &operator=(const git_repo_t &) = delete;
-  ~git_repo_t() {
+  repository() = default;
+  repository(const repository &) = delete;
+  repository &operator=(const repository &) = delete;
+  ~repository() {
     if (repo != nullptr) {
       git_repository_free(repo);
     }
   }
   bool open(const std::string &dir) {
-    if (git_repository_open(&repo, dir.c_str()) != 0) {
-      return false;
-    }
-    return true;
+    return git_repository_open(&repo, dir.c_str()) != 0;
   }
   bool branch_exists(const std::string &b) {
     git_reference *ref{nullptr};
@@ -49,16 +46,16 @@ private:
   ::git_repository *repo{nullptr};
 };
 
-class git_commit_t {
+class commit {
 public:
-  git_commit_t() = default;
-  ~git_commit_t() {
-    if (commit != nullptr) {
-      git_commit_free(commit);
+  commit() = default;
+  ~commit() {
+    if (c_ != nullptr) {
+      git_commit_free(c_);
     }
   }
   bool open_oid(git_repository *repo, const git_oid *id) {
-    if (git_commit_lookup(&commit, repo, id) != 0) {
+    if (git_commit_lookup(&c_, repo, id) != 0) {
       return false;
     }
     return true;
@@ -109,18 +106,18 @@ public:
     return open_ref(repo, refname);
   }
 
-  git_commit *pointer() { return commit; }
+  git_commit *pointer() { return c_; }
 
 private:
-  ::git_commit *commit;
+  ::git_commit *c_;
 };
 
-class git_tree_t {
+class tree {
 public:
-  git_tree_t() = default;
-  ~git_tree_t() {
-    if (tree != nullptr) {
-      git_tree_free(tree);
+  tree() = default;
+  ~tree() {
+    if (tree_ != nullptr) {
+      git_tree_free(tree_);
     }
   }
   bool open(git_repository *repo, git_commit *commit, const std::string &path) {
@@ -130,7 +127,7 @@ public:
       return false;
     }
     if (path.empty() || path.compare(".") == 0) {
-      tree = xtree;
+      tree_ = xtree;
       return true;
     }
     git_tree_entry *te{nullptr};
@@ -144,7 +141,7 @@ public:
       giterr_set_str(GITERR_TREE, "cannot cast tree entry to tree");
       return false;
     }
-    if (git_tree_lookup(&tree, repo, git_tree_entry_id(te)) != 0) {
+    if (git_tree_lookup(&tree_, repo, git_tree_entry_id(te)) != 0) {
       git_tree_entry_free(te);
       git_tree_free(xtree);
       return false;
@@ -153,10 +150,10 @@ public:
     git_tree_free(xtree);
     return true;
   }
-  git_tree *pointer() { return tree; }
+  git_tree *pointer() { return tree_; }
 
 private:
-  git_tree *tree{nullptr};
+  git_tree *tree_{nullptr};
 };
 
 inline void PrintError() {

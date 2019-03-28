@@ -36,7 +36,7 @@ ax::ErrorResult Fromwchars(std::string_view sv_, Integer &iv) {
   return ax::Integer_from_chars(sv_, iv, 10);
 }
 
-bool cmd_options(int argc, char **argv, git::cheat_options &opt) {
+bool cmd_options(int argc, char **argv, cheat_options &opt) {
   if (argc == 1) {
     usage();
     return false;
@@ -137,11 +137,12 @@ bool cmd_options(int argc, char **argv, git::cheat_options &opt) {
 }
 
 int cmd_main(int argc, char **argv) {
-  git::cheat_options opt;
+  cheat_options opt;
   if (!cmd_options(argc, argv, opt)) {
     return 1;
   }
-  if (!git::cheat_execute(opt)) {
+  if (!cheat_execute(opt)) {
+    fprintf(stderr, "cheat execute failed\n");
     return 1;
   }
   return 0;

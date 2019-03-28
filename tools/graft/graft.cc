@@ -127,12 +127,12 @@ std::optional<std::string> Refernece(git_repository *repo,
 
 bool graft_commit(const graft_info_t &gf) {
 
-  git::git_repo_t repo;
+  git::repository repo;
   if (!repo.open(gf.gitdir)) {
     git::PrintError();
     return false;
   }
-  git::git_commit_t commit;
+  git::commit commit;
   if (!commit.open(repo.pointer(), gf.commitid)) {
     fprintf(stderr, "open commit: %s ", gf.commitid.c_str());
     git::PrintError();
@@ -143,7 +143,7 @@ bool graft_commit(const graft_info_t &gf) {
     fprintf(stderr, "cannot found ref\n");
     return false;
   }
-  git::git_commit_t parent;
+  git::commit parent;
   if (!parent.open_ref(repo.pointer(), *ref)) {
     fprintf(stderr, "open par commit: %s ", ref->c_str());
     git::PrintError();
