@@ -188,10 +188,6 @@ private:
   ::git_repository *repo_{nullptr};
 };
 
-inline void PrintError() {
-  fprintf(stderr, "Last Error:%s\n", giterr_last()->message);
-}
-
 } // namespace git
 
 #endif

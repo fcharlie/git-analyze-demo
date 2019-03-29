@@ -105,6 +105,13 @@ void SignatureAuthorFill(git_signature *sig, const git_signature *old) {
   }
 }
 
+void dump_error() {
+  auto ec = giterr_last();
+  if (ec != nullptr) {
+    fprintf(stderr, "%s\n", ec->message);
+  }
+}
+
 std::optional<std::string> Refernece(git_repository *repo,
                                      const std::string &b) {
   if (!b.empty()) {
@@ -135,7 +142,7 @@ bool graft_commit(const graft_info_t &gf) {
   git::commit commit;
   if (!commit.open(repo->pointer(), gf.commitid)) {
     fprintf(stderr, "open commit: %s ", gf.commitid.c_str());
-    git::PrintError();
+    dump_error();
     return false;
   }
   auto ref = Refernece(repo->pointer(), gf.branch);
@@ -146,14 +153,14 @@ bool graft_commit(const graft_info_t &gf) {
   git::commit parent;
   if (!parent.open_ref(repo->pointer(), *ref)) {
     fprintf(stderr, "open par commit: %s ", ref->c_str());
-    git::PrintError();
+    dump_error();
     return false;
   }
   ///
 
   git_tree *tree = nullptr;
   if (git_commit_tree(&tree, commit.pointer()) != 0) {
-    git::PrintError();
+    dump_error();
     return false;
   }
   git_signature author, committer;
@@ -167,7 +174,7 @@ bool graft_commit(const graft_info_t &gf) {
   if (git_commit_create(&oid, repo->pointer(), ref->c_str(), &author,
                         &committer, nullptr, msg.c_str(), tree, 2,
                         parents) != 0) {
-    git::PrintError();
+    dump_error();
     git_tree_free(tree);
     return false;
   }
