@@ -15,7 +15,7 @@ bool RulesFile(std::string &rf) {
 }
 
 // update ref-name oldrev newrev
-int main(int argc, char const *argv[]) {
+int cmd_main(int argc, char **argv) {
   if (argc < 4) {
     fprintf(stderr, "BAD argv\n");
     return 1;

@@ -1,6 +1,7 @@
 #
 
 add_executable(update
+  ../cmd_main.cc
   driver.cc
   engine.cc
   executor.cc
