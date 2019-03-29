@@ -128,7 +128,7 @@ git-complete dir branch 'commit message' 2018～2100
 
 ## Update 钩子
 
-Update 钩子是一个实验性的钩子用户实现 git 只读目录功能，相关的原理可以查看 [https://forcemz.net](https://forcemz.net) 的相关博客，虽然目前博客还没有写。
+Update 钩子是一个实验性的钩子用户实现 git 只读目录功能，相关的原理可以查看 [实现 Git 目录权限控制](https://forcemz.net/git/2019/04/01/ImplementGitDirPermissionControl/)
 
 ## 与 GIT 整合
 
