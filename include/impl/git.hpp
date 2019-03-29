@@ -30,6 +30,31 @@ class reference;
 class commit;
 class treeex;
 
+class tree {
+public:
+  tree() = default;
+  tree(tree &&other) {
+    if (tree_ != nullptr) {
+      git_tree_free(tree_);
+    }
+    tree_ = other.tree_;
+    other.tree_ = nullptr;
+  }
+  tree(const tree &) = delete;
+  tree &operator=(const tree &) = delete;
+  ~tree() {
+    if (tree_ != nullptr) {
+      git_tree_free(tree_);
+    }
+  }
+  static std::optional<tree> get_tree(repository &r, commit &c,
+                                      std::string_view path);
+  git_tree *p() { return tree_; }
+
+private:
+  git_tree *tree_{nullptr};
+};
+
 class commit {
 public:
   commit() = default;
@@ -133,62 +158,17 @@ public:
     }
   }
 
-  git_repository *pointer() { return repo_; }
+  git_repository *p() { return repo_; }
   std::optional<reference> get_reference(std::string_view refname);
   std::optional<reference> get_branch(std::string_view branch);
   std::optional<commit> get_reference_commit(std::string_view ref);
   std::optional<commit> get_reference_commit_auto(std::string_view ref);
   std::optional<commit> get_commit(std::string_view oid);
-
   static std::optional<repository> make_repository(std::string_view sv,
                                                    error_code &ec);
 
 private:
   ::git_repository *repo_{nullptr};
-};
-
-class tree {
-public:
-  tree() = default;
-  ~tree() {
-    if (tree_ != nullptr) {
-      git_tree_free(tree_);
-    }
-  }
-  bool open(git_repository *repo, git_commit *commit, const std::string &path) {
-    // std::vector<std::string> pmv;
-    git_tree *xtree{nullptr};
-    if (git_commit_tree(&xtree, commit) != 0) {
-      return false;
-    }
-    if (path.empty() || path.compare(".") == 0) {
-      tree_ = xtree;
-      return true;
-    }
-    git_tree_entry *te{nullptr};
-    if (git_tree_entry_bypath(&te, xtree, path.c_str()) != 0) {
-      git_tree_free(xtree);
-      return false;
-    }
-    if (git_tree_entry_type(te) != GIT_OBJ_TREE) {
-      git_tree_entry_free(te);
-      git_tree_free(xtree);
-      giterr_set_str(GITERR_TREE, "cannot cast tree entry to tree");
-      return false;
-    }
-    if (git_tree_lookup(&tree_, repo, git_tree_entry_id(te)) != 0) {
-      git_tree_entry_free(te);
-      git_tree_free(xtree);
-      return false;
-    }
-    git_tree_entry_free(te);
-    git_tree_free(xtree);
-    return true;
-  }
-  git_tree *pointer() { return tree_; }
-
-private:
-  git_tree *tree_{nullptr};
 };
 
 } // namespace git

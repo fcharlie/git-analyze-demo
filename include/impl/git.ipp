@@ -5,6 +5,32 @@
 
 namespace git {
 
+std::optional<tree> tree::get_tree(repository &r, commit &c,
+                                   std::string_view path) {
+  tree t;
+  if (git_commit_tree(&t.tree_, c.p()) != 0) {
+    return std::nullopt;
+  }
+  if (path.empty() || path == ".") {
+    return std::make_optional(std::move(t));
+  }
+  git_tree_entry *te = nullptr;
+  if (git_tree_entry_bypath(&te, t.p(), path.data()) != 0) {
+    return std::nullopt;
+  }
+  if (git_tree_entry_type(te) != GIT_OBJ_TREE) {
+    git_tree_entry_free(te);
+    return std::nullopt;
+  }
+  tree ct;
+  if (git_tree_lookup(&ct.tree_, r.p(), git_tree_entry_id(te)) != 0) {
+    git_tree_entry_free(te);
+    return std::nullopt;
+  }
+  git_tree_entry_free(te);
+  return std::make_optional(std::move(ct));
+}
+
 inline repository::repository(repository &&other) {
   if (repo_ != nullptr) {
     git_repository_free(repo_);

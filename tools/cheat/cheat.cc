@@ -106,18 +106,17 @@ bool cheat_execute(cheat_options &opt) {
     fprintf(stderr, "Error: %s\n", e->message);
     return false;
   }
-  git::tree tree;
-  if (!tree.open(r->pointer(), c->p(), opt.treedir)) {
+  auto t = git::tree::get_tree(*r, *c, opt.treedir);
+  if (!t) {
     auto e = giterr_last();
     fprintf(stderr, "Error: %s\n", e->message);
     return false;
   }
   if (opt.kauthor) {
-    return duplicate_new_branch(r->pointer(), c->p(), tree.pointer(),
-                                opt.branch);
+    return duplicate_new_branch(r->p(), c->p(), t->p(), opt.branch);
   }
   if (opt.message.empty()) {
     opt.message = git_commit_message(c->p());
   }
-  return hack_new_branch(r->pointer(), tree.pointer(), opt);
+  return hack_new_branch(r->p(), t->p(), opt);
 }

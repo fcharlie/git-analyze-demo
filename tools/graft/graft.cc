@@ -132,26 +132,6 @@ std::optional<std::string> make_refname(git::repository &r,
   return std::nullopt;
 }
 
-std::optional<std::string> Refernece(git_repository *repo,
-                                     const std::string &b) {
-  if (!b.empty()) {
-    return std::make_optional("refs/heads/" + b);
-  }
-  git_reference *ref = nullptr;
-  if (git_reference_lookup(&ref, repo, "HEAD") != 0) {
-    return std::nullopt;
-  }
-  git_reference *df = nullptr;
-  if (git_reference_resolve(&df, ref) != 0) {
-    git_reference_free(ref);
-    return std::nullopt;
-  }
-  std::string name = git_reference_name(df);
-  git_reference_free(ref);
-  git_reference_free(df);
-  return std::make_optional(name);
-}
-
 bool graft_commit(const graft_info_t &gf) {
   git::error_code ec;
   auto repo = git::repository::make_repository(gf.gitdir, ec);
@@ -192,9 +172,8 @@ bool graft_commit(const graft_info_t &gf) {
   const git_commit *parents[] = {parent->p(), commit->p()};
   fprintf(stderr, "New commit, message: '%s'\n", msg.c_str());
   git_oid oid;
-  if (git_commit_create(&oid, repo->pointer(), refname->c_str(), &author,
-                        &committer, nullptr, msg.c_str(), tree, 2,
-                        parents) != 0) {
+  if (git_commit_create(&oid, repo->p(), refname->c_str(), &author, &committer,
+                        nullptr, msg.c_str(), tree, 2, parents) != 0) {
     dump_error();
     git_tree_free(tree);
     return false;
