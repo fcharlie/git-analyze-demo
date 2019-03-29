@@ -95,7 +95,7 @@ bool cheat_execute(cheat_options &opt) {
     fprintf(stderr, "Error: %s\n", ec.message.data());
     return false;
   }
-  if (r->branch_exists(opt.branch)) {
+  if (r->get_branch(opt.branch)) {
     fprintf(stderr, "Branch '%s' exists, please create other name branch.\n",
             opt.branch.c_str());
     return false;

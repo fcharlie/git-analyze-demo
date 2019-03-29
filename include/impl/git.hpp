@@ -26,6 +26,10 @@ private:
 };
 
 class repository;
+class reference;
+class commitex;
+class treeex;
+
 class reference {
 public:
   reference() = default;
@@ -43,11 +47,69 @@ public:
       git_reference_free(ref_);
     }
   }
-  git_reference *raw() const { return ref_; }
+  git_reference *p() const { return ref_; }
 
 private:
   friend class repository;
   git_reference *ref_{nullptr};
+};
+
+// repository helper
+class repository {
+public:
+  repository() = default;
+  repository(repository &&other);
+  repository(const repository &) = delete;
+  repository &operator=(const repository &) = delete;
+  ~repository() {
+    if (repo_ != nullptr) {
+      git_repository_free(repo_);
+    }
+  }
+
+  git_repository *pointer() { return repo_; }
+  std::optional<reference> get_reference(std::string_view ref);
+  std::optional<reference> get_branch(std::string_view branch);
+  static std::optional<repository> make_repository(std::string_view sv,
+                                                   error_code &ec);
+
+private:
+  ::git_repository *repo_{nullptr};
+};
+
+class commitex {
+public:
+  commitex() = default;
+  commitex(const commitex &) = delete;
+  commitex &operator=(const commitex &) = delete;
+  commitex(commitex &&other) {
+    if (c) {
+      git_commit_free(c);
+    }
+    c = other.c;
+    other.c = nullptr;
+  }
+  ~commitex() {
+    if (c != nullptr) {
+      git_commit_free(c);
+    }
+  }
+  git_commit *p() const { return c; }
+  std::vector<commitex> parents() {
+    std::vector<commitex> cv;
+    auto n = git_commit_parentcount(c);
+    for (unsigned int i = 0; i < n; i++) {
+      commitex pc;
+      if (git_commit_parent(&pc.c, c, i) != 0) {
+        return cv;
+      }
+      cv.push_back(std::move(pc));
+    }
+    return cv;
+  }
+
+private:
+  git_commit *c{nullptr};
 };
 
 class commit {
@@ -158,34 +220,6 @@ public:
 
 private:
   git_tree *tree_{nullptr};
-};
-
-// repository helper
-class repository {
-public:
-  repository() = default;
-  repository(repository &&other);
-  repository(const repository &) = delete;
-  repository &operator=(const repository &) = delete;
-  ~repository() {
-    if (repo_ != nullptr) {
-      git_repository_free(repo_);
-    }
-  }
-  bool branch_exists(const std::string &b) {
-    git_reference *ref{nullptr};
-    if (git_branch_lookup(&ref, repo_, b.c_str(), GIT_BRANCH_LOCAL) != 0) {
-      return false;
-    }
-    git_reference_free(ref);
-    return true;
-  }
-  git_repository *pointer() { return repo_; }
-  static std::optional<repository> make_repository(std::string_view sv,
-                                                   error_code &ec);
-
-private:
-  ::git_repository *repo_{nullptr};
 };
 
 } // namespace git
