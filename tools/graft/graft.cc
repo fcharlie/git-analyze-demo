@@ -112,6 +112,26 @@ void dump_error() {
   }
 }
 
+std::optional<std::string> make_refname(git::repository &r,
+                                        std::string_view sv) {
+  if (!sv.empty()) {
+    return std::make_optional(aze::strcat("refs/heads/", sv));
+  }
+  auto ref = r.get_reference("HEAD");
+  if (!ref) {
+    return std::nullopt;
+  }
+  auto dr = ref->symbolic_target();
+  if (!dr) {
+    return std::nullopt;
+  }
+  auto p = git_reference_name(dr->p());
+  if (p != nullptr) {
+    return std::make_optional(p);
+  }
+  return std::nullopt;
+}
+
 std::optional<std::string> Refernece(git_repository *repo,
                                      const std::string &b) {
   if (!b.empty()) {
@@ -139,39 +159,40 @@ bool graft_commit(const graft_info_t &gf) {
     fprintf(stderr, "Error: %s\n", ec.message.data());
     return false;
   }
-  git::commit commit;
-  if (!commit.open(repo->pointer(), gf.commitid)) {
+  auto commit = repo->get_commit(gf.commitid);
+  if (!commit) {
     fprintf(stderr, "open commit: %s ", gf.commitid.c_str());
     dump_error();
     return false;
   }
-  auto ref = Refernece(repo->pointer(), gf.branch);
-  if (!ref) {
-    fprintf(stderr, "cannot found ref\n");
+
+  auto refname = make_refname(*repo, gf.branch);
+  if (!refname) {
+    fprintf(stderr, "unable lookup branch name\n");
     return false;
   }
-  git::commit parent;
-  if (!parent.open_ref(repo->pointer(), *ref)) {
-    fprintf(stderr, "open par commit: %s ", ref->c_str());
+  auto parent = repo->get_reference_commit(*refname);
+  if (!parent) {
+    fprintf(stderr, "open par commit: %s ", gf.branch.c_str());
     dump_error();
     return false;
   }
   ///
 
   git_tree *tree = nullptr;
-  if (git_commit_tree(&tree, commit.pointer()) != 0) {
+  if (git_commit_tree(&tree, commit->p()) != 0) {
     dump_error();
     return false;
   }
   git_signature author, committer;
-  SignatureAuthorFill(&author, git_commit_author(commit.pointer()));
-  SignatureCommiterFill(&committer, git_commit_committer(commit.pointer()));
+  SignatureAuthorFill(&author, git_commit_author(commit->p()));
+  SignatureCommiterFill(&committer, git_commit_committer(commit->p()));
   std::string msg =
-      gf.message.empty() ? git_commit_message(commit.pointer()) : gf.message;
-  const git_commit *parents[] = {parent.pointer(), commit.pointer()};
+      gf.message.empty() ? git_commit_message(commit->p()) : gf.message;
+  const git_commit *parents[] = {parent->p(), commit->p()};
   fprintf(stderr, "New commit, message: '%s'\n", msg.c_str());
   git_oid oid;
-  if (git_commit_create(&oid, repo->pointer(), ref->c_str(), &author,
+  if (git_commit_create(&oid, repo->pointer(), refname->c_str(), &author,
                         &committer, nullptr, msg.c_str(), tree, 2,
                         parents) != 0) {
     dump_error();

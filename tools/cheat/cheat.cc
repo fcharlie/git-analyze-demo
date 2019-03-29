@@ -100,24 +100,24 @@ bool cheat_execute(cheat_options &opt) {
             opt.branch.c_str());
     return false;
   }
-  git::commit c;
-  if (!c.open(r->pointer(), opt.parent)) {
+  auto c = r->get_reference_commit_auto(opt.parent);
+  if (!c) {
     auto e = giterr_last();
     fprintf(stderr, "Error: %s\n", e->message);
     return false;
   }
   git::tree tree;
-  if (!tree.open(r->pointer(), c.pointer(), opt.treedir)) {
+  if (!tree.open(r->pointer(), c->p(), opt.treedir)) {
     auto e = giterr_last();
     fprintf(stderr, "Error: %s\n", e->message);
     return false;
   }
   if (opt.kauthor) {
-    return duplicate_new_branch(r->pointer(), c.pointer(), tree.pointer(),
+    return duplicate_new_branch(r->pointer(), c->p(), tree.pointer(),
                                 opt.branch);
   }
   if (opt.message.empty()) {
-    opt.message = git_commit_message(c.pointer());
+    opt.message = git_commit_message(c->p());
   }
   return hack_new_branch(r->pointer(), tree.pointer(), opt);
 }

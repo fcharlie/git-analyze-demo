@@ -27,8 +27,45 @@ private:
 
 class repository;
 class reference;
-class commitex;
+class commit;
 class treeex;
+
+class commit {
+public:
+  commit() = default;
+  commit(const commit &) = delete;
+  commit &operator=(const commit &) = delete;
+  commit(commit &&other) {
+    if (c) {
+      git_commit_free(c);
+    }
+    c = other.c;
+    other.c = nullptr;
+  }
+  ~commit() {
+    if (c != nullptr) {
+      git_commit_free(c);
+    }
+  }
+  git_commit *p() const { return c; }
+  std::vector<commit> parents() {
+    std::vector<commit> cv;
+    auto n = git_commit_parentcount(c);
+    for (unsigned int i = 0; i < n; i++) {
+      commit pc;
+      if (git_commit_parent(&pc.c, c, i) != 0) {
+        return cv;
+      }
+      cv.push_back(std::move(pc));
+    }
+    return cv;
+  }
+
+private:
+  friend class repository;
+  friend class reference;
+  git_commit *c{nullptr};
+};
 
 class reference {
 public:
@@ -46,6 +83,35 @@ public:
     if (ref_ != nullptr) {
       git_reference_free(ref_);
     }
+  }
+  std::optional<reference> symbolic_target() {
+    if (git_reference_type(ref_) != GIT_REFERENCE_SYMBOLIC) {
+      return std::nullopt;
+    }
+    reference dr;
+    if (git_reference_resolve(&dr.ref_, ref_) != 0) {
+      return std::nullopt;
+    }
+    return std::make_optional(std::move(dr));
+  }
+  const git_oid *commitid(git_oid &id) {
+    switch (git_reference_type(ref_)) {
+    case GIT_REFERENCE_DIRECT:
+      return git_reference_target(ref_);
+    case GIT_REFERENCE_SYMBOLIC: {
+      git_reference *dr = nullptr;
+      if (git_reference_resolve(&dr, ref_) != 0) {
+        return nullptr;
+      }
+      auto p = git_reference_target(dr);
+      git_oid_cpy(&id, p);
+      git_reference_free(dr);
+      return &id;
+    }
+    default:
+      break;
+    }
+    return nullptr;
   }
   git_reference *p() const { return ref_; }
 
@@ -68,114 +134,17 @@ public:
   }
 
   git_repository *pointer() { return repo_; }
-  std::optional<reference> get_reference(std::string_view ref);
+  std::optional<reference> get_reference(std::string_view refname);
   std::optional<reference> get_branch(std::string_view branch);
+  std::optional<commit> get_reference_commit(std::string_view ref);
+  std::optional<commit> get_reference_commit_auto(std::string_view ref);
+  std::optional<commit> get_commit(std::string_view oid);
+
   static std::optional<repository> make_repository(std::string_view sv,
                                                    error_code &ec);
 
 private:
   ::git_repository *repo_{nullptr};
-};
-
-class commitex {
-public:
-  commitex() = default;
-  commitex(const commitex &) = delete;
-  commitex &operator=(const commitex &) = delete;
-  commitex(commitex &&other) {
-    if (c) {
-      git_commit_free(c);
-    }
-    c = other.c;
-    other.c = nullptr;
-  }
-  ~commitex() {
-    if (c != nullptr) {
-      git_commit_free(c);
-    }
-  }
-  git_commit *p() const { return c; }
-  std::vector<commitex> parents() {
-    std::vector<commitex> cv;
-    auto n = git_commit_parentcount(c);
-    for (unsigned int i = 0; i < n; i++) {
-      commitex pc;
-      if (git_commit_parent(&pc.c, c, i) != 0) {
-        return cv;
-      }
-      cv.push_back(std::move(pc));
-    }
-    return cv;
-  }
-
-private:
-  git_commit *c{nullptr};
-};
-
-class commit {
-public:
-  commit() = default;
-  ~commit() {
-    if (c_ != nullptr) {
-      git_commit_free(c_);
-    }
-  }
-  bool open_oid(git_repository *repo, const git_oid *id) {
-    if (git_commit_lookup(&c_, repo, id) != 0) {
-      return false;
-    }
-    return true;
-  }
-  /// open reference name style ''
-  bool open_ref(git_repository *repo, const std::string &refname) {
-    git_reference *ref{nullptr};
-    if (git_reference_lookup(&ref, repo, refname.c_str()) != 0) {
-      return false;
-    }
-    switch (git_reference_type(ref)) {
-    case GIT_REF_OID: {
-      auto oid = git_reference_target(ref);
-      auto r = open_oid(repo, oid);
-      git_reference_free(ref);
-      return r;
-    }
-    case GIT_REF_SYMBOLIC: {
-      git_reference *dref{nullptr};
-      if (git_reference_resolve(&dref, ref) != 0) {
-        git_reference_free(ref);
-        return false;
-      }
-      git_reference_free(ref);
-      auto oid = git_reference_target(dref);
-      auto r = open_oid(repo, oid);
-      git_reference_free(dref);
-      return r;
-    }
-    default:
-      break;
-    }
-    git_reference_free(ref);
-    return true;
-  }
-  bool open(git_repository *repo, const std::string &rbo) {
-    git_oid oid;
-    if (git_oid_fromstr(&oid, rbo.c_str()) == 0) {
-      if (open_oid(repo, &oid)) {
-        return true;
-      }
-    }
-    if (aze::starts_with(rbo, "refs/heads/") || rbo.compare("HEAD") == 0) {
-      return open_ref(repo, rbo);
-    }
-    std::string refname("refs/heads/");
-    refname.append(rbo);
-    return open_ref(repo, refname);
-  }
-
-  git_commit *pointer() { return c_; }
-
-private:
-  ::git_commit *c_;
 };
 
 class tree {
