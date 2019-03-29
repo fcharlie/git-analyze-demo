@@ -85,6 +85,13 @@ public:
     }
     return cv;
   }
+  bool equal(const git_oid *id) {
+    auto xid = git_commit_id(c);
+    if (xid == nullptr) {
+      return false;
+    }
+    return git_oid_cmp(id, xid) == 0;
+  }
 
 private:
   friend class repository;
