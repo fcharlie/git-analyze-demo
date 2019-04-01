@@ -104,8 +104,9 @@ endif()
 
 set(ANALYZE_CLEANROOT "${CMAKE_BINARY_DIR}/cleanroot")
 
-include(ExternalProject)
+message(STATUS "TRACE '${CMAKE_GENERATOR}' ${CMAKE_MAKE_PROGRAM}")
 
+include(ExternalProject)
 
 ExternalProject_Add(http-parser
   URL https://github.com/nodejs/http-parser/archive/v2.9.0.tar.gz
