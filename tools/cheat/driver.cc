@@ -1,5 +1,6 @@
 ////
 #include <iomanip>
+#include <sstream>
 #include <string>
 #include <argvex.hpp>
 #include "cheat.hpp"
@@ -95,7 +96,9 @@ bool cmd_options(int argc, char **argv, cheat_options &opt) {
           struct std::tm tm;
           std::istringstream ss(optarg);
           ss >> std::get_time(&tm, "%Y-%m-%dT%H:%M:%SZ");
-          opt.timeoff = tm.tm_gmtoff;
+#ifndef _WIN32
+          opt.timeoff = tm.tm_gmtoff; // UNIX ONLY
+#endif
           opt.date = mktime(&tm);
         } break;
         case 'v':

@@ -89,6 +89,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED YES)
 
 if (MSVC)
   add_compile_options("-D_CRT_SECURE_NO_WARNINGS=1")
+  add_compile_options("/Zc:__cplusplus")
 else()
   add_compile_options("-g")
   add_compile_options("-Wall")

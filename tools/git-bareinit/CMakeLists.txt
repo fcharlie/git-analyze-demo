@@ -2,12 +2,14 @@
 
 if(WIN32)
 add_executable(git-bareinit
+  ../cmd_main.cc
   main.cc
   git-bareinit.manifest
   git-bareinit.rc
 )
 else()
 add_executable(git-bareinit
+  ../cmd_main.cc
   main.cc
 )
 endif()
