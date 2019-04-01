@@ -171,6 +171,7 @@ public:
   std::optional<commit> get_reference_commit(std::string_view ref);
   std::optional<commit> get_reference_commit_auto(std::string_view ref);
   std::optional<commit> get_commit(std::string_view oid);
+  std::optional<commit> get_commit(const git_oid *id);
   static std::optional<repository> make_repository(std::string_view sv,
                                                    error_code &ec);
 

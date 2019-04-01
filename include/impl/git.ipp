@@ -56,6 +56,14 @@ repository::get_branch(std::string_view branch) {
   return std::nullopt;
 }
 
+inline std::optional<commit> repository::get_commit(const git_oid *id) {
+  commit c;
+  if (git_commit_lookup(&c.c, repo_, id) != 0) {
+    return std::nullopt;
+  }
+  return std::make_optional(std::move(c));
+}
+
 inline std::optional<commit> repository::get_commit(std::string_view sid) {
   git_oid oid;
   if (git_oid_fromstrn(&oid, sid.data(), sid.size()) != 0) {

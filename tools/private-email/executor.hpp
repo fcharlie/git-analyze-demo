@@ -14,10 +14,13 @@ public:
   bool Initialize();
   bool Execute(std::string_view gitdir, std::string_view oldrev,
                std::string_view newrev);
+  bool IsBlocked() const { return blocked; }
 
 private:
+  bool Parentwalk(std::string_view gitdir, std::string_view newrev);
   std::vector<std::string> ke;
   std::unordered_set<std::string_view> emails;
+  bool blocked{false};
 };
 } // namespace aze
 
