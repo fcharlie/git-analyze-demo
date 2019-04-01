@@ -18,6 +18,10 @@ if(MINGW)
     #set_target_properties(git-analyze PROPERTIES COMPILE_FLAGS -municode)
 endif()
 
+add_dependencies(git-graft
+  libgit2
+)
+
 target_link_libraries(git-graft
   ${LIBGIT2}
 )

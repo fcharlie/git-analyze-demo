@@ -20,6 +20,10 @@ if(MINGW)
     #set_target_properties(git-analyze PROPERTIES COMPILE_FLAGS -municode)
 endif()
 
+add_dependencies(git-bareinit
+  libgit2
+)
+
 target_link_libraries(git-bareinit
   Pal
   ${LIBGIT2}

@@ -19,6 +19,10 @@ if(MINGW)
     #set_target_properties(git-analyze PROPERTIES COMPILE_FLAGS -municode)
 endif()
 
+add_dependencies(pre-commit
+  libgit2
+)
+
 target_link_libraries(pre-commit
   Pal
   ${LIBGIT2}

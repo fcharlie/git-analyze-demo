@@ -26,6 +26,11 @@ if(MINGW)
     #set_target_properties(git-rollback PROPERTIES COMPILE_FLAGS -municode)
 endif()
 
+
+add_dependencies(git-rollback
+  libgit2
+)
+
 target_link_libraries(git-rollback
   Pal
   ${LIBGIT2}

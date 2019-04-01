@@ -18,6 +18,10 @@ add_executable(git-analyze
 )
 endif()
 
+add_dependencies(git-analyze
+  libgit2
+)
+
 if(MINGW)
     target_compile_options(git-analyze PRIVATE -municode)
     set(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -municode")

@@ -25,6 +25,12 @@ add_executable(update_test
   update_test.cc
   engine.cc
 )
+
+add_dependencies(update
+  libgit2
+  libre2
+)
+
 if(WIN32)
   target_link_libraries(update_test
     re2
