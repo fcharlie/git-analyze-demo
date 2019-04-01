@@ -1,6 +1,6 @@
 # Copyright (c) 2019 GITEE.COM All Rights Reserved.
 
-cmake_minimum_required (VERSION 3.10)
+cmake_minimum_required (VERSION 3.14)
 project(git-analyze)
 
 
@@ -13,8 +13,6 @@ This process created the file `CMakeCache.txt' and the directory `CMakeFiles'.
 Please delete them.")
 endif()
 
-OPTION(ADDRESS_SANITIZER "Enable Address Sanitizer, When debug" OFF)
-
 if (NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   message(STATUS "No build type selected, default to Debug")
   set(CMAKE_BUILD_TYPE "Debug" CACHE STRING "Build type (default Debug)" FORCE)
@@ -22,11 +20,6 @@ if (NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
 endif()
 
-message(STATUS "Build git-analyze on ${CMAKE_SYSTEM_NAME} ")
-
-
-set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
-set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
 
 if(NOT DEFINED GITANALYZE_VERSION_MAJOR)
   set(GITANALYZE_VERSION_MAJOR 3)
@@ -83,24 +76,32 @@ if(WIN32)
   include(InstallRequiredSystemLibraries)
 endif()
 
+option(USE_SANITIZE "Use address sanitizer compile git-analyze" OFF)
+
+message(STATUS "Build git-analyze on ${CMAKE_SYSTEM_NAME} ")
+
+set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
+set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
+
 # Need CMake 3.10 or Later https://cmake.org/cmake/help/v3.10/prop_tgt/CXX_STANDARD.html#prop_tgt:CXX_STANDARD
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
 
 if (MSVC)
   add_compile_options("-D_CRT_SECURE_NO_WARNINGS=1")
-  add_compile_options("/Zc:__cplusplus")
+  add_compile_options("/Zc:__cplusplus") # C++ __cplusplus
 else()
   add_compile_options("-g")
   add_compile_options("-Wall")
   add_compile_options("-Wextra")
+  if(USE_SANITIZE)
+    add_compile_options("-fsanitize=address")
+    add_compile_options("-fno-omit-frame-pointer")
+    set(CMAKE_EXE_LINKER_FLAGS "-fsanitize=address ")
+  endif()
 endif()
 
-if(ADDRESS_SANITIZER)
-  add_compile_options("-fsanitize=address")
-  add_compile_options("-fno-omit-frame-pointer")
-  set(CMAKE_EXE_LINKER_FLAGS "-fsanitize=address ")
-endif()
+
 
 set(ANALYZE_CLEANROOT "${CMAKE_BINARY_DIR}/cleanroot")
 
@@ -114,7 +115,6 @@ ExternalProject_Add(http-parser
   PATCH_COMMAND patch -Nbp1 -i ${CMAKE_CURRENT_SOURCE_DIR}/patch/http-parser.patch
   CMAKE_ARGS
     -G${CMAKE_GENERATOR}
-    -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
     -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
     -DCMAKE_INSTALL_PREFIX:PATH=${ANALYZE_CLEANROOT}
     -DCMAKE_BUILD_TYPE:STRING=Release
@@ -128,6 +128,7 @@ ExternalProject_Add(libgit2
   URL_HASH SHA256=0ca11048795b0d6338f2e57717370208c2c97ad66c6d5eac0c97a8827d13936b
   CMAKE_ARGS
     -G${CMAKE_GENERATOR}
+    -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
     -DCMAKE_PROJECT_libgit2_INCLUDE=${CMAKE_CURRENT_SOURCE_DIR}/cmake/libgit2.cmake
     -DCMAKE_INSTALL_PREFIX:PATH=${ANALYZE_CLEANROOT}
     -DCMAKE_BUILD_TYPE:STRING=Release
@@ -148,6 +149,8 @@ ExternalProject_Add(libre2
   URL_HASH SHA256=05dc21aafc1fa21161214c6145aeed8a6d108bde390584c762aa3e64df557d6d
   CMAKE_ARGS
     -G${CMAKE_GENERATOR}
+    -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+    -DCMAKE_CXX_STANDARD=17
     -DCMAKE_BUILD_TYPE:STRING=Release
     -DCMAKE_INSTALL_PREFIX:PATH=${ANALYZE_CLEANROOT}
     -DBUILD_SHARED_LIBS=OFF
