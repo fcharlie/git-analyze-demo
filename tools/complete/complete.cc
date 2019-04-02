@@ -10,8 +10,8 @@
 
 //// this is real main
 int cmd_main(int argc, char **argv) {
-  int start_year = 0;
-  int end_year = 0;
+  uint32_t start_year = 0;
+  uint32_t end_year = 0;
   if (argc < 3) {
     Printe("usage: %s  dir branch message year(or year range) day\nExample: "
            "git-complete . dev 'no commit message' 2017~2020 \n",
@@ -29,10 +29,10 @@ int cmd_main(int argc, char **argv) {
   }
   if (argc > 4) {
     char *c = nullptr;
-    start_year = strtol(argv[4], &c, 10);
+    start_year = (uint32_t)strtol(argv[4], &c, 10);
     if (c != nullptr && (*c == '~' || *c == '-')) {
       char *c2 = nullptr;
-      end_year = strtol(c + 1, &c2, 10);
+      end_year = (uint32_t)strtol(c + 1, &c2, 10);
     }
     if (end_year == 0) {
       end_year = start_year;
