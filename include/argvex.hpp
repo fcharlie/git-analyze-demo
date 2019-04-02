@@ -54,14 +54,14 @@ ErrorResult Integer_from_chars(std::string_view wsv, Integer &ov,
   }
   using Unsigned = std::make_unsigned_t<Integer>;
   constexpr Unsigned _Uint_max = static_cast<Unsigned>(-1);
-  constexpr Unsigned _Int_max = static_cast<Unsigned>(_Uint_max >> 1);
-  constexpr Unsigned _Abs_int_min = static_cast<Unsigned>(_Int_max + 1);
 
   Unsigned _risky_val;
   Unsigned _max_digit;
 
   if constexpr (std::is_signed_v<Integer>) {
+    constexpr Unsigned _Int_max = static_cast<Unsigned>(_Uint_max >> 1);
     if (msign) {
+      constexpr Unsigned _Abs_int_min = static_cast<Unsigned>(_Int_max + 1);
       _risky_val = static_cast<Unsigned>(_Abs_int_min / base);
       _max_digit = static_cast<Unsigned>(_Abs_int_min % base);
     } else {

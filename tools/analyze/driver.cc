@@ -155,6 +155,12 @@ bool parse_opts(int argc, char **argv, aze_options &opt) {
   if (opt.warnsize == 0) {
     opt.warnsize = AzeEnv("GIT_AZE_WARNSIZE", 50 * MB);
   }
+  if (opt.gitdir.empty()) {
+    opt.gitdir = ".";
+  }
+  if (!opt.allrefs && opt.refname.empty()) {
+    opt.refname = "HEAD";
+  };
   return true;
 }
 
@@ -169,14 +175,13 @@ int cmd_main(int argc, char **argv) {
           "git-analyze details\nlimit size:      %4.2f MB\nwarnning size:   "
           "%4.2f MB\n",
           ((double)opt.largesize / MB), ((double)opt.warnsize / MB));
+
   if (!e.Initialize(opt.gitdir)) {
     return 1;
   }
   if (opt.allrefs) {
     return e.AzeAll(opt.timeout) ? 0 : 1;
   }
-  if (opt.refname.empty()) {
-    opt.refname = "HEAD";
-  }
+
   return e.AzeOne(opt.refname, opt.timeout) ? 0 : 1;
 }
