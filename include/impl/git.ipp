@@ -120,6 +120,21 @@ repository::make_repository(std::string_view sv, error_code &ec) {
   }
   return std::make_optional(std::move(repo));
 }
+
+inline std::optional<repository>
+repository::make_repository_ex(std::string_view sv, error_code &ec) {
+  repository repo;
+  ec.ec = git_repository_open_ext(&repo.repo_, sv.data(), 0, nullptr);
+  if (ec.ec != 0) {
+    auto e = giterr_last();
+    if (e != nullptr) {
+      ec.message = e->message;
+    }
+    return std::nullopt;
+  }
+  return std::make_optional(std::move(repo));
+}
+
 } // namespace git
 
 #endif

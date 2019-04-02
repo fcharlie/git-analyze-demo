@@ -90,7 +90,7 @@ bool cheat_execute(cheat_options &opt) {
     opt.parent = "HEAD"; /// current head
   }
   git::error_code ec;
-  auto r = git::repository::make_repository(opt.gitdir, ec);
+  auto r = git::repository::make_repository_ex(opt.gitdir, ec);
   if (!r) {
     fprintf(stderr, "Error: %s\n", ec.message.data());
     return false;

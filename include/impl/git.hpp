@@ -174,6 +174,8 @@ public:
   std::optional<commit> get_commit(const git_oid *id);
   static std::optional<repository> make_repository(std::string_view sv,
                                                    error_code &ec);
+  static std::optional<repository> make_repository_ex(std::string_view sv,
+                                                      error_code &ec);
 
 private:
   ::git_repository *repo_{nullptr};

@@ -134,7 +134,7 @@ std::optional<std::string> make_refname(git::repository &r,
 
 bool graft_commit(const graft_info_t &gf) {
   git::error_code ec;
-  auto repo = git::repository::make_repository(gf.gitdir, ec);
+  auto repo = git::repository::make_repository_ex(gf.gitdir, ec);
   if (!repo) {
     fprintf(stderr, "Error: %s\n", ec.message.data());
     return false;

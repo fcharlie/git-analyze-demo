@@ -1,10 +1,10 @@
 /*
-* commit.cc
-* git-analyze
-* author: Force.Charlie
-* Date: 2017.04
-* Copyright (C) 2019. GITEE.COM. All Rights Reserved.
-*/
+ * commit.cc
+ * git-analyze
+ * author: Force.Charlie
+ * Date: 2017.04
+ * Copyright (C) 2019. GITEE.COM. All Rights Reserved.
+ */
 #include "complete.hpp"
 
 bool Demolisher::Userinfo() {
@@ -88,7 +88,7 @@ bool Demolisher::Initialize(const char *dir, const char *ref,
   if (messageTemplate) {
     message.assign(messageTemplate);
   }
-  if (git_repository_open(&repo, dir) != 0) {
+  if (git_repository_open_ext(&repo, dir, 0, nullptr) != 0) {
     auto err = giterr_last();
     Printe("Open repository %s\n", err->message);
     return false;
