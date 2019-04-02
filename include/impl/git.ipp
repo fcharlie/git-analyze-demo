@@ -5,8 +5,8 @@
 
 namespace git {
 
-std::optional<tree> tree::get_tree(repository &r, commit &c,
-                                   std::string_view path) {
+inline std::optional<tree> tree::get_tree(repository &r, commit &c,
+                                          std::string_view path) {
   tree t;
   if (git_commit_tree(&t.tree_, c.p()) != 0) {
     return std::nullopt;
@@ -106,6 +106,16 @@ repository::get_reference_commit_auto(std::string_view ref) {
   std::string xref("refs/heads/");
   xref.append(ref);
   return get_reference_commit(ref);
+}
+
+inline std::optional<config> repository::get_config() {
+  std::string p(git_repository_path(repo_));
+  p.append("/config");
+  config c;
+  if (git_config_open_ondisk(&c.c, p.c_str()) != 0) {
+    return std::nullopt;
+  }
+  return std::make_optional(std::move(c));
 }
 
 inline std::optional<repository>

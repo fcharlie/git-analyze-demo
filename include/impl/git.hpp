@@ -47,6 +47,14 @@ public:
       git_tree_free(tree_);
     }
   }
+  tree &acquire(tree &&other) {
+    if (tree_ != nullptr) {
+      git_tree_free(tree_);
+    }
+    tree_ = other.tree_;
+    other.tree_ = nullptr;
+    return *this;
+  }
   static std::optional<tree> get_tree(repository &r, commit &c,
                                       std::string_view path);
   git_tree *p() { return tree_; }
@@ -71,6 +79,11 @@ public:
     if (c != nullptr) {
       git_commit_free(c);
     }
+  }
+  git_commit *lost() {
+    auto p = c;
+    c = nullptr;
+    return p;
   }
   git_commit *p() const { return c; }
   std::vector<commit> parents() {
@@ -152,6 +165,43 @@ private:
   git_reference *ref_{nullptr};
 };
 
+class config {
+public:
+  config() = default;
+  config(config &&other) {
+    if (c != nullptr) {
+      git_config_free(c);
+    }
+    c = other.c;
+    other.c = nullptr;
+  }
+  config(const config &) = delete;
+  config &operator=(const config &) = delete;
+  git_config *p() const { return c; }
+  static std::optional<config> global() {
+    config c;
+    if (git_config_open_default(&c.c) != 0) {
+      return std::nullopt;
+    }
+    return std::make_optional(std::move(c));
+  }
+  std::string get(const char *key) {
+    std::string v;
+    git_config_entry *e;
+    if (git_config_get_entry(&e, c, key) == 0) {
+      if (e->value != nullptr) {
+        v.assign(e->value);
+      }
+      git_config_entry_free(e);
+    }
+    return v;
+  }
+
+private:
+  friend class repository;
+  git_config *c{nullptr};
+};
+
 // repository helper
 class repository {
 public:
@@ -164,7 +214,14 @@ public:
       git_repository_free(repo_);
     }
   }
-
+  repository &acquire(repository &&other) {
+    if (repo_ != nullptr) {
+      git_repository_free(repo_);
+    }
+    repo_ = other.repo_;
+    other.repo_ = nullptr;
+    return *this;
+  }
   git_repository *p() { return repo_; }
   std::optional<reference> get_reference(std::string_view refname);
   std::optional<reference> get_branch(std::string_view branch);
@@ -172,6 +229,7 @@ public:
   std::optional<commit> get_reference_commit_auto(std::string_view ref);
   std::optional<commit> get_commit(std::string_view oid);
   std::optional<commit> get_commit(const git_oid *id);
+  std::optional<config> get_config(); // get repo's config
   static std::optional<repository> make_repository(std::string_view sv,
                                                    error_code &ec);
   static std::optional<repository> make_repository_ex(std::string_view sv,

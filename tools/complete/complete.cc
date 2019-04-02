@@ -18,9 +18,15 @@ int cmd_main(int argc, char **argv) {
            argv[0]);
     return 1;
   }
-  Demolisher demolisher;
-  if (!demolisher.Initialize(argv[1], argv[2], argv[3]))
+  bool createNewbranch = false;
+  if (argc > 5) {
+    createNewbranch = (strcmp("--nb", argv[5]) == 0 || strcmp("--NB", argv[5]));
+  }
+  git::global_initializer_t gi;
+  Executor ex;
+  if (!ex.Initialize(argv[1], argv[2], argv[3], createNewbranch)) {
     return 1;
+  }
   if (argc > 4) {
     char *c = nullptr;
     start_year = strtol(argv[4], &c, 10);
@@ -32,12 +38,9 @@ int cmd_main(int argc, char **argv) {
       end_year = start_year;
     }
   }
-  bool createNewbranch = false;
-  if (argc > 5) {
-    createNewbranch = (strcmp("--nb", argv[5]) == 0 || strcmp("--NB", argv[5]));
-  }
-  if (demolisher.IntervalFill(start_year, end_year, createNewbranch)) {
-    Print("Has completed in %d to %d's commits !\n", start_year, end_year);
+  if (ex.Execute(start_year, end_year)) {
+    fprintf(stderr, "\rHas completed in %d to %d's commits !\n", start_year,
+            end_year);
   }
   return 0;
 }

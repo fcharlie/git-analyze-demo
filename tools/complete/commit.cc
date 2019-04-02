@@ -7,142 +7,100 @@
  */
 #include "complete.hpp"
 
-bool Demolisher::Userinfo() {
-  git_config *config = nullptr;
-  /// To get default....
-  if (git_config_open_default(&config) == 0) {
-    git_config_entry *entry;
-    if (git_config_get_entry(&entry, config, "user.name") == 0) {
-      strncpy(name, entry->value, 256);
-      git_config_entry_free(entry);
+bool Executor::Parseconfig() {
+  auto c0 = git::config::global();
+  if (c0) {
+    auto a = c0->get("user.name");
+    if (!a.empty()) {
+      author.assign(a);
     }
-    if (git_config_get_entry(&entry, config, "user.email") == 0) {
-      strncpy(email, entry->value, 256);
-      git_config_entry_free(entry);
+    auto e = c0->get("user.email");
+    if (!e.empty()) {
+      email.assign(e);
     }
-    git_config_free(config);
   }
-  std::string path(git_repository_path(repo));
-  path.append("/config");
-  if (git_config_open_ondisk(&config, path.c_str()) == 0) {
-    git_config_entry *entry;
-    if (git_config_get_entry(&entry, config, "user.name") == 0) {
-      strncpy(name, entry->value, 256);
-      git_config_entry_free(entry);
+  auto c1 = r.get_config();
+  if (c1) {
+    auto a = c0->get("user.name");
+    if (!a.empty()) {
+      author.assign(a);
     }
-    if (git_config_get_entry(&entry, config, "user.email") == 0) {
-      strncpy(email, entry->value, 256);
-      git_config_entry_free(entry);
+    auto e = c0->get("user.email");
+    if (!e.empty()) {
+      email.assign(e);
     }
-    git_config_free(config);
   }
-  if (strlen(name) == 0 || strlen(email) == 0)
-    return false;
-  return true;
+  auto m = getenv("GIT_COMMIT_MAXCOUNT");
+  if (m != nullptr) {
+    char *c;
+    auto i = strtol(m, &c, 10);
+    if (errno == 0 && i > 0 && i < 32) {
+      maxcount = i;
+    }
+  }
+  auto a = getenv("GIT_COMMIT_AUTHOR");
+  if (a != nullptr) {
+    author.assign(a);
+  }
+  auto e = getenv("GIT_COMMIT_EMAIL");
+  if (e != nullptr) {
+    author.assign(e);
+  }
+  return !(author.empty() || email.empty());
 }
 
-bool Demolisher::InitializeRoot() {
-  git_reference *ref = nullptr;
-  if (git_repository_head(&ref, repo) != 0) {
-    auto err = giterr_last();
-    Printe("cannot open current head: %s\n", err->message);
-    git_repository_free(repo);
+bool Executor::Initialize(std::string_view dir, std::string_view branch,
+                          std::string_view message, bool nb_) {
+  nb = nb_;
+  git::error_code ec;
+  auto xr = git::repository::make_repository_ex(dir, ec);
+  if (!xr) {
+    Printe("unable open '%s'\n", dir.data());
     return false;
   }
-  git_reference *xref{nullptr};
-  if (git_reference_resolve(&xref, ref) != 0) {
-    auto err = giterr_last();
-    Printe("Resolve reference: %s\n", err->message);
-    git_reference_free(ref);
-    git_repository_free(repo);
+  r.acquire(std::move(*xr));
+  if (!Parseconfig()) {
+    Printe("Please set git commit email and git commit name\n");
     return false;
   }
-  auto oid = git_reference_target(xref);
-  if (!oid) {
-    auto err = giterr_last();
-    Printe("Lookup commit: %s\n", err->message);
-    git_reference_free(xref);
-    git_reference_free(ref);
-    return false;
-  }
-  if (git_commit_lookup(&parent, repo, oid) != 0) {
-    auto err = giterr_last();
-    Printe("Lookup commit tree: %s\n", err->message);
-    git_reference_free(xref);
-    git_reference_free(ref);
-    return false;
-  }
-  git_reference_free(xref);
-  git_reference_free(ref);
-  return true;
-}
-
-/// because call by ourself, not check nullptr
-bool Demolisher::Initialize(const char *dir, const char *ref,
-                            const char *messageTemplate) {
-  if (strncmp(ref, "refs/heads/", sizeof("refs/heads") - 1) == 0) {
-    refs.assign(ref);
+  msg = message;
+  if (aze::starts_with(branch, "refs/heads/")) {
+    refname = branch;
   } else {
-    refs.assign("refs/heads/").append(ref);
+    refname.assign("refs/heads/").append(branch);
   }
-  if (messageTemplate) {
-    message.assign(messageTemplate);
-  }
-  if (git_repository_open_ext(&repo, dir, 0, nullptr) != 0) {
-    auto err = giterr_last();
-    Printe("Open repository %s\n", err->message);
+  auto c = r.get_reference_commit_auto("HEAD");
+  if (!c) {
+    Printe("Unable resolve 'HEAD'\n");
     return false;
   }
-  if (!Userinfo()) {
-    Printe("Not Found configured name and email\n");
+  auto t_ = git::tree::get_tree(r, *c, "");
+  if (!t_) {
+    Printe("Unable resolve 'HEAD' tree\n");
     return false;
   }
-  if (!InitializeRoot()) {
-    Printe("Current no commit\n");
-    return false;
-  }
+  t.acquire(std::move(*t_));
+  parent = c->lost(); // lost pointer
   return true;
 }
 
-bool Demolisher::CommitBuilder(git_time when) {
+bool Executor::One(git_time when) {
   git_signature sig;
-  sig.name = name;
-  sig.email = email;
+  sig.name = author.data();
+  sig.email = email.data();
   sig.when = when;
-  git_oid newoid;
-  git_tree *tree = nullptr;
-  if (git_commit_tree(&tree, parent) != 0) {
-    auto err = giterr_last();
-    Printe("git_commit_tree() %s\n", err->message);
+  git_oid nid;
+  const git_commit *ps[] = {parent};
+  if (git_commit_create(&nid, r.p(), refname.c_str(), &sig, &sig, nullptr,
+                        msg.data(), t.p(), (nb ? 0 : 1),
+                        (nb ? nullptr : ps)) != 0) {
     return false;
   }
-  if (!createbranch) {
-    const git_commit *ps[] = {parent};
-    if (git_commit_create(&newoid, repo, refs.c_str(), &sig, &sig, NULL,
-                          message.data(), tree, 1, ps) != 0) {
-      auto err = giterr_last();
-      Printe("git_commit_create() %s\n", err->message);
-      git_tree_free(tree);
-      return false;
-    }
-  } else {
-    if (git_commit_create(&newoid, repo, refs.c_str(), &sig, &sig, NULL,
-                          message.data(), tree, 0, nullptr) != 0) {
-      auto err = giterr_last();
-      Printe("git_commit_create() %s\n", err->message);
-      git_tree_free(tree);
-      return false;
-    }
-  }
-  createbranch = false;
-  git_tree_free(tree);
-  if (parent)
+  if (parent != nullptr) {
     git_commit_free(parent);
-  parent = nullptr;
-  if (git_commit_lookup(&parent, repo, &newoid)) {
-    return false;
+    parent = nullptr;
   }
-  return true;
+  return (git_commit_lookup(&parent, r.p(), &nid) == 0);
 }
 
 static unsigned int Random() {
@@ -151,7 +109,7 @@ static unsigned int Random() {
   return (g_seed >> 16) & 0x7FFF;
 }
 
-bool Demolisher::RoundYear(int year) {
+bool Executor::RoundYear(int year) {
   auto t = time(nullptr);
   auto p = localtime(&t);
   unsigned my = year <= 1900 ? p->tm_year : year - 1900;
@@ -162,14 +120,14 @@ bool Demolisher::RoundYear(int year) {
   for (unsigned i = 1; i <= days; i++) {
     mt.tm_mday = i;
     mt.tm_mon = 0;
-    auto N = Random() % 5 + 1;
+    auto N = Random() % maxcount + 1;
     for (unsigned k = 0; k < N; k++) {
       mt.tm_hour = p->tm_hour;
       mt.tm_min = p->tm_min + k;
       mt.tm_sec = p->tm_sec;
       mt.tm_year = my;
       gt.time = mktime(&mt);
-      if (!CommitBuilder(gt)) {
+      if (!One(gt)) {
         return false;
       }
     }
@@ -177,16 +135,12 @@ bool Demolisher::RoundYear(int year) {
   return true;
 }
 
-bool Demolisher::IntervalFill(unsigned sy, unsigned ey, bool newref) {
-  Print("Year: %d~%d\n", sy, ey);
-
-  if (newref)
-    createbranch = true;
-  for (auto i = sy; i <= ey; i++) {
+bool Executor::Execute(uint32_t begin, uint32_t end) {
+  for (auto i = begin; i <= end; i++) {
     if (!RoundYear(i)) {
       return false;
     }
-    printf("Fill %d done\n", i);
+    fprintf(stderr, "\rFill %04d done", i);
   }
   return true;
 }
