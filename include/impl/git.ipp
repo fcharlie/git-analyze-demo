@@ -42,11 +42,19 @@ inline repository::repository(repository &&other) {
 inline std::optional<reference>
 repository::get_reference(std::string_view refname) {
   reference r;
-  if (git_reference_lookup(&r.ref_, repo_, refname.data()) == 0) {
-    return std::make_optional(std::move(r));
+  if (git_reference_lookup(&r.ref_, repo_, refname.data()) != 0) {
+    return std::nullopt;
   }
-  return std::nullopt;
+  if (git_reference_type(r.p()) == GIT_REFERENCE_SYMBOLIC) {
+    reference rd;
+    if (git_reference_resolve(&rd.ref_, r.p()) != 0) {
+      return std::nullopt;
+    }
+    return std::make_optional(std::move(rd));
+  }
+  return std::make_optional(std::move(r));
 }
+
 inline std::optional<reference>
 repository::get_branch(std::string_view branch) {
   reference r;

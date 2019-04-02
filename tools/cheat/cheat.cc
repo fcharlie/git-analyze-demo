@@ -8,8 +8,8 @@ bool duplicate_new_branch(git_repository *repo, git_commit *commit,
   auto au = git_commit_author(commit);
   auto cu = git_commit_committer(commit);
   auto msg = git_commit_message(commit);
-  if (git_commit_create(&newoid, repo, refname.c_str(), au, cu, NULL, msg, tree,
-                        0, nullptr) != 0) {
+  if (git_commit_create(&newoid, repo, refname.c_str(), au, cu, nullptr, msg,
+                        tree, 0, nullptr) != 0) {
     auto e = giterr_last();
     fprintf(stderr, "create new branch %s failed: %s\n", branch.c_str(),
             e->message);
@@ -58,7 +58,7 @@ bool hack_new_branch(git_repository *repo, git_tree *tree,
   }
   git_oid newoid;
   std::string refname = std::string("refs/heads/") + opt.branch;
-  if (git_commit_create(&newoid, repo, refname.c_str(), au, cu, NULL,
+  if (git_commit_create(&newoid, repo, refname.c_str(), au, cu, nullptr,
                         opt.message.c_str(), tree, 0, nullptr) != 0) {
     auto e = giterr_last();
     fprintf(stderr, "create new branch %s failed: %s\n", opt.branch.c_str(),
