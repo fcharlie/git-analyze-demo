@@ -51,7 +51,6 @@ bool Executor::Parseconfig() {
 
 bool Executor::Initialize(std::string_view dir, std::string_view branch,
                           std::string_view message, bool nb_) {
-  nb = nb_;
   git::error_code ec;
   auto xr = git::repository::make_repository_ex(dir, ec);
   if (!xr) {
@@ -63,11 +62,21 @@ bool Executor::Initialize(std::string_view dir, std::string_view branch,
     Printe("Please set git commit email and git commit name\n");
     return false;
   }
+
   msg = message;
   if (aze::starts_with(branch, "refs/heads/")) {
     refname = branch;
   } else {
     refname.assign("refs/heads/").append(branch);
+  }
+  nb = nb_;
+  if (nb) {
+    auto ref = r.get_reference(refname);
+    if (ref) {
+      fprintf(stderr, "branch '%s' exists, unable create new branch\n",
+              branch.data());
+      return false;
+    }
   }
   auto c = r.get_reference_commit_auto("HEAD");
   if (!c) {
@@ -96,6 +105,7 @@ bool Executor::One(git_time when) {
                         (nb ? nullptr : ps)) != 0) {
     return false;
   }
+  nb = false;
   if (parent != nullptr) {
     git_commit_free(parent);
     parent = nullptr;
