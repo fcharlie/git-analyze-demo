@@ -2,6 +2,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <finaly.hpp>
+#include <console.hpp>
 #include "executor.hpp"
 
 namespace aze {
@@ -35,8 +36,8 @@ constexpr const std::uint64_t MB = 1024 * 1024ull;
 
 void print_commit_message(const git_commit *commit_) {
   auto sig = git_commit_author(commit_);
-  fprintf(stderr, "author: %s <%s>\nmessage: %s\n\n", sig->name, sig->email,
-          git_commit_message(commit_));
+  aze::FPrintF(stderr, "author: %s <%s>\nmessage: %s\n\n", sig->name,
+               sig->email, git_commit_message(commit_));
 }
 
 int git_treewalk_callback_impl(const char *root, const git_tree_entry *entry,
@@ -50,8 +51,8 @@ int git_treewalk_callback_impl(const char *root, const git_tree_entry *entry,
       auto size = git_blob_rawsize(blob);
       if (size >= dv->wsize) {
         auto cstr = git_oid_tostr_s(git_commit_id(dv->c));
-        fprintf(stderr, "\rcommit: %s file: %s%s (%4.2f MB)\n", cstr, root,
-                git_tree_entry_name(entry), ((double)size / MB));
+        aze::FPrintF(stderr, "\rcommit: %s file: %s%s (%4.2f MB)\n", cstr, root,
+                     git_tree_entry_name(entry), ((double)size / MB));
         if (dv->showcommitter) {
           print_commit_message(dv->c);
         }
@@ -71,8 +72,8 @@ int git_diff_callback(const git_diff_delta *delta, float progress,
     auto dv = reinterpret_cast<aze_payload_t *>(payload);
     if (delta->new_file.size > (git_off_t)dv->wsize) {
       auto cstr = git_oid_tostr_s(git_commit_id(dv->c));
-      fprintf(stderr, "\rcommit: %s file: %s (%4.2f MB) \n", cstr,
-              delta->new_file.path, ((double)delta->new_file.size / MB));
+      aze::FPrintF(stderr, "\rcommit: %s file: %s (%4.2f MB) \n", cstr,
+                   delta->new_file.path, ((double)delta->new_file.size / MB));
       if (dv->showcommitter) {
         print_commit_message(dv->c);
       }
@@ -134,29 +135,28 @@ bool Executor::AzeOneInternal(const git_oid *id) {
     cur = parent;
     parent = nullptr;
     i++;
-    fprintf(stderr, "\rcompleted: %d", i);
+    aze::FPrintF(stderr, "\rcompleted: %d", i);
   }
   dv.c = cur;
   git_tree_walk(new_tree, GIT_TREEWALK_PRE, git_treewalk_callback_impl, &dv);
   i++;
-  fprintf(stderr, "\rcompleted: %d\n", i);
+  aze::FPrintF(stderr, "\rcompleted: %d\n", i);
   return true;
 }
 
 bool Executor::AzeOne(std::string_view refname, std::int64_t timeout) {
   if (timeout > 0) {
     t.async_wait(timeout, [] {
-      fprintf(stderr, "git-analyze process timeout, exit !\n");
+      aze::FPrintF(stderr, "git-analyze process timeout, exit !\n");
       exit(1);
     });
   }
-  fprintf(stderr, "Begin check '%s'\n", refname.data());
   auto c = r.get_reference_commit_auto(refname);
   if (!c) {
     return false;
   }
   if (AzeOneInternal(git_commit_id(c->p()))) {
-    fprintf(stderr, "Branch '%s' resolve done\n", refname.data());
+    aze::FPrintF(stderr, "Branch '%s' resolve done\n", refname.data());
     return true;
   }
   return false;
@@ -165,7 +165,7 @@ bool Executor::AzeOne(std::string_view refname, std::int64_t timeout) {
 bool Executor::AzeAll(std::int64_t timeout) {
   if (timeout > 0) {
     t.async_wait(timeout, [] {
-      fprintf(stderr, "git-analyze process timeout, exit !\n");
+      aze::FPrintF(stderr, "git-analyze process timeout, exit !\n");
       exit(1);
     });
   }
@@ -173,7 +173,7 @@ bool Executor::AzeAll(std::int64_t timeout) {
   git_branch_iterator *iter_{nullptr};
   if (git_branch_iterator_new(&iter_, r.p(), GIT_BRANCH_LOCAL) != 0) {
     auto err = giterr_last();
-    fprintf(stderr, "git_branch_iterator_new: %s\n", err->message);
+    aze::FPrintF(stderr, "git_branch_iterator_new: %s\n", err->message);
     return false;
   }
   git_reference *ref_{nullptr};
@@ -182,7 +182,7 @@ bool Executor::AzeAll(std::int64_t timeout) {
   while (git_branch_next(&ref_, &tb, iter_) == 0) {
     auto oid = git_reference_target(ref_);
     if (AzeOneInternal(oid)) {
-      fprintf(stderr, "\rresolve %s done\n", git_reference_name(ref_));
+      aze::FPrintF(stderr, "\rresolve %s done\n", git_reference_name(ref_));
     }
     git_reference_free(ref_);
   }
@@ -194,7 +194,7 @@ bool Executor::Initialize(std::string_view gitdir) {
   git::error_code ec;
   auto o = git::repository::make_repository_ex(gitdir, ec);
   if (!o) {
-    fprintf(stderr, "unable open repository: %s\n", ec.message.data());
+    aze::FPrintF(stderr, "unable open repository: %s\n", ec.message);
     return false;
   }
   r.acquire(std::move(*o));

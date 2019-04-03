@@ -27,10 +27,14 @@ endif()
 
 IF(WIN32)
   target_link_libraries(git-analyze
+    absl::str_format
+    absl::strings
     ${LIBGIT2}
   )
 else()
   target_link_libraries(git-analyze
+    absl::str_format
+    absl::strings
     ${LIBGIT2}
     pthread
   )
