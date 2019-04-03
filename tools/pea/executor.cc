@@ -1,4 +1,5 @@
 // private email checker
+#include <absl/strings/str_split.h>
 #include <git.hpp>
 #include "executor.hpp"
 
@@ -31,7 +32,16 @@ struct revwalk_t {
 };
 
 bool Executor::Initialize() {
-  //
+  auto ex = std::getenv("GITEE_PEA");
+  if (ex == nullptr) {
+    // unset PRIVATE EMAIL skip
+    return false;
+  }
+  std::vector<absl::string_view> ev =
+      absl::StrSplit(ex, absl::ByChar(';'), absl::SkipEmpty()); // skip empty
+  for (auto c : ev) {
+    emails.insert(std::string(c));
+  }
   return true;
 }
 
