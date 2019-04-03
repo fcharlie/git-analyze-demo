@@ -96,8 +96,9 @@ private:
   console_write_adapter() { initialize(); }
   bool initialize() {
     hStderr = GetStdHandle(STD_OUTPUT_HANDLE);
+    hStdout = GetStdHandle(STD_ERROR_HANDLE);
     stderrmode = FileHandleMode(hStderr, stderrvt);
-    stdoutmode = FileHandleMode(hStderr, stdoutvt);
+    stdoutmode = FileHandleMode(hStdout, stdoutvt);
     return false;
   }
   int writeconsole(HANDLE hFile, bool vt, std::string_view sv) {
@@ -108,13 +109,15 @@ private:
       return (int)dwWrite;
     }
     // unsupport now
-    /////////// ---> color detect
-    return 0;
+    auto wsv = utf8towide(sv);
+    DWORD dwWrite = 0;
+    WriteConsoleW(hFile, wsv.data(), (DWORD)wsv.size(), &dwWrite, nullptr);
+    return (int)dwWrite;
   }
 };
 
 inline int console_write(FILE *out, std::string_view msg) {
-  if (out != stdout || out != stderr) {
+  if (out != stdout && out != stderr) {
     return (int)fwrite(msg.data(), 1, msg.size(), out);
   }
   return console_write_adapter::instance().write(out, msg);

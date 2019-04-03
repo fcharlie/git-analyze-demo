@@ -20,5 +20,6 @@ go/post-receive
 go/pre-receive
 go/update
 .vs/
+.vscode/ipch/
 *.VC.db*
 CMakeSettings.json
