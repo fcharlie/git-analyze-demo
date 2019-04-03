@@ -14,8 +14,12 @@ struct commit_t {
   }
   git_commit *commit{nullptr};
   git_tree *tree{nullptr};
-  bool lookup(git_repository *repo, const git_oid *id) {
-    if (git_commit_lookup(&commit, repo, id) != 0) {
+  bool lookup(git_repository *r, std::string_view rev) {
+    git_oid id;
+    if (git_oid_fromstrn(&id, rev.data(), rev.size()) != 0) {
+      return false;
+    }
+    if (git_commit_lookup(&commit, r, &id) != 0) {
       return false;
     }
     return git_commit_tree(&tree, commit) == 0;
@@ -73,12 +77,8 @@ int git_treewalk_impl(const char *root, const git_tree_entry *entry,
   return 0;
 }
 bool Executor::ExecuteTreeWalk(std::string_view rev) {
-  git_oid oid;
-  if (git_oid_fromstrn(&oid, rev.data(), rev.size()) != 0) {
-    return false;
-  }
   commit_t commit;
-  if (!commit.lookup(base->repo(), &oid)) {
+  if (!commit.lookup(base->repo(), rev)) {
     return false;
   }
   return (git_tree_walk(commit.tree, GIT_TREEWALK_PRE, git_treewalk_impl,
@@ -146,18 +146,11 @@ bool Executor::Execute(std::string_view path, std::string_view oldrev,
   if (newrev == zerooid) {
     return ExecuteTreeWalk(oldrev);
   }
-  git_oid ooid, noid;
-  if (git_oid_fromstrn(&ooid, oldrev.data(), oldrev.size()) != 0) {
-    return false;
-  }
-  if (git_oid_fromstrn(&noid, newrev.data(), newrev.size()) != 0) {
-    return false;
-  }
   commit_t oldcommit, newcommit;
-  if (!oldcommit.lookup(base->repo(), &ooid)) {
+  if (!oldcommit.lookup(base->repo(), oldrev)) {
     return false;
   }
-  if (!newcommit.lookup(base->repo(), &noid)) {
+  if (!newcommit.lookup(base->repo(), newrev)) {
     return false;
   }
   diff_t diff;

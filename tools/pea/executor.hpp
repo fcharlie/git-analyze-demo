@@ -2,7 +2,6 @@
 #ifndef PE_EXECUTOR_HPP
 #define PE_EXECUTOR_HPP
 #include <string_view>
-#include <vector>
 #include <absl/container/flat_hash_set.h>
 
 namespace aze {

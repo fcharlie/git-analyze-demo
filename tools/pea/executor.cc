@@ -38,19 +38,22 @@ struct revwalk_t {
       git_revwalk_free(walk);
     }
   }
-  bool hide(std::string_view rev) {
-    if (rev == zid) {
-      return true;
-    }
-    git_oid id;
-    if (git_oid_fromstrn(&id, rev.data(), rev.size()) != 0) {
+  bool initialize_range(git_repository *r, absl::string_view oldrev,
+                        absl::string_view newrev) {
+    if (git_revwalk_new(&walk, r) != 0) {
       return false;
     }
-    return git_revwalk_hide(walk, &id) == 0;
-  }
-  bool push(std::string_view rev) {
+    if (oldrev != zid) {
+      git_oid id;
+      if (git_oid_fromstrn(&id, oldrev.data(), oldrev.size()) != 0) {
+        return false;
+      }
+      if (git_revwalk_hide(walk, &id) != 0) {
+        return false;
+      }
+    }
     git_oid id;
-    if (git_oid_fromstrn(&id, rev.data(), rev.size()) != 0) {
+    if (git_oid_fromstrn(&id, newrev.data(), newrev.size()) != 0) {
       return false;
     }
     return git_revwalk_push(walk, &id) == 0;
@@ -91,7 +94,6 @@ bool Executor::Execute(std::string_view gitdir, std::string_view oldrev,
     // delete branch not need check
     return true;
   }
-
   git::error_code ec;
   auto r = git::repository::make_repository(gitdir, ec);
   if (!r) {
@@ -99,16 +101,9 @@ bool Executor::Execute(std::string_view gitdir, std::string_view oldrev,
     return false;
   }
   revwalk_t w;
-  if (git_revwalk_new(&w.walk, r->p()) != 0) {
+  if (!w.initialize_range(r->p(), oldrev, newrev)) {
     return false;
   }
-  if (!w.hide(oldrev)) {
-    return false;
-  }
-  if (!w.push(newrev)) {
-    return false;
-  }
-
   git_oid oid;
   while (!git_revwalk_next(&oid, w.walk)) {
     auto c = r->get_commit(&oid);
