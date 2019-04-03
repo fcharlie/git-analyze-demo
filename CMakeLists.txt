@@ -163,7 +163,7 @@ ExternalProject_Add(libre2
 include_directories(
   ${ANALYZE_CLEANROOT}/include
   ./include
-  ./vendor/libgit2/include
+  ./vendor/abseil
 )
 
 link_directories(
@@ -186,6 +186,8 @@ install(FILES "${ANALYZE_CLEANROOT}/share/libgit2/COPYING"
   RENAME copyright
 )
 
+add_subdirectory(vendor/abseil)
+
 add_subdirectory(lib/Pal)
 add_subdirectory(tools/analyze)
 add_subdirectory(tools/rollback)
@@ -195,4 +197,5 @@ add_subdirectory(tools/complete)
 add_subdirectory(tools/git-bareinit)
 add_subdirectory(tools/graft)
 add_subdirectory(tools/update)
+add_subdirectory(tools/update-pe)
 add_subdirectory(test)
