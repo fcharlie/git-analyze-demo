@@ -188,7 +188,7 @@ install(FILES "${ANALYZE_CLEANROOT}/share/libgit2/COPYING"
 
 add_subdirectory(vendor/abseil)
 
-add_subdirectory(lib/Pal)
+# tools
 add_subdirectory(tools/analyze)
 add_subdirectory(tools/rollback)
 add_subdirectory(tools/cheat)

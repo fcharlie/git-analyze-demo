@@ -17,7 +17,7 @@
 #include <functional>
 #include <regex>
 #include <git2.h>
-#include <Pal.hpp>
+#include <console.hpp>
 
 #ifdef _MSC_VER
 #define strcasecmp _stricmp
@@ -144,14 +144,15 @@ int git_diff_callback(const git_diff_delta *delta, float progress,
     PrecommitInfo *info = static_cast<PrecommitInfo *>(payload);
     git_blob *blob = nullptr;
     if (git_blob_lookup(&blob, info->repo, &(delta->new_file.id)) != 0) {
-      Printe("lookup blob failed: %s\n", delta->new_file.path);
+      aze::FPrintF(stderr, "lookup blob failed: %s\n", delta->new_file.path);
       return 0;
     }
 
     if (!info->ps.Filters().empty()) {
       if (std::regex_search(delta->new_file.path,
                             std::regex(info->ps.Filters()))) {
-        Printe("Introduced the exclude file: %s\n", delta->new_file.path);
+        aze::FPrintF(stderr, "Introduced the exclude file: %s\n",
+                     delta->new_file.path);
         info->filterfiles++;
       }
     }
@@ -161,12 +162,14 @@ int git_diff_callback(const git_diff_delta *delta, float progress,
     git_off_t size = git_blob_rawsize(blob);
     if (size > (git_off_t)lsize) {
       ///
-      Printe("%s size is %4.2f MB more than %4.2f MB\n", delta->new_file.path,
-             (double)size / MBSIZE, (double)lsize / MBSIZE);
+      aze::FPrintF(stderr, "%s size is %4.2f MB more than %4.2f MB\n",
+                   delta->new_file.path, (double)size / MBSIZE,
+                   (double)lsize / MBSIZE);
       info->limitfiles++;
     } else if (size > (git_off_t)wsize) {
-      Printw("%s size %4.2f MB more than %4.2f MB\n", delta->new_file.path,
-             (double)size / MBSIZE, (double)wsize / MBSIZE);
+      aze::FPrintF(stderr, "%s size %4.2f MB more than %4.2f MB\n",
+                   delta->new_file.path, (double)size / MBSIZE,
+                   (double)wsize / MBSIZE);
       info->warnfiles++;
     }
     git_blob_free(blob);
@@ -184,18 +187,18 @@ bool PrecommitIndexScanf(PrecommitInfo &info, git_repository *repo,
   for (size_t i = 0; i < ecount; ++i) {
     const git_index_entry *e = git_index_get_byindex(index, i);
     if (std::regex_search(e->path, reg)) {
-      Printe("Introduced the exclude file: %s\n", e->path);
+      aze::FPrintF(stderr, "Introduced the exclude file: %s\n", e->path);
       info.filterfiles++;
     }
     auto size = e->file_size;
     if (size > lsize) {
       ///
-      Printe("%s size is %4.2f MB more than %4.2f MB\n", e->path,
-             (double)size / MBSIZE, (double)lsize / MBSIZE);
+      aze::FPrintF(stderr, "%s size is %4.2f MB more than %4.2f MB\n", e->path,
+                   (double)size / MBSIZE, (double)lsize / MBSIZE);
       info.limitfiles++;
     } else if (size > wsize) {
-      Printw("%s size %4.2f MB more than %4.2f MB\n", e->path,
-             (double)size / MBSIZE, (double)wsize / MBSIZE);
+      aze::FPrintF(stderr, "%s size %4.2f MB more than %4.2f MB\n", e->path,
+                   (double)size / MBSIZE, (double)wsize / MBSIZE);
       info.warnfiles++;
     }
   }
@@ -248,24 +251,24 @@ bool PrecommitExecute(const char *td) {
   }
 CheckValue:
   if (info.filterfiles != 0 && info.ps.FilterBroken()) {
-    Printe("git commit has broken \n");
-    Printw("Your can use git rm --cached to remove filter "
-           "files, and commit again !\n");
+    aze::FPrintF(stderr, "git commit has broken \n");
+    aze::FPrintF(stderr, "Your can use git rm --cached to remove filter "
+                         "files, and commit again !\n");
     goto Success;
   }
   if (info.limitfiles == 0) {
     result = true;
   } else {
-    Printe("git commit has broken \n");
-    Printw("Your can use git rm --cached to "
-           "remove large file, and commit again !\n");
+    aze::FPrintF(stderr, "git commit has broken \n");
+    aze::FPrintF(stderr, "Your can use git rm --cached to "
+                         "remove large file, and commit again !\n");
   }
 
   goto Success;
 Cleanup:
   if (!result) {
     auto err = giterr_last();
-    fprintf(stderr, "LastError %s: %s\n", errmsg, err->message);
+    aze::FPrintF(stderr, "LastError %s: %s\n", errmsg, err->message);
   }
 Success:
   DoRelease(diff, git_diff_free);

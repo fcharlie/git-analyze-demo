@@ -9,7 +9,7 @@
 #include <cstring>
 #include <errno.h>
 #include <string>
-#include <Pal.hpp>
+#include <console.hpp>
 /*
  * bool GitGCInvoke(const std::string &dir,bool forced);
  *
@@ -191,7 +191,9 @@ bool GitGCInvoke(const std::string &dir, bool forced) {
   std::wstring gitbin;
   if (!GitExecutePathSearchAuto(L"git.exe", gitbin)) {
     if (!SearchGitForWindowsInstall(gitbin)) {
-      Printe("Not Found git in your PATH environemnt variable and Registry !");
+      aze::FPrintF(
+          stderr,
+          "Not Found git in your PATH environemnt variable and Registry !");
       return false;
     }
   }
@@ -252,7 +254,7 @@ bool GitGCRealExecute(const char *dir, bool forced) {
       exit(-1);
     }
     execvp("git", Argv_.data());
-    Printe("%s\n", strerror(errno));
+    aze::FPrintF(stderr, "%s\n", strerror(errno));
     exit(-1);
   } break;
   case -1:
@@ -288,7 +290,7 @@ bool GitExecutePathSearchAuto(const char *cmd, std::string &gitbin) {
 bool GitGCInvoke(const std::string &dir, bool forced) {
   std::string gitbin;
   if (!GitExecutePathSearchAuto("git", gitbin)) {
-    Printe("git not found\n");
+    aze::FPrintF(stderr, "git not found\n");
     return false;
   }
   return GitGCRealExecute(dir.c_str(), forced);

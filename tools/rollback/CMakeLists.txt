@@ -32,7 +32,8 @@ add_dependencies(git-rollback
 )
 
 target_link_libraries(git-rollback
-  Pal
+  absl::str_format
+  absl::strings
   ${LIBGIT2}
 )
 

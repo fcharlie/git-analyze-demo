@@ -9,7 +9,7 @@
 #include <cstdio>
 #include <cstring>
 #include <vector>
-#include <Pal.hpp>
+#include <console.hpp>
 #include <Argv.hpp>
 #include "rollback.hpp"
 
@@ -88,9 +88,9 @@ int cmd_main(int argc, char **argv) {
   ProcessArgs(argc, argv, taskArgs);
   bool result = false;
   if (taskArgs.hexid.empty() && taskArgs.rev <= 0) {
-    Print("usage: \ngit-rollback --git-dir=/path/to/repo "
-          "--backrev=7\ngit-rollback --git-dir=/path/to/repo "
-          "--backid=commitid\n");
+    aze::FPrintF(stderr, "usage: \ngit-rollback --git-dir=/path/to/repo "
+                         "--backrev=7\ngit-rollback --git-dir=/path/to/repo "
+                         "--backid=commitid\n");
     return 1;
   }
   if (taskArgs.hexid.size() > 0) {
@@ -104,9 +104,9 @@ int cmd_main(int argc, char **argv) {
   }
 
   if (!result) {
-    Printe("git-rollback: Operation aborted !\n");
+    aze::FPrintF(stderr, "git-rollback: Operation aborted !\n");
     return 1;
   }
-  Print("git-rollback: Operation completed !\n");
+  aze::FPrintF(stderr, "git-rollback: Operation completed !\n");
   return 0;
 }

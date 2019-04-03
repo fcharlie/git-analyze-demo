@@ -1,15 +1,15 @@
 /*
-* rollback.cc
-* git-rollback
-* author: Force.Charlie
-* Date: 2016.08
-* Copyright (C) 2019. GITEE.COM. All Rights Reserved.
-*/
+ * rollback.cc
+ * git-rollback
+ * author: Force.Charlie
+ * Date: 2016.08
+ * Copyright (C) 2019. GITEE.COM. All Rights Reserved.
+ */
 #include <cstdio>
 #include <cstring>
 #include <string>
 #include <git2.h>
-#include <Pal.hpp>
+#include <console.hpp>
 #include "rollback.hpp"
 
 RollbackDriver::RollbackDriver() { git_libgit2_init(); }
@@ -45,15 +45,15 @@ bool RollbackWithRealCommit(git_reference *ref, const git_oid *id) {
   ///
   git_reference *newref_{nullptr};
   if (git_oid_cmp(id, git_reference_target(ref)) == 0) {
-    Print("Rollback aborted, reference %s commit is %s\n",
-          git_reference_name(ref), git_oid_tostr_s(id));
+    aze::FPrintF(stderr, "Rollback aborted, reference %s commit is %s\n",
+                 git_reference_name(ref), git_oid_tostr_s(id));
     return false;
   }
   std::string log("rollback to old commit: ");
   log.append(git_oid_tostr_s(id));
   if (git_reference_set_target(&newref_, ref, id, log.c_str()) != 0) {
     auto er = giterr_last();
-    Printe("rollback reference failed: %s\n", er->message);
+    aze::FPrintF(stderr, "rollback reference failed: %s\n", er->message);
     return false;
   }
   git_reference_free(newref_);
@@ -83,7 +83,7 @@ bool RollbackWithRealRevision(git_repository *repo, git_reference *dref,
     git_commit_free(commit_);
     commit_ = parent_;
   } while (true);
-  Printe("git-rollback: Over commit, rollback broken !\n");
+  aze::FPrintF(stderr, "git-rollback: Over commit, rollback broken !\n");
   git_commit_free(commit_);
   return false;
 }
@@ -96,7 +96,7 @@ bool RollbackDriver::RollbackWithCommit(const char *repodir,
   git_reference *ref_{nullptr};
   git_oid oid;
   if (git_oid_fromstr(&oid, hexid) != 0 || git_oid_iszero(&oid)) {
-    Printe("Error Hexid %s\n", hexid);
+    aze::FPrintF(stderr, "Error Hexid %s\n", hexid);
     return false;
   }
   auto Release = [&]() {
@@ -110,14 +110,14 @@ bool RollbackDriver::RollbackWithCommit(const char *repodir,
   };
   if (git_repository_open(&repo_, repodir) != 0) {
     auto err = giterr_last();
-    Printe("%s\n", err->message);
+    aze::FPrintF(stderr, "%s\n", err->message);
     return false;
   }
   git_reference *xref;
   if (git_reference_lookup(&xref, repo_, refname) != 0) {
     if (git_branch_lookup(&xref, repo_, refname, GIT_BRANCH_LOCAL) != 0) {
       auto err = giterr_last();
-      Printe("%s\n", err->message);
+      aze::FPrintF(stderr, "%s\n", err->message);
       Release();
       return false;
     }
@@ -131,19 +131,19 @@ bool RollbackDriver::RollbackWithCommit(const char *repodir,
   ///////////////////////////////////////////////
   if (!IsRelationshipCommit(repo_, ref_, &oid)) {
     Release();
-    Printe("Not Found commit : %s In branch mainline\n", hexid);
+    aze::FPrintF(stderr, "Not Found commit : %s In branch mainline\n", hexid);
     return false;
   }
   auto result = RollbackWithRealCommit(ref_, &oid);
   if (result) {
-    Print("rollback ref: %s to commit: %s success\n", git_reference_name(ref_),
-          hexid);
+    aze::FPrintF(stderr, "rollback ref: %s to commit: %s success\n",
+                 git_reference_name(ref_), hexid);
     Release();
     if (GitGCInvoke(repodir, forced)) {
       Release();
       return true;
     }
-    Printe("git-rollback: run git gc failed !\n");
+    aze::FPrintF(stderr, "git-rollback: run git gc failed !\n");
   }
   Release();
   return false;
@@ -152,10 +152,10 @@ bool RollbackDriver::RollbackWithCommit(const char *repodir,
 bool RollbackDriver::RollbackWithRev(const char *repodir, const char *refname,
                                      int rev, bool forced) {
   if (rev < 0) {
-    Printe("git-rollback: rollack revision rev must >0\n");
+    aze::FPrintF(stderr, "git-rollback: rollack revision rev must >0\n");
     return false;
   } else if (rev == 0) {
-    Print("no rollback, rev=0 \n");
+    aze::FPrintF(stderr, "no rollback, rev=0 \n");
     return true;
   }
   git_repository *repo_{nullptr};
@@ -172,14 +172,14 @@ bool RollbackDriver::RollbackWithRev(const char *repodir, const char *refname,
 
   if (git_repository_open(&repo_, repodir) != 0) {
     auto err = giterr_last();
-    Printe("git-rollback error: %s\n", err->message);
+    aze::FPrintF(stderr, "git-rollback error: %s\n", err->message);
     return false;
   }
   git_reference *xref;
   if (git_reference_lookup(&xref, repo_, refname) != 0) {
     if (git_branch_lookup(&xref, repo_, refname, GIT_BRANCH_LOCAL) != 0) {
       auto err = giterr_last();
-      Printe("lookup reference: %s\n", err->message);
+      aze::FPrintF(stderr, "lookup reference: %s\n", err->message);
       Release();
       return false;
     }
@@ -192,12 +192,12 @@ bool RollbackDriver::RollbackWithRev(const char *repodir, const char *refname,
   git_reference_free(xref);
 
   if (RollbackWithRealRevision(repo_, ref_, rev)) {
-    Print("git-rollback: rollback success !\n");
+    aze::FPrintF(stderr, "git-rollback: rollback success !\n");
     if (GitGCInvoke(repodir, forced)) {
       Release();
       return true;
     }
-    Printe("git-rollback: run git gc failed !\n");
+    aze::FPrintF(stderr, "git-rollback: run git gc failed !\n");
   }
   ///////////////////////
   Release();

@@ -7,15 +7,6 @@ add_executable(treewalk
   treewalk.cc
 )
 
-add_executable(palenv
-  palenv.cc
-)
-
-  target_link_libraries(palenv
-    Pal
-    ${LIBGIT2}
-  )
-
 if(WIN32)
   target_link_libraries(aze
     ${LIBGIT2}

@@ -24,7 +24,8 @@ add_dependencies(pre-commit
 )
 
 target_link_libraries(pre-commit
-  Pal
+  absl::str_format
+  absl::strings
   ${LIBGIT2}
 )
 
