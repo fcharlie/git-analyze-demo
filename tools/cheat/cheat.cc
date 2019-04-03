@@ -1,6 +1,8 @@
 /////
 #include <git.hpp>
+#include <console.hpp>
 #include "cheat.hpp"
+
 bool duplicate_new_branch(git_repository *repo, git_commit *commit,
                           git_tree *tree, const std::string &branch) {
   git_oid newoid;
@@ -11,12 +13,12 @@ bool duplicate_new_branch(git_repository *repo, git_commit *commit,
   if (git_commit_create(&newoid, repo, refname.c_str(), au, cu, nullptr, msg,
                         tree, 0, nullptr) != 0) {
     auto e = giterr_last();
-    fprintf(stderr, "create new branch %s failed: %s\n", branch.c_str(),
-            e->message);
+    aze::FPrintF(stderr, "create new branch %s failed: %s\n", branch,
+                 e->message);
     return false;
   }
-  fprintf(stderr, "[%s %s]\ncommitter: %s\nemail: %s\nmessage: %s\n\n",
-          branch.c_str(), git_oid_tostr_s(&newoid), cu->name, cu->email, msg);
+  aze::FPrintF(stderr, "[%s %s]\ncommitter: %s\nemail: %s\nmessage: %s\n\n",
+               branch, git_oid_tostr_s(&newoid), cu->name, cu->email, msg);
   return true;
 }
 
@@ -61,15 +63,15 @@ bool hack_new_branch(git_repository *repo, git_tree *tree,
   if (git_commit_create(&newoid, repo, refname.c_str(), au, cu, nullptr,
                         opt.message.c_str(), tree, 0, nullptr) != 0) {
     auto e = giterr_last();
-    fprintf(stderr, "create new branch %s failed: %s\n", opt.branch.c_str(),
-            e->message);
+    aze::FPrintF(stderr, "create new branch %s failed: %s\n",
+                 opt.branch.c_str(), e->message);
     git_signature_free(au);
     git_signature_free(cu);
     return false;
   }
-  fprintf(stderr, "[%s %s]\ncommitter: %s\nemail: %s\nmessage: %s\n\n",
-          opt.branch.c_str(), git_oid_tostr_s(&newoid), cu->name, cu->email,
-          opt.message.c_str());
+  aze::FPrintF(stderr, "[%s %s]\ncommitter: %s\nemail: %s\nmessage: %s\n\n",
+               opt.branch, git_oid_tostr_s(&newoid), cu->name, cu->email,
+               opt.message);
   git_signature_free(au);
   git_signature_free(cu);
   return true;
@@ -79,7 +81,7 @@ bool cheat_execute(cheat_options &opt) {
   // TODO initialize libgit2 thread safe.
   git::global_initializer_t gi;
   if (opt.branch.empty()) {
-    fprintf(stderr, "New branch name cannot be empty.\n");
+    aze::FPrintF(stderr, "New branch name cannot be empty.\n");
     return false;
   }
 
@@ -92,24 +94,25 @@ bool cheat_execute(cheat_options &opt) {
   git::error_code ec;
   auto r = git::repository::make_repository_ex(opt.gitdir, ec);
   if (!r) {
-    fprintf(stderr, "Error: %s\n", ec.message.data());
+    aze::FPrintF(stderr, "Error: %s\n", ec.message);
     return false;
   }
   if (r->get_branch(opt.branch)) {
-    fprintf(stderr, "Branch '%s' exists, please create other name branch.\n",
-            opt.branch.c_str());
+    aze::FPrintF(stderr,
+                 "Branch '%s' exists, please create other name branch.\n",
+                 opt.branch);
     return false;
   }
   auto c = r->get_reference_commit_auto(opt.parent);
   if (!c) {
     auto e = giterr_last();
-    fprintf(stderr, "Error: %s\n", e->message);
+    aze::FPrintF(stderr, "Error: %s\n", e->message);
     return false;
   }
   auto t = git::tree::get_tree(*r, *c, opt.treedir);
   if (!t) {
     auto e = giterr_last();
-    fprintf(stderr, "Error: %s\n", e->message);
+    aze::FPrintF(stderr, "Error: %s\n", e->message);
     return false;
   }
   if (opt.kauthor) {

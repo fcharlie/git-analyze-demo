@@ -28,7 +28,8 @@ add_dependencies(git-cheat
 )
 
 target_link_libraries(git-cheat
-  Pal
+  absl::str_format
+  absl::strings
   ${LIBGIT2}
 )
 
