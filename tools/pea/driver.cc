@@ -20,6 +20,7 @@ int cmd_main(int argc, char **argv) {
 
     return 0;
   }
+  fprintf(stderr, "\n");
   // Found Private email broken.
   if (e.IsBlocked()) {
     fprintf(stderr,

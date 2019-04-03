@@ -21,7 +21,6 @@ public:
   }
 
 private:
-  bool Parentwalk(std::string_view gitdir, std::string_view newrev);
   absl::flat_hash_set<std::string> emails;
   bool blocked{false};
 };

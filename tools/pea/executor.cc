@@ -19,6 +19,9 @@ bool Executor::Initialize() {
   return true;
 }
 
+constexpr const std::string_view zid =
+    "0000000000000000000000000000000000000000";
+
 struct revwalk_t {
   revwalk_t() = default;
   revwalk_t(const revwalk_t &) = delete;
@@ -35,6 +38,16 @@ struct revwalk_t {
       git_revwalk_free(walk);
     }
   }
+  bool hide(std::string_view rev) {
+    if (rev == zid) {
+      return true;
+    }
+    git_oid id;
+    if (git_oid_fromstrn(&id, rev.data(), rev.size()) != 0) {
+      return false;
+    }
+    return git_revwalk_hide(walk, &id) == 0;
+  }
   bool push(std::string_view rev) {
     git_oid id;
     if (git_oid_fromstrn(&id, rev.data(), rev.size()) != 0) {
@@ -44,43 +57,6 @@ struct revwalk_t {
   }
   git_revwalk *walk{nullptr};
 };
-
-// parentwalk
-bool Executor::Parentwalk(std::string_view gitdir, std::string_view newrev) {
-  git::error_code ec;
-  auto r = git::repository::make_repository(gitdir, ec);
-  if (!r) {
-    fprintf(stderr, "unable open repo\n");
-    return false;
-  }
-  revwalk_t w;
-  if (git_revwalk_new(&w.walk, r->p()) != 0) {
-    return false;
-  }
-  if (!w.push(newrev)) {
-    return false;
-  }
-  git_oid oid;
-  while (!git_revwalk_next(&oid, w.walk)) {
-    // r->get_commit(std::string_view sid)
-    auto c = r->get_commit(&oid);
-    if (!c) {
-      break;
-    }
-    auto author = git_commit_author(c->p());
-    if (Exists(author->email)) {
-      blocked = true;
-      return false;
-    }
-    auto commiter = git_commit_committer(c->p());
-    if (Exists(commiter->email)) {
-      blocked = true;
-      return false;
-    }
-  }
-
-  return true;
-}
 
 /*
 Situation 1:
@@ -106,25 +82,49 @@ Situation 5:
  ---> A ---> C
  oldrev B newrev C
  C --> A
-
 */
 
 bool Executor::Execute(std::string_view gitdir, std::string_view oldrev,
                        std::string_view newrev) {
-  constexpr const std::string_view zid =
-      "0000000000000000000000000000000000000000";
+
   if (newrev == zid) {
     // delete branch not need check
     return true;
   }
-  if (oldrev == zid) {
-    return Parentwalk(gitdir, newrev);
-  }
+
   git::error_code ec;
   auto r = git::repository::make_repository(gitdir, ec);
   if (!r) {
     fprintf(stderr, "unable open repo\n");
     return false;
+  }
+  revwalk_t w;
+  if (git_revwalk_new(&w.walk, r->p()) != 0) {
+    return false;
+  }
+  if (!w.hide(oldrev)) {
+    return false;
+  }
+  if (!w.push(newrev)) {
+    return false;
+  }
+
+  git_oid oid;
+  while (!git_revwalk_next(&oid, w.walk)) {
+    auto c = r->get_commit(&oid);
+    if (!c) {
+      break;
+    }
+    auto author = git_commit_author(c->p());
+    if (Exists(author->email)) {
+      blocked = true;
+      return false;
+    }
+    auto commiter = git_commit_committer(c->p());
+    if (Exists(commiter->email)) {
+      blocked = true;
+      return false;
+    }
   }
 
   return true;
