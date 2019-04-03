@@ -27,12 +27,10 @@ endif()
 
 IF(WIN32)
   target_link_libraries(git-analyze
-    Pal
     ${LIBGIT2}
   )
 else()
   target_link_libraries(git-analyze
-    Pal
     ${LIBGIT2}
     pthread
   )
