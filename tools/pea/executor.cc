@@ -5,6 +5,20 @@
 
 // check commit emails exists in private-email set.
 namespace aze {
+bool Executor::Initialize() {
+  auto ex = std::getenv("GITEE_PEA");
+  if (ex == nullptr) {
+    // unset PRIVATE EMAIL skip
+    return false;
+  }
+  std::vector<absl::string_view> ev =
+      absl::StrSplit(ex, absl::ByChar(';'), absl::SkipEmpty()); // skip empty
+  for (auto c : ev) {
+    emails.insert(std::string(c));
+  }
+  return true;
+}
+
 struct revwalk_t {
   revwalk_t() = default;
   revwalk_t(const revwalk_t &) = delete;
@@ -31,20 +45,6 @@ struct revwalk_t {
   git_revwalk *walk{nullptr};
 };
 
-bool Executor::Initialize() {
-  auto ex = std::getenv("GITEE_PEA");
-  if (ex == nullptr) {
-    // unset PRIVATE EMAIL skip
-    return false;
-  }
-  std::vector<absl::string_view> ev =
-      absl::StrSplit(ex, absl::ByChar(';'), absl::SkipEmpty()); // skip empty
-  for (auto c : ev) {
-    emails.insert(std::string(c));
-  }
-  return true;
-}
-
 // parentwalk
 bool Executor::Parentwalk(std::string_view gitdir, std::string_view newrev) {
   git::error_code ec;
@@ -53,12 +53,11 @@ bool Executor::Parentwalk(std::string_view gitdir, std::string_view newrev) {
     fprintf(stderr, "unable open repo\n");
     return false;
   }
-
   revwalk_t w;
   if (git_revwalk_new(&w.walk, r->p()) != 0) {
     return false;
   }
-  if (w.push(newrev)) {
+  if (!w.push(newrev)) {
     return false;
   }
   git_oid oid;
