@@ -23,6 +23,8 @@ add_dependencies(git-graft
 )
 
 target_link_libraries(git-graft
+  absl::str_format
+  absl::strings
   ${LIBGIT2}
 )
 

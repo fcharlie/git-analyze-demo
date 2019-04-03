@@ -25,7 +25,8 @@ add_dependencies(git-bareinit
 )
 
 target_link_libraries(git-bareinit
-  Pal
+  absl::str_format
+  absl::strings
   ${LIBGIT2}
 )
 

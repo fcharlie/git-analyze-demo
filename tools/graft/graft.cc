@@ -6,6 +6,7 @@
 #include <argvex.hpp>
 #include <git.hpp>
 #include <optional>
+#include <console.hpp>
 
 struct graft_info_t {
   std::string gitdir{"."};
@@ -61,7 +62,7 @@ bool parse_argv(int argc, char **argv, graft_info_t &gf) {
       });
   if (err.errorcode != 0) {
     if (err.errorcode == 1) {
-      printf("ParseArgv: %s\n", err.message.c_str());
+      aze::FPrintF(stderr, "ParseArgv: %s\n", err.message);
     }
     return false;
   }
@@ -108,7 +109,7 @@ void SignatureAuthorFill(git_signature *sig, const git_signature *old) {
 void dump_error() {
   auto ec = giterr_last();
   if (ec != nullptr) {
-    fprintf(stderr, "%s\n", ec->message);
+    aze::FPrintF(stderr, "%s\n", ec->message);
   }
 }
 
@@ -136,24 +137,24 @@ bool graft_commit(const graft_info_t &gf) {
   git::error_code ec;
   auto repo = git::repository::make_repository_ex(gf.gitdir, ec);
   if (!repo) {
-    fprintf(stderr, "Error: %s\n", ec.message.data());
+    aze::FPrintF(stderr, "Error: %s\n", ec.message);
     return false;
   }
   auto commit = repo->get_commit(gf.commitid);
   if (!commit) {
-    fprintf(stderr, "open commit: %s ", gf.commitid.c_str());
+    aze::FPrintF(stderr, "open commit: %s ", gf.commitid);
     dump_error();
     return false;
   }
 
   auto refname = make_refname(*repo, gf.branch);
   if (!refname) {
-    fprintf(stderr, "unable lookup branch name\n");
+    aze::FPrintF(stderr, "unable lookup branch name\n");
     return false;
   }
   auto parent = repo->get_reference_commit(*refname);
   if (!parent) {
-    fprintf(stderr, "open par commit: %s ", gf.branch.c_str());
+    aze::FPrintF(stderr, "open par commit: %s ", gf.branch);
     dump_error();
     return false;
   }
@@ -170,7 +171,7 @@ bool graft_commit(const graft_info_t &gf) {
   std::string msg =
       gf.message.empty() ? git_commit_message(commit->p()) : gf.message;
   const git_commit *parents[] = {parent->p(), commit->p()};
-  fprintf(stderr, "New commit, message: '%s'\n", msg.c_str());
+  aze::FPrintF(stderr, "New commit, message: '%s'\n", msg);
   git_oid oid;
   if (git_commit_create(&oid, repo->p(), refname->c_str(), &author, &committer,
                         nullptr, msg.c_str(), tree, 2, parents) != 0) {
