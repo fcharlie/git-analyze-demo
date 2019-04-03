@@ -54,12 +54,12 @@ bool Executor::Initialize(std::string_view dir, std::string_view branch,
   git::error_code ec;
   auto xr = git::repository::make_repository_ex(dir, ec);
   if (!xr) {
-    Printe("unable open '%s'\n", dir.data());
+    aze::FPrintF(stderr, "unable open '%s'\n", dir);
     return false;
   }
   r.acquire(std::move(*xr));
   if (!Parseconfig()) {
-    Printe("Please set git commit email and git commit name\n");
+    aze::FPrintF(stderr, "Please set git commit email and git commit name\n");
     return false;
   }
 
@@ -80,12 +80,12 @@ bool Executor::Initialize(std::string_view dir, std::string_view branch,
   }
   auto c = r.get_reference_commit_auto("HEAD");
   if (!c) {
-    Printe("Unable resolve 'HEAD'\n");
+    aze::FPrintF(stderr, "Unable resolve 'HEAD'\n");
     return false;
   }
   auto t_ = git::tree::get_tree(r, *c, "");
   if (!t_) {
-    Printe("Unable resolve 'HEAD' tree\n");
+    aze::FPrintF(stderr, "Unable resolve 'HEAD' tree\n");
     return false;
   }
   t.acquire(std::move(*t_));
@@ -150,7 +150,7 @@ bool Executor::Execute(uint32_t begin, uint32_t end) {
     if (!RoundYear(i)) {
       return false;
     }
-    fprintf(stderr, "\rFill %04d done", i);
+    aze::FPrintF(stderr, "\rFill %04d done", i);
   }
   return true;
 }

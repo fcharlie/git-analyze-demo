@@ -28,7 +28,8 @@ add_dependencies(git-complete
 )
 
 target_link_libraries(git-complete
-  Pal
+  absl::str_format
+  absl::strings
   ${LIBGIT2}
 )
 

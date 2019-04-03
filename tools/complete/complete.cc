@@ -13,9 +13,11 @@ int cmd_main(int argc, char **argv) {
   uint32_t start_year = 0;
   uint32_t end_year = 0;
   if (argc < 3) {
-    Printe("usage: %s  dir branch message year(or year range) day\nExample: "
-           "git-complete . dev 'no commit message' 2017~2020 \n",
-           argv[0]);
+    aze::FPrintF(
+        stderr,
+        "usage: %s  dir branch message year(or year range) day\nExample: "
+        "git-complete . dev 'no commit message' 2017~2020 \n",
+        argv[0]);
     return 1;
   }
   bool createNewbranch = false;
@@ -39,8 +41,8 @@ int cmd_main(int argc, char **argv) {
     }
   }
   if (ex.Execute(start_year, end_year)) {
-    fprintf(stderr, "\rHas completed in %d to %d's commits !\n", start_year,
-            end_year);
+    aze::FPrintF(stderr, "\rHas completed in %d to %d's commits !\n",
+                 start_year, end_year);
   }
   return 0;
 }

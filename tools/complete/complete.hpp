@@ -13,8 +13,7 @@
 #include <string>
 #include <string_view>
 #include <git.hpp>
-#include <git2.h>
-#include <Pal.hpp>
+#include <console.hpp>
 
 inline unsigned Days(unsigned year) {
   if ((year % 4 == 0 && year % 100 != 0) || year % 400 == 0)
