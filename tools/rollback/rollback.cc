@@ -12,7 +12,35 @@
 #include <console.hpp>
 #include <git.hpp>
 #include "rollback.hpp"
-#include "packbuilder.hpp"
+
+struct revwalk_t {
+  revwalk_t() = default;
+  revwalk_t(const revwalk_t &) = delete;
+  revwalk_t &operator=(const revwalk_t &) = delete;
+  revwalk_t(revwalk_t &&other) {
+    if (walk != nullptr) {
+      git_revwalk_free(walk);
+    }
+    walk = other.walk;
+    other.walk = nullptr;
+  }
+  ~revwalk_t() {
+    if (walk != nullptr) {
+      git_revwalk_free(walk);
+    }
+  }
+  bool initialize(git_repository *r) {
+    return (git_revwalk_new(&walk, r) == 0);
+  }
+  bool initialize_ref(git_repository *r, git_reference *ref) {
+    if (git_revwalk_new(&walk, r) != 0) {
+      return false;
+    }
+    return (git_revwalk_push_ref(walk, git_reference_name(ref)) == 0);
+  }
+
+  git_revwalk *walk{nullptr};
+};
 
 bool RevExists(git::repository &r, git::reference &ref, const git_oid *id) {
   revwalk_t w;
@@ -99,26 +127,16 @@ bool ApplyBackRev(git::repository &r, std::string_view refname, int rev) {
   return true;
 }
 
-bool Executor::Execute() {
+bool ExecuteWithOptions(const rollback_options &opt) {
   git::error_code ec;
-  auto r = git::repository::make_repository_ex(opt_.gitdir, ec);
+  auto r = git::repository::make_repository_ex(opt.gitdir, ec);
   if (!r) {
-    aze::FPrintF(stderr, "unable open '%s' error: %s\n", opt_.gitdir,
+    aze::FPrintF(stderr, "unable open '%s' error: %s\n", opt.gitdir,
                  ec.message);
     return false;
   }
-  if (!opt_.oid.empty()) {
-    if (!ApplyNewOID(*r, opt_.refname, opt_.oid)) {
-      return false;
-    }
-  } else {
-    if (!ApplyBackRev(*r, opt_.refname, opt_.rev)) {
-      return false;
-    }
+  if (!opt.oid.empty()) {
+    return ApplyNewOID(*r, opt.refname, opt.oid);
   }
-
-  if (opt_.forced) {
-    //
-  }
-  return true;
+  return ApplyBackRev(*r, opt.refname, opt.rev);
 }

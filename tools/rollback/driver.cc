@@ -31,7 +31,6 @@ OPTIONS:
   --backid         set rollback commit id
   --backrev        set rollback current back X rev
   --refname        set rollback current reference name
-  --force          force gc prune
 
 Example:
   git-rollback --git-dir=/path/to/repo --backrev=7
@@ -56,7 +55,6 @@ bool parse_opts(int argc, char **argv, rollback_options &opt) {
       {"backid", ax::ParseArgv::required_argument, 'I'},
       {"backrev", ax::ParseArgv::required_argument, 'R'},
       {"refname", ax::ParseArgv::required_argument, 'N'},
-      {"force", ax::ParseArgv::no_argument, 'F'},
       {"version", ax::ParseArgv::no_argument, 'v'},
       {"verbose", ax::ParseArgv::no_argument, 'V'},
       {"help", ax::ParseArgv::no_argument, 'h'}};
@@ -80,11 +78,8 @@ bool parse_opts(int argc, char **argv, rollback_options &opt) {
             opt.refname = aze::strcat("refs/heads/", opt.refname);
           }
           break;
-        case 'F':
-          opt.forced = true;
-          break;
         case 'v':
-          printf("git-analyze 1.0\n");
+          printf("git-rollback 1.0\n");
           exit(0);
           break;
         case 'V':
@@ -126,9 +121,9 @@ bool parse_opts(int argc, char **argv, rollback_options &opt) {
 
 int cmd_main(int argc, char **argv) {
   git::global_initializer_t gi;
-  Executor e;
-  if (!parse_opts(argc, argv, e.options())) {
+  rollback_options opt;
+  if (!parse_opts(argc, argv, opt)) {
     return 1;
   }
-  return 0;
+  return ExecuteWithOptions(opt) ? 0 : 1;
 }
