@@ -129,6 +129,13 @@ public:
       git_reference_free(ref_);
     }
   }
+  std::optional<reference> new_target(const git_oid *id, std::string_view msg) {
+    reference nr;
+    if (git_reference_set_target(&nr.ref_, ref_, id, msg.data()) != 0) {
+      return std::nullopt;
+    }
+    return std::make_optional(std::move(nr));
+  }
   std::optional<reference> symbolic_target() {
     if (git_reference_type(ref_) != GIT_REFERENCE_SYMBOLIC) {
       return std::nullopt;

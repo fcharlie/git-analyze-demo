@@ -5,6 +5,7 @@ add_executable(git-rollback
   ../cmd_main.cc
   driver.cc
   rollback.cc
+  packbuilder.cc
   gc.cc
   git-rollback.rc
   git-rollback.manifest
@@ -14,6 +15,7 @@ add_executable(git-rollback
   ../cmd_main.cc
   driver.cc
   rollback.cc
+  packbuilder.cc
   gc.cc
 )
 endif()

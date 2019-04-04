@@ -10,7 +10,9 @@
 #include <cstring>
 #include <vector>
 #include <console.hpp>
-#include <Argv.hpp>
+#include <argvex.hpp>
+#include <git.hpp>
+#include <string.hpp>
 #include "rollback.hpp"
 
 /*
@@ -19,8 +21,8 @@
  * git-rollback --git-dir=/path/to/repo --backid=a59a9bb06a
  */
 
-void RollbackUsage() {
-  const char *kUsage =
+void usage() {
+  const char *ua =
       R"(OVERVIEW: GIT rollback tools
 Usage: git-rollback <options>...] [--] [<pathspec>...] [<refs|branches> ...]
 OPTIONS:
@@ -30,83 +32,103 @@ OPTIONS:
   --backrev        set rollback current back X rev
   --refname        set rollback current reference name
   --force          force gc prune
+
+Example:
+  git-rollback --git-dir=/path/to/repo --backrev=7
+  git-rollback --git-dir=/path/to/repo --backid=commitid
+
 )";
-  printf("%s\n", kUsage);
+  fprintf(stderr, "%s\n", ua);
 }
 
-int ResolveInteger(const char *cstr) {
-  char *c;
-  auto i = std::strtol(cstr, &c, 10);
-  if (i > 0) {
-    return static_cast<int>(i);
-  }
-  return 0;
+template <typename Integer>
+ax::ErrorResult Fromchars(std::string_view sv_, Integer &iv) {
+  return ax::Integer_from_chars(sv_, iv, 10);
 }
 
-int ProcessArgs(int Argc, char **Argv, RollbackTaskArgs &taskArgs) {
-  const char *va{nullptr};
-  for (int i = 1; i < Argc; i++) {
-    if (IsArg(Argv[i], "--git-dir", sizeof("--git-dir") - 1, &va)) {
-      if (va) {
-        taskArgs.gitdir.assign(va);
-      } else if (++i < Argc) {
-        taskArgs.gitdir.assign(Argv[i]);
-      }
-    } else if (IsArg(Argv[i], "--backrev", sizeof("--backrev") - 1, &va)) {
-      if (va) {
-        taskArgs.rev = ResolveInteger(va);
-      } else if (++i < Argc) {
-        taskArgs.rev = ResolveInteger(Argv[i]);
-      }
-    } else if (IsArg(Argv[i], "--backid", sizeof("--backid") - 1, &va)) {
-      if (va) {
-        taskArgs.hexid.assign(va);
-      } else if (++i < Argc) {
-        taskArgs.hexid.assign(Argv[i]);
-      }
-    } else if (IsArg(Argv[i], "--refname", sizeof("--refname") - 1, &va)) {
-      if (va) {
-        taskArgs.refname.assign(va);
-      } else if (++i < Argc) {
-        taskArgs.refname.assign(Argv[i]);
-      }
-    } else if (IsArg(Argv[i], "--force")) {
-
-    } else if (IsArg(Argv[i], "-h", "--help")) {
-      RollbackUsage();
-      std::exit(0);
-    } else {
-      /// do some things
-    }
+bool parse_opts(int argc, char **argv, rollback_options &opt) {
+  if (argc == 1) {
+    usage();
+    return false;
   }
+  std::vector<ax::ParseArgv::option> opts = {
+      {"git-dir", ax::ParseArgv::required_argument, 'g'},
+      {"backid", ax::ParseArgv::required_argument, 'I'},
+      {"backrev", ax::ParseArgv::required_argument, 'R'},
+      {"refname", ax::ParseArgv::required_argument, 'N'},
+      {"force", ax::ParseArgv::no_argument, 'F'},
+      {"version", ax::ParseArgv::no_argument, 'v'},
+      {"verbose", ax::ParseArgv::no_argument, 'V'},
+      {"help", ax::ParseArgv::no_argument, 'h'}};
+  ax::ParseArgv pa(argc, argv);
+  auto err =
+      pa.ParseArgument(opts, [&](int ch, const char *optarg, const char *) {
+        switch (ch) {
+        case 'g':
+          opt.gitdir = optarg;
+          break;
+        case 'I':
+          opt.oid = optarg;
+          break;
+        case 'R':
+          Fromchars(optarg, opt.rev);
+          break;
+        case 'N':
+          opt.refname = optarg;
+          if (!aze::starts_with(opt.refname, "refs/heads/") &&
+              opt.refname != "HEAD") {
+            opt.refname = aze::strcat("refs/heads/", opt.refname);
+          }
+          break;
+        case 'F':
+          opt.forced = true;
+          break;
+        case 'v':
+          printf("git-analyze 1.0\n");
+          exit(0);
+          break;
+        case 'V':
+          opt.verbose = true;
+          break;
+        case 'h':
+          usage();
+          exit(0);
+          break;
+        default:
+          break;
+        }
+        return true;
+      });
+  if (!err) {
+    aze::FPrintF(stderr, "Parse argv error: %s\n", err.message);
+    return false;
+  }
+
+  /// Apply unresolved args to gitdir repo, and other
+  size_t index = 0;
+  auto sz = pa.UnresolvedArgs().size();
+  if (opt.gitdir.empty() && index < sz) {
+    opt.gitdir = pa.UnresolvedArgs()[index];
+    index++;
+  }
+  if (index < sz) {
+    opt.refname = pa.UnresolvedArgs()[index];
+  }
+  if (opt.gitdir.empty()) {
+    opt.gitdir = ".";
+  }
+  if (opt.refname.empty()) {
+    opt.refname = "HEAD";
+  };
+  return true;
   return 0;
 }
 
 int cmd_main(int argc, char **argv) {
-  RollbackTaskArgs taskArgs;
-  RollbackDriver driver;
-  ProcessArgs(argc, argv, taskArgs);
-  bool result = false;
-  if (taskArgs.hexid.empty() && taskArgs.rev <= 0) {
-    aze::FPrintF(stderr, "usage: \ngit-rollback --git-dir=/path/to/repo "
-                         "--backrev=7\ngit-rollback --git-dir=/path/to/repo "
-                         "--backid=commitid\n");
+  git::global_initializer_t gi;
+  Executor e;
+  if (!parse_opts(argc, argv, e.options())) {
     return 1;
   }
-  if (taskArgs.hexid.size() > 0) {
-    result = driver.RollbackWithCommit(taskArgs.gitdir.c_str(),
-                                       taskArgs.refname.c_str(),
-                                       taskArgs.hexid.c_str(), taskArgs.forced);
-  } else {
-    result = driver.RollbackWithRev(taskArgs.gitdir.c_str(),
-                                    taskArgs.refname.c_str(), taskArgs.rev,
-                                    taskArgs.forced);
-  }
-
-  if (!result) {
-    aze::FPrintF(stderr, "git-rollback: Operation aborted !\n");
-    return 1;
-  }
-  aze::FPrintF(stderr, "git-rollback: Operation completed !\n");
   return 0;
 }

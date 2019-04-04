@@ -105,7 +105,7 @@ bool Executor::Execute(std::string_view gitdir, std::string_view oldrev,
     return false;
   }
   git_oid oid;
-  while (!git_revwalk_next(&oid, w.walk)) {
+  while (git_revwalk_next(&oid, w.walk) == 0) {
     auto c = r->get_commit(&oid);
     if (!c) {
       break;
