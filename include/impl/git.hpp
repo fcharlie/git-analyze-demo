@@ -86,25 +86,8 @@ public:
     return p;
   }
   git_commit *p() const { return c; }
-  std::vector<commit> parents() {
-    std::vector<commit> cv;
-    auto n = git_commit_parentcount(c);
-    for (unsigned int i = 0; i < n; i++) {
-      commit pc;
-      if (git_commit_parent(&pc.c, c, i) != 0) {
-        return cv;
-      }
-      cv.push_back(std::move(pc));
-    }
-    return cv;
-  }
-  bool equal(const git_oid *id) {
-    auto xid = git_commit_id(c);
-    if (xid == nullptr) {
-      return false;
-    }
-    return git_oid_cmp(id, xid) == 0;
-  }
+  std::vector<commit> parents();
+  bool equal(const git_oid *id);
 
 private:
   friend class repository;

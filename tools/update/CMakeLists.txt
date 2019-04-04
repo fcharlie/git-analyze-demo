@@ -11,11 +11,15 @@ if(WIN32)
   target_link_libraries(update
     ${LIBGIT2}
     re2
+    absl::str_format
+    absl::strings
   )
 else()
   target_link_libraries(update
     ${LIBGIT2}
     re2
+    absl::str_format
+    absl::strings
     pthread
   )
 endif()

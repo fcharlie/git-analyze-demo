@@ -5,6 +5,27 @@
 
 namespace git {
 
+inline bool commit::equal(const git_oid *id) {
+  auto xid = git_commit_id(c);
+  if (xid == nullptr) {
+    return false;
+  }
+  return git_oid_cmp(id, xid) == 0;
+}
+
+inline std::vector<commit> commit::parents() {
+  std::vector<commit> cv;
+  auto n = git_commit_parentcount(c);
+  for (unsigned int i = 0; i < n; i++) {
+    commit pc;
+    if (git_commit_parent(&pc.c, c, i) != 0) {
+      return cv;
+    }
+    cv.push_back(std::move(pc));
+  }
+  return cv;
+}
+
 inline std::optional<tree> tree::get_tree(repository &r, commit &c,
                                           std::string_view path) {
   tree t;
@@ -64,24 +85,42 @@ repository::get_branch(std::string_view branch) {
   return std::nullopt;
 }
 
+// When only resolve one peel object. tag exists.
 inline std::optional<commit> repository::get_commit(const git_oid *id) {
-  commit c;
-  if (git_commit_lookup(&c.c, repo_, id) != 0) {
+  git_object *obj = nullptr;
+  if (git_object_lookup(&obj, repo_, id, GIT_OBJECT_ANY) != 0) {
     return std::nullopt;
   }
+  switch (git_object_type(obj)) {
+  case GIT_OBJECT_COMMIT: {
+    commit c;
+    c.c = reinterpret_cast<git_commit *>(obj);
+    return std::make_optional(std::move(c));
+  }
+  case GIT_OBJECT_TAG:
+    break;
+  default:
+    git_object_free(obj);
+    return std::nullopt;
+  }
+  git_object *peel = nullptr;
+  if (git_object_peel(&peel, obj, GIT_OBJECT_COMMIT) != 0) {
+    /* code */
+    git_object_free(obj);
+    return std::nullopt;
+  }
+  git_object_free(obj);
+  commit c;
+  c.c = reinterpret_cast<git_commit *>(peel);
   return std::make_optional(std::move(c));
 }
 
-inline std::optional<commit> repository::get_commit(std::string_view sid) {
-  git_oid oid;
-  if (git_oid_fromstrn(&oid, sid.data(), sid.size()) != 0) {
+inline std::optional<commit> repository::get_commit(std::string_view oid) {
+  git_oid id;
+  if (git_oid_fromstrn(&id, oid.data(), oid.size()) != 0) {
     return std::nullopt;
   }
-  commit c;
-  if (git_commit_lookup(&c.c, repo_, &oid) != 0) {
-    return std::nullopt;
-  }
-  return std::make_optional(std::move(c));
+  return get_commit(&id);
 }
 
 inline std::optional<commit>
@@ -91,15 +130,11 @@ repository::get_reference_commit(std::string_view refname) {
     return std::nullopt;
   }
   git_oid id;
-  auto cid = ref->commitid(id);
-  if (cid == nullptr) {
+  auto oid = ref->commitid(id);
+  if (oid == nullptr) {
     return std::nullopt;
   }
-  commit c;
-  if (git_commit_lookup(&c.c, repo_, cid) != 0) {
-    return std::nullopt;
-  }
-  return std::make_optional(std::move(c));
+  return get_commit(oid);
 }
 
 inline std::optional<commit>

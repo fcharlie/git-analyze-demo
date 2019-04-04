@@ -83,7 +83,7 @@ OPTIONS:
   --backid         set rollback commit id
   --backrev        set rollback current back X rev
   --refname        set rollback current reference name
-  --force          force gc prune
+
 ```
 参数格式与 git-analyze 类似, --force 将强制运行 git gc 并清除悬空对象. 当 未指定 git-dir 时,为当前目录,未指定 refname 时,为 HEAD 指向的分支.
 

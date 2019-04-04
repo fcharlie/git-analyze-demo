@@ -1,6 +1,7 @@
 ////////
 #include "executor.hpp"
 #include <git2.h>
+#include <console.hpp>
 
 struct commit_t {
   commit_t() = default;
@@ -19,7 +20,25 @@ struct commit_t {
     if (git_oid_fromstrn(&id, rev.data(), rev.size()) != 0) {
       return false;
     }
-    if (git_commit_lookup(&commit, r, &id) != 0) {
+    git_object *obj = nullptr;
+    if (git_object_lookup(&obj, r, &id, GIT_OBJECT_ANY) != 0) {
+      return false;
+    }
+    switch (git_object_type(obj)) {
+    case GIT_OBJECT_COMMIT:
+      commit = reinterpret_cast<git_commit *>(obj);
+      break;
+    case GIT_OBJECT_TAG: {
+      git_object *po = nullptr;
+      if (git_object_peel(&po, obj, GIT_OBJECT_COMMIT) != 0) {
+        git_object_free(obj);
+        return false;
+      }
+      git_object_free(obj);
+      commit = reinterpret_cast<git_commit *>(po);
+    } break;
+    default:
+      git_object_free(obj);
       return false;
     }
     return git_commit_tree(&tree, commit) == 0;
@@ -79,6 +98,7 @@ int git_treewalk_impl(const char *root, const git_tree_entry *entry,
 bool Executor::ExecuteTreeWalk(std::string_view rev) {
   commit_t commit;
   if (!commit.lookup(base->repo(), rev)) {
+    aze::FPrintF(stderr, "unable open ref: %s\n", rev);
     return false;
   }
   return (git_tree_walk(commit.tree, GIT_TREEWALK_PRE, git_treewalk_impl,
@@ -151,6 +171,7 @@ bool Executor::Execute(std::string_view path, std::string_view oldrev,
     return false;
   }
   if (!newcommit.lookup(base->repo(), newrev)) {
+    aze::FPrintF(stderr, "unable resolve ref: %s\n", newrev);
     return false;
   }
   diff_t diff;
