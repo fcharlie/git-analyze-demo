@@ -6,7 +6,7 @@
 // check commit emails exists in private-email set.
 namespace aze {
 bool Executor::Initialize() {
-  auto ex = std::getenv("GITEE_PEA");
+  auto ex = std::getenv("GIT_PRIVATE_EMAIL_LIST");
   if (ex == nullptr) {
     // unset PRIVATE EMAIL skip
     return false;
