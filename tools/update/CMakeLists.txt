@@ -7,23 +7,19 @@ add_executable(update
   executor.cc
 )
 
-if(WIN32)
-  target_link_libraries(update
-    ${LIBGIT2}
-    re2
-    absl::str_format
-    absl::strings
-  )
-else()
-  target_link_libraries(update
-    ${LIBGIT2}
-    re2
-    absl::str_format
-    absl::strings
-    pthread
-  )
+if(MINGW)
+    target_compile_options(update PRIVATE -municode)
+    set(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -municode")
+    #set_target_properties(git-analyze PROPERTIES COMPILE_FLAGS -municode)
 endif()
 
+target_link_libraries(update
+  ${LIBGIT2_LIBS}
+  re2
+  absl::str_format
+  absl::strings
+  ${AZE_UNIX_LIB}
+)
 
 add_executable(update_test
   update_test.cc
@@ -35,16 +31,10 @@ add_dependencies(update
   libre2
 )
 
-if(WIN32)
-  target_link_libraries(update_test
-    re2
-  )
-else()
-  target_link_libraries(update_test
-    re2
-    pthread
-  )
-endif()
+target_link_libraries(update_test
+  re2
+  ${AZE_UNIX_LIB}
+)
 
 install(TARGETS update
     DESTINATION bin

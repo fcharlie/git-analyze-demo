@@ -1,18 +1,16 @@
-#C++ Based hook command
-
+# git-bare init
 if(WIN32)
-add_executable(git-bareinit
-  ../cmd_main.cc
-  main.cc
-  git-bareinit.manifest
-  git-bareinit.rc
-)
-else()
-add_executable(git-bareinit
-  ../cmd_main.cc
-  main.cc
-)
+  set(BARE_WIN_SRC
+    bareinit.manifest
+    bareinit.rc
+  )
 endif()
+
+add_executable(git-bareinit
+  ../cmd_main.cc
+  main.cc
+  ${BARE_WIN_SRC}
+)
 
 if(MINGW)
     target_compile_options(git-bareinit PRIVATE -municode)
@@ -27,7 +25,7 @@ add_dependencies(git-bareinit
 target_link_libraries(git-bareinit
   absl::str_format
   absl::strings
-  ${LIBGIT2}
+  ${LIBGIT2_LIBS}
 )
 
 install(TARGETS git-bareinit

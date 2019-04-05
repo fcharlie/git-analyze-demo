@@ -1,16 +1,17 @@
 #C++ Based hook command
 
 if(WIN32)
-add_executable(git-graft
-  ../cmd_main.cc
-  graft.cc
-)
-else()
-add_executable(git-graft
-  ../cmd_main.cc
-  graft.cc
-)
+  set(GRAFT_WIN_SRC
+    graft.manifest
+    graft.rc
+  )
 endif()
+
+add_executable(git-graft
+  ../cmd_main.cc
+  graft.cc
+  ${GRAFT_WIN_SRC}
+)
 
 if(MINGW)
     target_compile_options(git-graft PRIVATE -municode)
@@ -25,7 +26,7 @@ add_dependencies(git-graft
 target_link_libraries(git-graft
   absl::str_format
   absl::strings
-  ${LIBGIT2}
+  ${LIBGIT2_LIBS}
 )
 
 install(TARGETS git-graft

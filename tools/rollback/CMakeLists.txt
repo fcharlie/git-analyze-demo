@@ -1,21 +1,18 @@
-#C++ Based hook command
+# git-rollback
 
 if(WIN32)
-add_executable(git-rollback
-  ../cmd_main.cc
-  driver.cc
-  rollback.cc
-  git-rollback.rc
-  git-rollback.manifest
-)
-else()
-add_executable(git-rollback
-  ../cmd_main.cc
-  driver.cc
-  rollback.cc
-)
+  set(RBK_WIN_SRC
+    git-rollback.rc
+    git-rollback.manifest
+  )
 endif()
 
+add_executable(git-rollback
+  ../cmd_main.cc
+  driver.cc
+  rollback.cc
+  ${RBK_WIN_SRC}
+)
 
 
 if(MINGW)
@@ -32,7 +29,7 @@ add_dependencies(git-rollback
 target_link_libraries(git-rollback
   absl::str_format
   absl::strings
-  ${LIBGIT2}
+  ${LIBGIT2_LIBS}
 )
 
 install(TARGETS git-rollback

@@ -1,21 +1,22 @@
-#C++ Based hook command
+# git-cheat
 
 if(WIN32)
-add_executable(git-cheat
-  ../cmd_main.cc
-  driver.cc
-  cheat.cc
-  git-cheat.rc
-  git-cheat.manifest
-)
-else()
-add_executable(git-cheat
-  ../cmd_main.cc
-  driver.cc
-  cheat.cc
-  #environment.cc
-)
+  set(CHEAT_WIN_SRC
+    git-cheat.rc
+    git-cheat.manifest
+  )
 endif()
+
+add_executable(git-cheat
+  ../cmd_main.cc
+  driver.cc
+  cheat.cc
+  ${CHEAT_WIN_SRC}
+)
+
+add_dependencies(git-cheat
+  libgit2
+)
 
 if(MINGW)
     target_compile_options(git-cheat PRIVATE -municode)
@@ -23,14 +24,10 @@ if(MINGW)
     #set_target_properties(git-analyze PROPERTIES COMPILE_FLAGS -municode)
 endif()
 
-add_dependencies(git-cheat
-  libgit2
-)
-
 target_link_libraries(git-cheat
   absl::str_format
   absl::strings
-  ${LIBGIT2}
+  ${LIBGIT2_LIBS}
 )
 
 install(TARGETS git-cheat

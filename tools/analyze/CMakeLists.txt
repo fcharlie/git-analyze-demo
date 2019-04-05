@@ -5,10 +5,6 @@ if(WIN32)
     git-analyze.rc
     git-analyze.manifest
   )
-else()
-  set(AZE_UNIX_LIB
-    pthread
-  )
 endif()
 
 add_executable(git-analyze
@@ -25,7 +21,7 @@ add_dependencies(git-analyze
 target_link_libraries(git-analyze
   absl::str_format
   absl::strings
-  ${LIBGIT2}
+  ${LIBGIT2_LIBS}
   ${AZE_UNIX_LIB}
 )
 
@@ -33,8 +29,6 @@ if(MINGW)
     target_compile_options(git-analyze PRIVATE -municode)
     set(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -municode")
 endif()
-
-
 
 install(TARGETS git-analyze
     DESTINATION bin

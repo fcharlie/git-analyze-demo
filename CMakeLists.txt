@@ -1,6 +1,6 @@
 # Copyright (c) 2019 GITEE.COM All Rights Reserved.
 
-cmake_minimum_required (VERSION 3.14)
+cmake_minimum_required (VERSION 3.12)
 project(git-analyze)
 
 
@@ -77,6 +77,7 @@ if(WIN32)
 endif()
 
 option(USE_SANITIZE "Use address sanitizer compile git-analyze" OFF)
+option(ENABLE_AZE_CLAR "Enable build aze test utils" OFF)
 
 message(STATUS "Build git-analyze on ${CMAKE_SYSTEM_NAME} ")
 
@@ -90,6 +91,17 @@ set(CMAKE_CXX_STANDARD_REQUIRED YES)
 if (MSVC)
   add_compile_options("-D_CRT_SECURE_NO_WARNINGS=1")
   add_compile_options("-Zc:__cplusplus") # C++ __cplusplus
+  set(WIN_COMPILER_FLAGS
+    CMAKE_CXX_FLAGS
+    CMAKE_CXX_FLAGS_DEBUG
+    CMAKE_CXX_FLAGS_RELEASE
+    CMAKE_C_FLAGS
+    CMAKE_C_FLAGS_DEBUG
+    CMAKE_C_FLAGS_RELEASE
+  )
+  foreach(WIN_COMPILER_FLAG ${WIN_COMPILER_FLAGS})
+    string(REPLACE "/MD" "/MT" ${WIN_COMPILER_FLAG} "${${WIN_COMPILER_FLAG}}")
+  endforeach()
 else()
   add_compile_options("-g")
   add_compile_options("-Wall")
@@ -101,68 +113,82 @@ else()
   endif()
 endif()
 
-
-
 set(ANALYZE_CLEANROOT "${CMAKE_BINARY_DIR}/cleanroot")
 
 message(STATUS "TRACE '${CMAKE_GENERATOR}' ${CMAKE_MAKE_PROGRAM}")
 
 include(ExternalProject)
 
-if(NOT WIN32)
-ExternalProject_Add(http-parser
-  URL https://github.com/nodejs/http-parser/archive/v2.9.0.tar.gz
-  URL_HASH SHA256=ef26268c54c8084d17654ba2ed5140bffeffd2a040a895ffb22a6cca3f6c613f
-  PATCH_COMMAND patch -Nbp1 -i ${CMAKE_CURRENT_SOURCE_DIR}/patch/http-parser.patch
-  CMAKE_ARGS
-    -G${CMAKE_GENERATOR}
-    -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
-    -DCMAKE_INSTALL_PREFIX:PATH=${ANALYZE_CLEANROOT}
-    -DCMAKE_BUILD_TYPE:STRING=Release
-  BUILD_COMMAND cmake --build .
-  INSTALL_COMMAND ${CMAKE_MAKE_PROGRAM} install
-)
+set(LIBGIT2_URL https://github.com/libgit2/libgit2/archive/v0.28.1.tar.gz)
+set(LIBGIT2_HASH 0ca11048795b0d6338f2e57717370208c2c97ad66c6d5eac0c97a8827d13936b)
+set(LIBGIT2_LIBS git2)
+set(AZE_UNIX_LIB)
+set(AZE_BUILD_TYPE Release)
 
-ExternalProject_Add(libgit2
-  DEPENDS http-parser
-  URL https://github.com/libgit2/libgit2/archive/v0.28.1.tar.gz
-  URL_HASH SHA256=0ca11048795b0d6338f2e57717370208c2c97ad66c6d5eac0c97a8827d13936b
-  CMAKE_ARGS
-    -G${CMAKE_GENERATOR}
-    -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
-    -DCMAKE_PROJECT_libgit2_INCLUDE=${CMAKE_CURRENT_SOURCE_DIR}/cmake/libgit2.cmake
-    -DCMAKE_INSTALL_PREFIX:PATH=${ANALYZE_CLEANROOT}
-    -DCMAKE_BUILD_TYPE:STRING=Release
-    BUILD_COMMAND cmake --build .
-    INSTALL_COMMAND ${CMAKE_MAKE_PROGRAM} install
-)
-
-
-set(LIBGIT2
-  git2
-  http_parser
-)
-
+if(WIN32)
+  set(AZE_BUILD_TYPE ${CMAKE_BUILD_TYPE})
+  ExternalProject_Add(libgit2
+    URL ${LIBGIT2_URL}
+    URL_HASH SHA256=${LIBGIT2_HASH}
+    CMAKE_ARGS
+      -G${CMAKE_GENERATOR}
+      -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+      -DBUILD_SHARED_LIBS=OFF
+      -DSTATIC_CRT=ON
+      -DCMAKE_PROJECT_libgit2_INCLUDE=${CMAKE_CURRENT_SOURCE_DIR}/cmake/libgit2.cmake
+      -DCMAKE_INSTALL_PREFIX:PATH=${ANALYZE_CLEANROOT}
+      -DCMAKE_BUILD_TYPE:STRING=${AZE_BUILD_TYPE}
+      BUILD_COMMAND cmake --build .
+      INSTALL_COMMAND ${CMAKE_MAKE_PROGRAM} install
+  )
+  set(LIBGIT2_LIBS
+    git2
+    ws2_32
+    winhttp
+    rpcrt4
+    crypt32
+    ole32
+  )
+  set(RE2_WIN_OPT
+    -DCRT_FLAG_DEBUG=${CRT_FLAG_DEBUG}
+    -DCRT_FLAG_RELEASE=${CRT_FLAG_RELEASE}
+  )
 
 else()
-
-ExternalProject_Add(libgit2
-  URL https://github.com/libgit2/libgit2/archive/v0.28.1.tar.gz
-  URL_HASH SHA256=0ca11048795b0d6338f2e57717370208c2c97ad66c6d5eac0c97a8827d13936b
-  CMAKE_ARGS
-    -G${CMAKE_GENERATOR}
-    -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
-    -DCMAKE_PROJECT_libgit2_INCLUDE=${CMAKE_CURRENT_SOURCE_DIR}/cmake/libgit2.cmake
-    -DCMAKE_INSTALL_PREFIX:PATH=${ANALYZE_CLEANROOT}
-    -DCMAKE_BUILD_TYPE:STRING=Release
+  ExternalProject_Add(http-parser
+    URL https://github.com/nodejs/http-parser/archive/v2.9.0.tar.gz
+    URL_HASH SHA256=ef26268c54c8084d17654ba2ed5140bffeffd2a040a895ffb22a6cca3f6c613f
+    PATCH_COMMAND patch -Nbp1 -i ${CMAKE_CURRENT_SOURCE_DIR}/patch/http-parser.patch
+    CMAKE_ARGS
+      -G${CMAKE_GENERATOR}
+      -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+      -DCMAKE_INSTALL_PREFIX:PATH=${ANALYZE_CLEANROOT}
+      -DCMAKE_BUILD_TYPE:STRING=${AZE_BUILD_TYPE}
     BUILD_COMMAND cmake --build .
     INSTALL_COMMAND ${CMAKE_MAKE_PROGRAM} install
-)
-
-set(LIBGIT2
-  git2
-)
-
+  )
+  ExternalProject_Add(libgit2
+    DEPENDS http-parser
+    URL ${LIBGIT2_URL}
+    URL_HASH SHA256=${LIBGIT2_HASH}
+    CMAKE_ARGS
+      -G${CMAKE_GENERATOR}
+      -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+      -DBUILD_SHARED_LIBS=OFF
+      -DCMAKE_PROJECT_libgit2_INCLUDE=${CMAKE_CURRENT_SOURCE_DIR}/cmake/libgit2.cmake
+      -DCMAKE_INSTALL_PREFIX:PATH=${ANALYZE_CLEANROOT}
+      -DCMAKE_BUILD_TYPE:STRING=${AZE_BUILD_TYPE}
+      BUILD_COMMAND cmake --build .
+      INSTALL_COMMAND ${CMAKE_MAKE_PROGRAM} install
+  )
+  install(FILES "${ANALYZE_CLEANROOT}/lib/libgit2.so"
+    DESTINATION lib
+  )
+  set(LIBGIT2_LIBS
+    git2
+    http_parser
+  )
+  set(AZE_UNIX_LIB pthread)
 endif()
 
 # RE2
@@ -174,8 +200,11 @@ ExternalProject_Add(libre2
   CMAKE_ARGS
     -G${CMAKE_GENERATOR}
     -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+    -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}
+    -DCMAKE_CXX_FLAGS_RELEASE=${CMAKE_CXX_FLAGS_RELEASE}
+    -DCMAKE_CXX_FLAGS_DEBUG=${CMAKE_CXX_FLAGS_DEBUG}
     -DCMAKE_CXX_STANDARD=17
-    -DCMAKE_BUILD_TYPE:STRING=${CMAKE_BUILD_TYPE}
+    -DCMAKE_BUILD_TYPE:STRING=${AZE_BUILD_TYPE}
     -DCMAKE_INSTALL_PREFIX:PATH=${ANALYZE_CLEANROOT}
     -DBUILD_SHARED_LIBS=OFF
     -DRE2_BUILD_TESTING=OFF
@@ -194,32 +223,13 @@ link_directories(
   ${ANALYZE_CLEANROOT}/lib
 )
 
-
-if(WIN32)
-  install(FILES "${ANALYZE_CLEANROOT}/lib/git2.dll"
-    DESTINATION bin
-  )
-else()
-  install(FILES "${ANALYZE_CLEANROOT}/lib/libgit2.so"
-    DESTINATION lib
-  )
-endif()
-
 install(FILES "${ANALYZE_CLEANROOT}/share/libgit2/COPYING"
   DESTINATION share/libgit2
   RENAME copyright
 )
 
 add_subdirectory(vendor/abseil)
-
-# tools
-add_subdirectory(tools/analyze)
-add_subdirectory(tools/rollback)
-add_subdirectory(tools/cheat)
-add_subdirectory(tools/pea) # Private email address filter, link as update hook.
-add_subdirectory(tools/pre-commit)
-add_subdirectory(tools/complete)
-add_subdirectory(tools/git-bareinit)
-add_subdirectory(tools/graft)
-add_subdirectory(tools/update)
-add_subdirectory(test)
+add_subdirectory(tools) # add tools
+if(ENABLE_AZE_CLAR)
+  add_subdirectory(test) # test
+endif()

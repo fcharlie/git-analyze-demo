@@ -1,21 +1,18 @@
-#C++ Based hook command
+# git-complete
 
 if(WIN32)
-add_executable(git-complete
-  ../cmd_main.cc
-  complete.cc
-  commit.cc
-  complete.manifest
-  complete.rc
-)
-else()
-add_executable(git-complete
-  ../cmd_main.cc
-  complete.cc
-  commit.cc
-  #environment.cc
-)
+  set(COMPLETE_WIN_SRC
+    complete.manifest
+    complete.rc
+  )
 endif()
+
+add_executable(git-complete
+  ../cmd_main.cc
+  complete.cc
+  commit.cc
+  ${COMPLETE_WIN_SRC}
+)
 
 if(MINGW)
     target_compile_options(git-complete PRIVATE -municode)
@@ -30,7 +27,7 @@ add_dependencies(git-complete
 target_link_libraries(git-complete
   absl::str_format
   absl::strings
-  ${LIBGIT2}
+  ${LIBGIT2_LIBS}
 )
 
 install(TARGETS git-complete
