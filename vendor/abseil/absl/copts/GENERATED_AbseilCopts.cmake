@@ -203,9 +203,9 @@ list(APPEND ABSL_MSVC_FLAGS
     "/wd4800"
 )
 
-# list(APPEND ABSL_MSVC_LINKOPTS
-#     "/ignore:4221"
-# )
+list(APPEND ABSL_MSVC_LINKOPTS
+    "-ignore:4221"
+)
 
 list(APPEND ABSL_MSVC_TEST_FLAGS
     "/wd4018"
