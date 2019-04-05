@@ -14,9 +14,9 @@ add_executable(git-graft
 )
 
 if(MINGW)
-    target_compile_options(git-graft PRIVATE -municode)
-    set(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -municode")
-    #set_target_properties(git-analyze PROPERTIES COMPILE_FLAGS -municode)
+  target_compile_options(git-graft PRIVATE -municode)
+  set(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -municode")
+  #set_target_properties(git-analyze PROPERTIES COMPILE_FLAGS -municode)
 endif()
 
 add_dependencies(git-graft

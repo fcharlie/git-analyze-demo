@@ -26,8 +26,8 @@ target_link_libraries(git-analyze
 )
 
 if(MINGW)
-    target_compile_options(git-analyze PRIVATE -municode)
-    set(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -municode")
+  target_compile_options(git-analyze PRIVATE -municode)
+  set(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -municode")
 endif()
 
 install(TARGETS git-analyze

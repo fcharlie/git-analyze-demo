@@ -19,9 +19,9 @@ add_dependencies(git-cheat
 )
 
 if(MINGW)
-    target_compile_options(git-cheat PRIVATE -municode)
-    set(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -municode")
-    #set_target_properties(git-analyze PROPERTIES COMPILE_FLAGS -municode)
+  target_compile_options(git-cheat PRIVATE -municode)
+  set(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -municode")
+  #set_target_properties(git-analyze PROPERTIES COMPILE_FLAGS -municode)
 endif()
 
 target_link_libraries(git-cheat

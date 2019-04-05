@@ -2,14 +2,13 @@
 #ifndef AZE_CONSOLE_HPP
 #define AZE_CONSOLE_HPP
 #include <cstdio>
+#include <string_view>
 #include <absl/strings/str_format.h>
 #ifdef _WIN32
 #include "impl/console_win.hpp"
 #endif
 
 namespace aze {
-//
-
 #ifdef _WIN32
 template <typename... Args>
 int FPrintF(std::FILE *out, const absl::FormatSpec<Args...> &format,
