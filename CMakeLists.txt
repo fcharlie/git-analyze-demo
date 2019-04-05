@@ -119,14 +119,23 @@ message(STATUS "TRACE '${CMAKE_GENERATOR}' ${CMAKE_MAKE_PROGRAM}")
 
 include(ExternalProject)
 
+# Libgit2
 set(LIBGIT2_URL https://github.com/libgit2/libgit2/archive/v0.28.1.tar.gz)
 set(LIBGIT2_HASH 0ca11048795b0d6338f2e57717370208c2c97ad66c6d5eac0c97a8827d13936b)
+# HTTP Parser
+set(HTTP_PARSER_URL https://github.com/nodejs/http-parser/archive/v2.9.0.tar.gz)
+set(HTTP_PARSER_HASH ef26268c54c8084d17654ba2ed5140bffeffd2a040a895ffb22a6cca3f6c613f)
+# libre2
+set(LIBRE2_URL https://github.com/google/re2/archive/2019-03-01.tar.gz)
+set(LIBRE2_HASH 05dc21aafc1fa21161214c6145aeed8a6d108bde390584c762aa3e64df557d6d)
+
 set(LIBGIT2_LIBS git2)
 set(AZE_UNIX_LIB)
 set(AZE_BUILD_TYPE Release)
 
 if(WIN32)
   set(AZE_BUILD_TYPE ${CMAKE_BUILD_TYPE})
+  # Build libgit2 static
   ExternalProject_Add(libgit2
     URL ${LIBGIT2_URL}
     URL_HASH SHA256=${LIBGIT2_HASH}
@@ -156,8 +165,8 @@ if(WIN32)
 
 else()
   ExternalProject_Add(http-parser
-    URL https://github.com/nodejs/http-parser/archive/v2.9.0.tar.gz
-    URL_HASH SHA256=ef26268c54c8084d17654ba2ed5140bffeffd2a040a895ffb22a6cca3f6c613f
+    URL ${HTTP_PARSER_URL}
+    URL_HASH SHA256=${HTTP_PARSER_HASH}
     PATCH_COMMAND patch -Nbp1 -i ${CMAKE_CURRENT_SOURCE_DIR}/patch/http-parser.patch
     CMAKE_ARGS
       -G${CMAKE_GENERATOR}
@@ -167,6 +176,7 @@ else()
     BUILD_COMMAND cmake --build .
     INSTALL_COMMAND ${CMAKE_MAKE_PROGRAM} install
   )
+  # Build libgit2 shared
   ExternalProject_Add(libgit2
     DEPENDS http-parser
     URL ${LIBGIT2_URL}
@@ -185,17 +195,16 @@ else()
   )
   set(LIBGIT2_LIBS
     git2
+    z
     http_parser
   )
   set(AZE_UNIX_LIB pthread)
 endif()
 
-# RE2
-# https://github.com/google/re2/archive/2019-03-01.tar.gz
-
+# build libre2
 ExternalProject_Add(libre2
-  URL https://github.com/google/re2/archive/2019-03-01.tar.gz
-  URL_HASH SHA256=05dc21aafc1fa21161214c6145aeed8a6d108bde390584c762aa3e64df557d6d
+  URL ${LIBRE2_URL}
+  URL_HASH SHA256=${LIBRE2_HASH}
   CMAKE_ARGS
     -G${CMAKE_GENERATOR}
     -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
