@@ -9,14 +9,14 @@
 
 Windows 依赖：
 +   Visual Studio 2017 15.7 or Later
-+   CMake 3.10 or Later
++   CMake 3.12 or Later
 
 Unix 依赖：
 +   GCC 7.3 or Later (Best GCC 8)
-+   CMake 3.10 or Later
++   CMake 3.12 or Later
 
 ```
-git clone --recursive https://gitee.com/oscstudio/git-analyze.git
+git clone https://gitee.com/oscstudio/git-analyze.git
 ```
 
 Windows 构建：
