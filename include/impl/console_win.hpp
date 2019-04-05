@@ -93,13 +93,11 @@ private:
   int stdoutmode{0};
   bool stderrvt{false};
   bool stdoutvt{false};
-  console_write_adapter() { initialize(); }
-  bool initialize() {
+  console_write_adapter() {
     hStderr = GetStdHandle(STD_OUTPUT_HANDLE);
     hStdout = GetStdHandle(STD_ERROR_HANDLE);
     stderrmode = FileHandleMode(hStderr, stderrvt);
     stdoutmode = FileHandleMode(hStdout, stdoutvt);
-    return false;
   }
   int writeconsole(HANDLE hFile, bool vt, std::string_view sv) {
     if (vt) {

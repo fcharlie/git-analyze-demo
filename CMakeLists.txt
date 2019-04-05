@@ -89,7 +89,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED YES)
 
 if (MSVC)
   add_compile_options("-D_CRT_SECURE_NO_WARNINGS=1")
-  add_compile_options("/Zc:__cplusplus") # C++ __cplusplus
+  add_compile_options("-Zc:__cplusplus") # C++ __cplusplus
 else()
   add_compile_options("-g")
   add_compile_options("-Wall")
@@ -109,6 +109,7 @@ message(STATUS "TRACE '${CMAKE_GENERATOR}' ${CMAKE_MAKE_PROGRAM}")
 
 include(ExternalProject)
 
+if(NOT WIN32)
 ExternalProject_Add(http-parser
   URL https://github.com/nodejs/http-parser/archive/v2.9.0.tar.gz
   URL_HASH SHA256=ef26268c54c8084d17654ba2ed5140bffeffd2a040a895ffb22a6cca3f6c613f
@@ -136,10 +137,33 @@ ExternalProject_Add(libgit2
     INSTALL_COMMAND ${CMAKE_MAKE_PROGRAM} install
 )
 
+
 set(LIBGIT2
   git2
   http_parser
 )
+
+
+else()
+
+ExternalProject_Add(libgit2
+  URL https://github.com/libgit2/libgit2/archive/v0.28.1.tar.gz
+  URL_HASH SHA256=0ca11048795b0d6338f2e57717370208c2c97ad66c6d5eac0c97a8827d13936b
+  CMAKE_ARGS
+    -G${CMAKE_GENERATOR}
+    -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+    -DCMAKE_PROJECT_libgit2_INCLUDE=${CMAKE_CURRENT_SOURCE_DIR}/cmake/libgit2.cmake
+    -DCMAKE_INSTALL_PREFIX:PATH=${ANALYZE_CLEANROOT}
+    -DCMAKE_BUILD_TYPE:STRING=Release
+    BUILD_COMMAND cmake --build .
+    INSTALL_COMMAND ${CMAKE_MAKE_PROGRAM} install
+)
+
+set(LIBGIT2
+  git2
+)
+
+endif()
 
 # RE2
 # https://github.com/google/re2/archive/2019-03-01.tar.gz
@@ -151,7 +175,7 @@ ExternalProject_Add(libre2
     -G${CMAKE_GENERATOR}
     -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
     -DCMAKE_CXX_STANDARD=17
-    -DCMAKE_BUILD_TYPE:STRING=Release
+    -DCMAKE_BUILD_TYPE:STRING=${CMAKE_BUILD_TYPE}
     -DCMAKE_INSTALL_PREFIX:PATH=${ANALYZE_CLEANROOT}
     -DBUILD_SHARED_LIBS=OFF
     -DRE2_BUILD_TESTING=OFF

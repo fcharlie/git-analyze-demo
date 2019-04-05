@@ -12,7 +12,7 @@ namespace aze {
 
 #ifdef _WIN32
 template <typename... Args>
-int FPrintF(std::FILE *output, const absl::FormatSpec<Args...> &format,
+int FPrintF(std::FILE *out, const absl::FormatSpec<Args...> &format,
             const Args &... args) {
   auto msg = absl::str_format_internal::FormatPack(
       absl::str_format_internal::UntypedFormatSpecImpl::Extract(format),
@@ -21,10 +21,10 @@ int FPrintF(std::FILE *output, const absl::FormatSpec<Args...> &format,
 }
 #else
 template <typename... Args>
-int FPrintF(std::FILE *output, const absl::FormatSpec<Args...> &format,
+int FPrintF(std::FILE *out, const absl::FormatSpec<Args...> &format,
             const Args &... args) {
   return absl::str_format_internal::FprintF(
-      output, absl::str_format_internal::UntypedFormatSpecImpl::Extract(format),
+      out, absl::str_format_internal::UntypedFormatSpecImpl::Extract(format),
       {absl::str_format_internal::FormatArgImpl(args)...});
 }
 #endif

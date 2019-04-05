@@ -24,10 +24,10 @@ Windows 构建：
 ```sh
 mkdir build
 cd build
-cmake -DCMAKE_BUILD_TYPE=Release ..
+cmake -G "NMake Makefiles" -DCMAKE_BUILD_TYPE=Release ..
 cpack
 ```
-然后打开安装包即可。
+然后打开安装包即可。这里需要注意，Ninja 并不能很好的支持 `cmake ExternalProject` 特性，因此会构建失败。
 
 Unix 构建：
 
