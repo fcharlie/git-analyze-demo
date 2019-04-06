@@ -46,7 +46,7 @@ private:
   std::string msg{"no commit message"};
   std::string refname;
   git_commit *parent{nullptr};
-  uint32_t maxcount{5};
+  uint32_t maxcount{7};
   bool nb{false};
 };
 
