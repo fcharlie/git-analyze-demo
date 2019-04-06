@@ -113,8 +113,8 @@ bool Executor::One(git_time when) {
   return (git_commit_lookup(&parent, r.p(), &nid) == 0);
 }
 
-static unsigned int Random() {
-  static unsigned int g_seed = 0;
+static uint32_t Random() {
+  static uint32_t g_seed = 0;
   g_seed = (214013 * g_seed + 2531011);
   return (g_seed >> 16) & 0x7FFF;
 }
@@ -130,7 +130,8 @@ bool Executor::RoundYear(int year) {
   for (unsigned i = 1; i <= days; i++) {
     mt.tm_mday = i;
     mt.tm_mon = 0;
-    auto N = Random() % maxcount + 1;
+    constexpr uint32_t mincount = 2;
+    auto N = (std::max)(Random() % maxcount, mincount);
     for (unsigned k = 0; k < N; k++) {
       mt.tm_hour = p->tm_hour;
       mt.tm_min = p->tm_min + k;
