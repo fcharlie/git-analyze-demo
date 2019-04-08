@@ -34,6 +34,7 @@ public:
   bool Initialize(std::string_view dir, std::string_view branch,
                   std::string_view msg, bool nb_);
   bool Execute(uint32_t begin, uint32_t end);
+  uint64_t Totals() const { return totals; }
 
 private:
   bool Parseconfig();
@@ -47,6 +48,7 @@ private:
   std::string refname;
   git_commit *parent{nullptr};
   uint32_t maxcount{7};
+  uint64_t totals{0};
   bool nb{false};
 };
 

@@ -110,6 +110,7 @@ bool Executor::One(git_time when) {
     git_commit_free(parent);
     parent = nullptr;
   }
+  totals++;
   return (git_commit_lookup(&parent, r.p(), &nid) == 0);
 }
 

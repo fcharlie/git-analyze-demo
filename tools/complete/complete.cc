@@ -41,8 +41,9 @@ int cmd_main(int argc, char **argv) {
     }
   }
   if (ex.Execute(start_year, end_year)) {
-    aze::FPrintF(stderr, "\rHas completed in %d to %d's commits !\n",
-                 start_year, end_year);
+    // https://abseil.io/docs/cpp/guides/format
+    aze::FPrintF(stderr, "\r%d~%d commits has been filled, totals: %u\n",
+                 start_year, end_year, ex.Totals());
   }
   return 0;
 }
