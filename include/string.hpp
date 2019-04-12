@@ -4,6 +4,7 @@
 #include <string>
 #include <string_view>
 #include <cstring>
+#include <cctype>
 
 namespace aze {
 
@@ -47,6 +48,19 @@ inline bool ends_with(std::string_view sv, std::string_view suffix) {
   auto pos = sv.size() - suffix.size();
   return memcmp(sv.data() + pos, suffix.data(), suffix.size()) == 0;
 }
+
+// inline int memcasecmp(const char* s1, const char* s2, size_t len) {
+//   const unsigned char* us1 = reinterpret_cast<const unsigned char*>(s1);
+//   const unsigned char* us2 = reinterpret_cast<const unsigned char*>(s2);
+//
+//   for (size_t i = 0; i < len; i++) {
+//     const int diff =
+//         int{static_cast<unsigned char>(absl::ascii_tolower(us1[i]))} -
+//         int{static_cast<unsigned char>(absl::ascii_tolower(us2[i]))};
+//     if (diff != 0) return diff;
+//   }
+//   return 0;
+// }
 
 inline bool ends_case_with(std::string_view sv, std::string_view suffix) {
   if (suffix.size() > sv.size()) {
