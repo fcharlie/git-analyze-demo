@@ -27,6 +27,7 @@ endif()
 target_link_libraries(git-cheat
   absl::str_format
   absl::strings
+  absl::time
   ${LIBGIT2_LIBS}
 )
 

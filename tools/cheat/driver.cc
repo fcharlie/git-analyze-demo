@@ -4,6 +4,7 @@
 #include <string>
 #include <argv.hpp>
 #include <console.hpp>
+#include <absl/time/time.h>
 #include "cheat.hpp"
 
 void usage() {
@@ -58,49 +59,55 @@ bool cmd_options(int argc, char **argv, cheat_options &opt) {
   av::error_code ec;
 
   auto result = pa.Execute(
-      [&](int ch, const char *optarg, const char *) {
+      [&](int ch, const char *oa, const char *) {
         switch (ch) {
         case 'g':
-          opt.gitdir = optarg;
+          opt.gitdir = oa;
           break;
         case 'b':
-          opt.branch = optarg;
+          opt.branch = oa;
           break;
         case 'm':
-          opt.message = optarg;
+          opt.message = oa;
           break;
         case 'p':
-          opt.parent = optarg;
+          opt.parent = oa;
           break;
         case 't':
-          opt.treedir = optarg;
+          opt.treedir = oa;
           break;
         case 'a':
-          opt.author = optarg;
+          opt.author = oa;
           break;
         case 'c':
-          opt.committer = optarg;
+          opt.committer = oa;
           break;
         case 'e':
-          opt.authoremail = optarg;
+          opt.authoremail = oa;
           break;
         case 'E':
-          opt.commiteremail = optarg;
+          opt.commiteremail = oa;
           break;
         case 'k':
           opt.kauthor = true;
           break;
         case 'd': {
-          struct std::tm tm;
-          std::istringstream ss(optarg);
-          ss >> std::get_time(&tm, "%Y-%m-%dT%H:%M:%SZ");
+          absl::Time t;
+          std::string err;
+          std::string fmt = "%Y-%m-%dT%H:%M:%SZ";
+          if (!absl::ParseTime(fmt, oa, &t, &err)) {
+            absl::FPrintF(stderr, "Pase date: %s error: %s; we support: %s\n",
+                          oa, err, fmt);
+            return false;
+          }
+          auto tm = absl::ToTM(t, absl::LocalTimeZone());
 #ifndef _WIN32
           opt.timeoff = tm.tm_gmtoff; // UNIX ONLY
 #endif
           opt.date = mktime(&tm);
         } break;
         case 'v':
-          printf("1.0\n");
+          aze::FPrintF(stderr, "git-cheat 1.0\n");
           exit(0);
           break;
         case 'V':
@@ -116,8 +123,10 @@ bool cmd_options(int argc, char **argv, cheat_options &opt) {
         return true;
       },
       ec);
-  if (!result && ec.ec != av::SkipParse) {
-    aze::FPrintF(stderr, "%s\n", ec.message);
+  if (!result) {
+    if (ec.ec != av::SkipParse) {
+      aze::FPrintF(stderr, "ParseArgv: %s\n", ec.message);
+    }
     return false;
   }
 
@@ -145,7 +154,7 @@ int cmd_main(int argc, char **argv) {
     return 1;
   }
   if (!cheat_execute(opt)) {
-    fprintf(stderr, "cheat execute failed\n");
+    aze::FPrintF(stderr, "cheat execute failed\n");
     return 1;
   }
   return 0;
