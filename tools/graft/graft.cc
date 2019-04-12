@@ -3,7 +3,7 @@
 #include <cstdlib>
 #include <string>
 #include <string_view>
-#include <argvex.hpp>
+#include <argv.hpp>
 #include <git.hpp>
 #include <optional>
 #include <console.hpp>
@@ -31,16 +31,15 @@ Example:
 }
 
 bool parse_argv(int argc, char **argv, graft_info_t &gf) {
-  std::vector<ax::ParseArgv::option> opts = {
-      {"help", ax::ParseArgv::no_argument, 'h'},
-      {"git-dir", ax::ParseArgv::required_argument, 'd'},
-      {"message", ax::ParseArgv::required_argument, 'm'},
-      {"branch", ax::ParseArgv::required_argument, 'b'}
-      //
-  };
-  ax::ParseArgv pv(argc, argv);
-  auto ec =
-      pv.Parse(opts, [&](int ch, const char *optarg, const char *raw) {
+  av::ParseArgv pv(argc, argv);
+
+  pv.Add("help", av::no_argument, 'h')
+      .Add("git-dir", av::required_argument, 'd')
+      .Add("message", av::required_argument, 'm')
+      .Add("branch", av::required_argument, 'b');
+  av::error_code ec;
+  auto result = pv.Execute(
+      [&](int ch, const char *optarg, const char *raw) {
         switch (ch) {
         case 'h':
           PrintUsage();
@@ -60,8 +59,9 @@ bool parse_argv(int argc, char **argv, graft_info_t &gf) {
           return false;
         }
         return true;
-      });
-  if (ec && ec.ec != ax::SkipParse) {
+      },
+      ec);
+  if (!result && ec.ec != av::SkipParse) {
     aze::FPrintF(stderr, "ParseArgv: %s\n", ec.message);
     return false;
   }

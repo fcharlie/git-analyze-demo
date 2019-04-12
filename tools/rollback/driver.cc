@@ -10,7 +10,7 @@
 #include <cstring>
 #include <vector>
 #include <console.hpp>
-#include <argvex.hpp>
+#include <argv.hpp>
 #include <git.hpp>
 #include <string.hpp>
 #include "rollback.hpp"
@@ -37,12 +37,7 @@ Example:
   git-rollback --git-dir=/path/to/repo --backid=commitid
 
 )";
-  fprintf(stderr, "%s\n", ua);
-}
-
-template <typename Integer>
-ax::error_code Fromchars(std::string_view sv_, Integer &iv) {
-  return ax::Integer_from_chars(sv_, iv, 10);
+  aze::FPrintF(stderr, "%s\n", ua);
 }
 
 bool parse_opts(int argc, char **argv, rollback_options &opt) {
@@ -50,36 +45,39 @@ bool parse_opts(int argc, char **argv, rollback_options &opt) {
     usage();
     return false;
   }
-  std::vector<ax::ParseArgv::option> opts = {
-      {"git-dir", ax::ParseArgv::required_argument, 'g'},
-      {"backid", ax::ParseArgv::required_argument, 'I'},
-      {"backrev", ax::ParseArgv::required_argument, 'R'},
-      {"refname", ax::ParseArgv::required_argument, 'N'},
-      {"version", ax::ParseArgv::no_argument, 'v'},
-      {"verbose", ax::ParseArgv::no_argument, 'V'},
-      {"help", ax::ParseArgv::no_argument, 'h'}};
-  ax::ParseArgv pa(argc, argv);
-  auto ec =
-      pa.Parse(opts, [&](int ch, const char *optarg, const char *) {
+  av::ParseArgv pa(argc, argv);
+  pa.Add("git-dir", av::required_argument, 'g')
+      .Add("backid", av::required_argument, 'I')
+      .Add("backrev", av::required_argument, 'R')
+      .Add("refname", av::required_argument, 'N')
+      .Add("version", av::no_argument, 'v')
+      .Add("verbose", av::no_argument, 'V')
+      .Add("help", av::no_argument, 'h');
+  av::error_code ec;
+  auto result = pa.Execute(
+      [&](int ch, const char *oa, const char *) {
         switch (ch) {
         case 'g':
-          opt.gitdir = optarg;
+          opt.gitdir = oa;
           break;
         case 'I':
-          opt.oid = optarg;
+          opt.oid = oa;
           break;
-        case 'R':
-          Fromchars(optarg, opt.rev);
-          break;
+        case 'R': {
+          int rev = 0;
+          if (absl::SimpleAtoi(oa, &rev)) {
+            opt.rev = rev;
+          }
+        } break;
         case 'N':
-          opt.refname = optarg;
+          opt.refname = oa;
           if (!aze::starts_with(opt.refname, "refs/heads/") &&
               opt.refname != "HEAD") {
             opt.refname = aze::strcat("refs/heads/", opt.refname);
           }
           break;
         case 'v':
-          printf("git-rollback 1.0\n");
+          aze::FPrintF(stderr, "git-rollback 1.0\n");
           exit(0);
           break;
         case 'V':
@@ -93,8 +91,9 @@ bool parse_opts(int argc, char **argv, rollback_options &opt) {
           break;
         }
         return true;
-      });
-  if (ec && ec.ec != ax::SkipParse) {
+      },
+      ec);
+  if (!result && ec.ec != av::SkipParse) {
     aze::FPrintF(stderr, "Parse argv error: %s\n", ec.message);
     return false;
   }
