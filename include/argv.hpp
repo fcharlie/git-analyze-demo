@@ -128,7 +128,7 @@ inline bool ParseArgv::parse_internal_short(std::string_view a,
     oa = (a[1] == '=') ? (a.data() + 2) : (a.data() + 1);
   }
   if (oa != nullptr && ha == no_argument) {
-    ec.Assign(1, "option '-", a, "' unexpected parameter: ", oa);
+    ec.Assign(1, "option '-", a.substr(0, 1), "' unexpected parameter: ", oa);
     return false;
   }
   if (oa == nullptr && ha == required_argument) {
