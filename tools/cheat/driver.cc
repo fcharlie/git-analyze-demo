@@ -2,7 +2,7 @@
 #include <iomanip>
 #include <sstream>
 #include <string>
-#include <argvex.hpp>
+#include <argv.hpp>
 #include <console.hpp>
 #include "cheat.hpp"
 
@@ -33,35 +33,32 @@ example:
   printf("%s\n", ua);
 }
 
-template <typename Integer>
-ax::error_code Fromwchars(std::string_view sv_, Integer &iv) {
-  return ax::Integer_from_chars(sv_, iv, 10);
-}
-
 bool cmd_options(int argc, char **argv, cheat_options &opt) {
   if (argc == 1) {
     usage();
     return false;
   }
-  std::vector<ax::ParseArgv::option> opts = {
-      {"git-dir", ax::ParseArgv::required_argument, 'g'},
-      {"branch", ax::ParseArgv::required_argument, 'b'},
-      {"message", ax::ParseArgv::required_argument, 'm'},
-      {"parent", ax::ParseArgv::required_argument, 'p'},
-      {"tree", ax::ParseArgv::required_argument, 't'},
-      {"date", ax::ParseArgv::required_argument, 'd'},
-      {"author", ax::ParseArgv::required_argument, 'a'},
-      {"author-email", ax::ParseArgv::required_argument, 'e'},
-      {"committer", ax::ParseArgv::required_argument, 'c'},
-      {"committer-email", ax::ParseArgv::required_argument, 'E'},
-      {"date", ax::ParseArgv::required_argument, 'd'},
-      {"keep", ax::ParseArgv::no_argument, 'k'},
-      {"version", ax::ParseArgv::no_argument, 'v'},
-      {"verbose", ax::ParseArgv::no_argument, 'V'},
-      {"help", ax::ParseArgv::no_argument, 'h'}};
-  ax::ParseArgv pa(argc, argv);
-  auto ec =
-      pa.Parse(opts, [&](int ch, const char *optarg, const char *) {
+  av::ParseArgv pa(argc, argv);
+  pa.Add("git-dir", av::required_argument, 'g')
+      .Add("branch", av::required_argument, 'b')
+      .Add("message", av::required_argument, 'm')
+      .Add("parent", av::required_argument, 'p')
+      .Add("tree", av::required_argument, 't')
+      .Add("date", av::required_argument, 'd')
+      .Add("author", av::required_argument, 'a')
+      .Add("author", av::required_argument, 'a')
+      .Add("author-email", av::required_argument, 'e')
+      .Add("committer", av::required_argument, 'c')
+      .Add("committer-email", av::required_argument, 'E')
+      .Add("date", av::required_argument, 'd')
+      .Add("keep", av::no_argument, 'k')
+      .Add("version", av::no_argument, 'v')
+      .Add("verbose", av::no_argument, 'V')
+      .Add("help", av::no_argument, 'h');
+  av::error_code ec;
+
+  auto result = pa.Execute(
+      [&](int ch, const char *optarg, const char *) {
         switch (ch) {
         case 'g':
           opt.gitdir = optarg;
@@ -117,8 +114,9 @@ bool cmd_options(int argc, char **argv, cheat_options &opt) {
           break;
         }
         return true;
-      });
-  if (ec && ec.ec != ax::SkipParse) {
+      },
+      ec);
+  if (!result && ec.ec != av::SkipParse) {
     aze::FPrintF(stderr, "%s\n", ec.message);
     return false;
   }

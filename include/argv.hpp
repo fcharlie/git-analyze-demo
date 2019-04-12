@@ -7,7 +7,7 @@
 #include <string_view> // C++17
 #include <absl/strings/str_cat.h>
 //
-namespace ax {
+namespace av {
 enum ParseError {
   SkipParse = -1,
   None = 0,
@@ -206,6 +206,6 @@ inline bool ParseArgv::parse_internal(std::string_view a, const invoke_t &v,
   return parse_internal_short(a.substr(1), v, ec);
 }
 
-} // namespace ax
+} // namespace av
 
 #endif
