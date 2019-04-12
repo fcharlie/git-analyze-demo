@@ -27,6 +27,7 @@ target_link_libraries(git-graft
   absl::str_format
   absl::strings
   ${LIBGIT2_LIBS}
+  ${UV_LIBS}
 )
 
 install(TARGETS git-graft

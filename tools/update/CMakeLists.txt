@@ -18,6 +18,7 @@ target_link_libraries(update
   re2
   absl::str_format
   absl::strings
+  ${UV_LIBS}
   ${AZE_UNIX_LIB}
 )
 

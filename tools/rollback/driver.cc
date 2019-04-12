@@ -41,7 +41,7 @@ Example:
 }
 
 template <typename Integer>
-ax::ErrorResult Fromchars(std::string_view sv_, Integer &iv) {
+ax::error_code Fromchars(std::string_view sv_, Integer &iv) {
   return ax::Integer_from_chars(sv_, iv, 10);
 }
 
@@ -59,7 +59,7 @@ bool parse_opts(int argc, char **argv, rollback_options &opt) {
       {"verbose", ax::ParseArgv::no_argument, 'V'},
       {"help", ax::ParseArgv::no_argument, 'h'}};
   ax::ParseArgv pa(argc, argv);
-  auto err =
+  auto ec =
       pa.ParseArgument(opts, [&](int ch, const char *optarg, const char *) {
         switch (ch) {
         case 'g':
@@ -94,8 +94,8 @@ bool parse_opts(int argc, char **argv, rollback_options &opt) {
         }
         return true;
       });
-  if (!err) {
-    aze::FPrintF(stderr, "Parse argv error: %s\n", err.message);
+  if (ec && ec.ec != ax::SkipParse) {
+    aze::FPrintF(stderr, "Parse argv error: %s\n", ec.message);
     return false;
   }
 

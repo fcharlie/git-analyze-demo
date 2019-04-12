@@ -5,7 +5,7 @@
 #include <string_view>
 #include <absl/strings/str_format.h>
 #ifdef _WIN32
-#include "impl/console_win.hpp"
+#include "details/console_win.hpp"
 #endif
 
 namespace aze {

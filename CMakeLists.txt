@@ -128,6 +128,8 @@ set(HTTP_PARSER_HASH ef26268c54c8084d17654ba2ed5140bffeffd2a040a895ffb22a6cca3f6
 # libre2
 set(LIBRE2_URL https://github.com/google/re2/archive/2019-03-01.tar.gz)
 set(LIBRE2_HASH 05dc21aafc1fa21161214c6145aeed8a6d108bde390584c762aa3e64df557d6d)
+set(LIBUV_URL https://github.com/libuv/libuv/archive/v1.27.0.tar.gz)
+set(LIBUV_HASH 4afcdc84cd315b77c8e532e7b3fde43d536af0e2e835eafbd0e75518ed26dbed)
 
 set(LIBGIT2_LIBS git2)
 set(AZE_UNIX_LIB)
@@ -201,6 +203,20 @@ else()
   set(AZE_UNIX_LIB pthread)
 endif()
 
+# build libuv
+ExternalProject_Add(libuv
+  URL ${LIBUV_URL}
+  URL_HASH SHA256=${LIBUV_HASH}
+  CMAKE_ARGS
+    -G${CMAKE_GENERATOR}
+    -DCMAKE_BUILD_TYPE:STRING=${AZE_BUILD_TYPE}
+    -DCMAKE_INSTALL_PREFIX:PATH=${ANALYZE_CLEANROOT}
+    -DBUILD_SHARED_LIBS=OFF
+    -DBUILD_TESTING=OFF
+    BUILD_COMMAND cmake --build .
+    INSTALL_COMMAND ${CMAKE_MAKE_PROGRAM} install
+)
+
 # build libre2
 ExternalProject_Add(libre2
   URL ${LIBRE2_URL}
@@ -220,6 +236,9 @@ ExternalProject_Add(libre2
     INSTALL_COMMAND ${CMAKE_MAKE_PROGRAM} install
 )
 
+set(UV_LIBS
+  uv_a
+)
 
 include_directories(
   ${ANALYZE_CLEANROOT}/include

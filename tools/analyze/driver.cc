@@ -11,6 +11,8 @@
 #include <vector>
 #include <argvex.hpp>
 #include <git.hpp>
+#include <console.hpp>
+#include <os.hpp>
 #include "executor.hpp"
 
 /*
@@ -30,15 +32,15 @@ void usage() {
    --who            show who is commit's author
    --all            analyze will scanf all refs
  )";
-  printf("%s\n", ua);
+  aze::FPrintF(stdout, "%s\n", ua);
 }
 template <typename Integer>
-ax::ErrorResult Fromchars(std::string_view sv_, Integer &iv) {
+ax::error_code Fromchars(std::string_view sv_, Integer &iv) {
   return ax::Integer_from_chars(sv_, iv, 10);
 }
 const constexpr std::uint64_t GB = 1024 * 1024 * 1024ull;
 const constexpr std::uint64_t MB = 1024 * 1024ull;
-ax::ErrorResult Fromsize(std::string_view sv_, std::uint64_t &iv) {
+ax::error_code Fromsize(std::string_view sv_, std::uint64_t &iv) {
   std::uint64_t size = 1;
   if (aze::ends_with(sv_, "MB") || aze::ends_with(sv_, "mb")) {
     size = MB;
@@ -58,13 +60,13 @@ ax::ErrorResult Fromsize(std::string_view sv_, std::uint64_t &iv) {
   return ec;
 }
 
-std::uint64_t AzeEnv(const char *key, std::uint64_t dv) {
-  auto s = std::getenv(key);
-  if (s == nullptr) {
+std::uint64_t AzeEnv(std::string_view key, std::uint64_t dv) {
+  auto s = os::GetEnv(key);
+  if (s.empty()) {
     return dv;
   }
   std::uint64_t xs;
-  auto ec = Fromchars(s, xs);
+  auto ec = Fromsize(s, xs);
   if (ec) {
     return dv;
   }
@@ -98,7 +100,7 @@ bool parse_opts(int argc, char **argv, aze_options &opt) {
       {"verbose", ax::ParseArgv::no_argument, 'V'},
       {"help", ax::ParseArgv::no_argument, 'h'}};
   ax::ParseArgv pa(argc, argv);
-  auto err =
+  auto ec =
       pa.ParseArgument(opts, [&](int ch, const char *optarg, const char *) {
         switch (ch) {
         case 'g':
@@ -120,7 +122,7 @@ bool parse_opts(int argc, char **argv, aze_options &opt) {
           Fromchars(optarg, opt.timeout);
           break;
         case 'v':
-          printf("git-analyze 1.0\n");
+          aze::FPrintF(stdout, "git-analyze 1.0\n");
           exit(0);
           break;
         case 'V':
@@ -135,7 +137,8 @@ bool parse_opts(int argc, char **argv, aze_options &opt) {
         }
         return true;
       });
-  if (!err) {
+  if (ec && ec.ec != ax::SkipParse) {
+    aze::FPrintF(stderr, "%s\n", ec.message);
     return false;
   }
 

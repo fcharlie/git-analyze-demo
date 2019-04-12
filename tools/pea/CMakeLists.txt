@@ -18,4 +18,5 @@ target_link_libraries(pea
   absl::hash
   absl::str_format
   absl::strings
+  ${UV_LIBS}
 )

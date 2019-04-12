@@ -7,6 +7,7 @@
 #include <git.hpp>
 #include <optional>
 #include <console.hpp>
+#include <os.hpp>
 
 struct graft_info_t {
   std::string gitdir{"."};
@@ -38,7 +39,7 @@ bool parse_argv(int argc, char **argv, graft_info_t &gf) {
       //
   };
   ax::ParseArgv pv(argc, argv);
-  auto err =
+  auto ec =
       pv.ParseArgument(opts, [&](int ch, const char *optarg, const char *raw) {
         switch (ch) {
         case 'h':
@@ -60,10 +61,8 @@ bool parse_argv(int argc, char **argv, graft_info_t &gf) {
         }
         return true;
       });
-  if (err.errorcode != 0) {
-    if (err.errorcode == 1) {
-      aze::FPrintF(stderr, "ParseArgv: %s\n", err.message);
-    }
+  if (ec && ec.ec != ax::SkipParse) {
+    aze::FPrintF(stderr, "ParseArgv: %s\n", ec.message);
     return false;
   }
   if (pv.UnresolvedArgs().size() < 1) {
@@ -74,37 +73,35 @@ bool parse_argv(int argc, char **argv, graft_info_t &gf) {
   return true;
 }
 
-inline void SignatureCommiterFill(git_signature *sig,
-                                  const git_signature *old) {
-  sig->when = old->when;
-  auto name = getenv("GIT_COMMITTER_NAME");
-  if (name != nullptr) {
-    sig->name = name;
-  } else {
-    sig->name = old->name;
+class SignatureSaver {
+public:
+  SignatureSaver() = default;
+  SignatureSaver(const SignatureSaver &) = delete;
+  SignatureSaver &operator=(const SignatureSaver &) = delete;
+  void InitializeEnv() {
+    name = os::GetEnv("GIT_COMMITTER_NAME");
+    email = os::GetEnv("GIT_COMMITTER_EMAIL");
+    aname = os::GetEnv("GIT_AUTHOR_NAME");
+    aemail = os::GetEnv("GIT_AUTHOR_NAME");
   }
-  auto email = getenv("GIT_COMMITTER_EMAIL");
-  if (email != nullptr) {
-    sig->email = email;
-  } else {
-    sig->email = old->email;
+
+  void UpdateCommiter(git_signature *sig, const git_signature *old) {
+    sig->email = email.empty() ? old->email : email.data();
+    sig->name = name.empty() ? old->name : name.data();
+    sig->when = old->when;
   }
-}
-void SignatureAuthorFill(git_signature *sig, const git_signature *old) {
-  sig->when = old->when;
-  auto name = getenv("GIT_AUTHOR_NAME");
-  if (name != nullptr) {
-    sig->name = name;
-  } else {
-    sig->name = old->name;
+  void UpdateAuthor(git_signature *sig, const git_signature *old) {
+    sig->email = aemail.empty() ? old->email : aemail.data();
+    sig->name = aname.empty() ? old->name : aname.data();
+    sig->when = old->when;
   }
-  auto email = getenv("GIT_AUTHOR_NAME");
-  if (email != nullptr) {
-    sig->email = email;
-  } else {
-    sig->email = old->email;
-  }
-}
+
+private:
+  std::string name;
+  std::string email;
+  std::string aname;
+  std::string aemail;
+};
 
 void dump_error() {
   auto ec = giterr_last();
@@ -166,8 +163,10 @@ bool graft_commit(const graft_info_t &gf) {
     return false;
   }
   git_signature author, committer;
-  SignatureAuthorFill(&author, git_commit_author(commit->p()));
-  SignatureCommiterFill(&committer, git_commit_committer(commit->p()));
+  SignatureSaver saver;
+  saver.InitializeEnv();
+  saver.UpdateAuthor(&author, git_commit_author(commit->p()));
+  saver.UpdateCommiter(&committer, git_commit_committer(commit->p()));
   std::string msg =
       gf.message.empty() ? git_commit_message(commit->p()) : gf.message;
   const git_commit *parents[] = {parent->p(), commit->p()};

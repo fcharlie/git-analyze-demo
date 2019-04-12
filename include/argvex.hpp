@@ -5,13 +5,26 @@
 #include <vector>
 #include <string_view>
 #include <functional>
+#include <absl/strings/str_cat.h>
 
 namespace ax {
-struct ErrorResult {
-  std::string message;
-  int errorcode{0};
-  operator bool() { return errorcode == 0; }
+enum ParseError {
+  SkipParse = -1,
+  None = 0,
+  ErrorNormal = 1 //
 };
+
+struct error_code {
+  std::string message;
+  int ec{0};
+  operator bool() { return ec != 0; }
+};
+
+template <typename... Args> error_code make_error_code_v(int ec, Args... args) {
+  std::initializer_list<absl::string_view> as = {
+      static_cast<const absl::AlphaNum &>(args).Piece()...};
+  return error_code{absl::strings_internal::CatPieces(as), ec};
+}
 
 inline unsigned char _Digit_from_char(const char _Ch) noexcept // strengthened
 { // convert ['0', '9'] ['A', 'Z'] ['a', 'z'] to [0, 35], everything else to 255
@@ -40,8 +53,8 @@ inline unsigned char _Digit_from_char(const char _Ch) noexcept // strengthened
 }
 
 template <typename Integer>
-ErrorResult Integer_from_chars(std::string_view wsv, Integer &ov,
-                               const int base) {
+error_code Integer_from_chars(std::string_view wsv, Integer &ov,
+                              const int base) {
   bool msign = false;
   auto _begin = wsv.begin();
   auto _end = wsv.end();
@@ -80,7 +93,7 @@ ErrorResult Integer_from_chars(std::string_view wsv, Integer &ov,
   for (; _iter != _end; ++_iter) {
     char wch = *_iter;
     if (wch > CHAR_MAX) {
-      return ErrorResult{"out of range", 1};
+      return make_error_code_v(1, "out of range");
     }
     const unsigned char _digit = _Digit_from_char(static_cast<char>(wch));
 
@@ -101,11 +114,11 @@ ErrorResult Integer_from_chars(std::string_view wsv, Integer &ov,
   }
 
   if (_iter - _begin == static_cast<ptrdiff_t>(msign)) {
-    return ErrorResult{"invalid argument", 1};
+    return make_error_code_v(1, "invalid argument");
   }
 
   if (_overflowed) {
-    return ErrorResult{"result out of range", 1};
+    return make_error_code_v(1, "result out of range");
   }
 
   if constexpr (std::is_signed_v<Integer>) {
@@ -115,7 +128,7 @@ ErrorResult Integer_from_chars(std::string_view wsv, Integer &ov,
   }
   ov = static_cast<Unsigned>(_value); // implementation-defined for negative,
                                       // N4713 7.8 [conv.integral]/3
-  return ErrorResult{};
+  return error_code{};
 }
 
 class ParseArgv {
@@ -135,12 +148,13 @@ public:
     HasArgs has_args;
     int val;
   };
-  using ArgumentCallback =
+  using argument_callback_t =
       std::function<bool(int, const char *optarg, const char *raw)>;
-  ErrorResult ParseArgument(const std::vector<option> &opts,
-                            const ArgumentCallback &callback) {
+  //
+  error_code ParseArgument(const std::vector<option> &opts,
+                           const argument_callback_t &callback) {
     if (argc_ == 0 || argv_ == nullptr) {
-      return ErrorResult{"invalid argument input"};
+      return make_error_code_v(1, "bad argv input");
     };
     index = 1;
     for (; index < argc_; index++) {
@@ -149,12 +163,12 @@ public:
         uargs.push_back(arg);
         continue;
       }
-      auto err = ParseInternal(arg, opts, callback);
-      if (err.errorcode != 0) {
-        return err;
+      auto ec = ParseInternal(arg, opts, callback);
+      if (ec) {
+        return ec;
       }
     }
-    return ErrorResult{};
+    return error_code{};
   }
   const std::vector<std::string_view> &UnresolvedArgs() const { return uargs; }
 
@@ -163,15 +177,15 @@ private:
   char *const *argv_;
   std::vector<std::string_view> uargs;
   int index{0};
-  ErrorResult ParseInternal(std::string_view arg,
-                            const std::vector<option> &opts,
-                            const ArgumentCallback &callback) {
+  error_code ParseInternal(std::string_view arg,
+                           const std::vector<option> &opts,
+                           const argument_callback_t &callback) {
     /*
     -x ; -x value -Xvalue
     --xy;--xy=value;--xy value
     */
     if (arg.size() < 2) {
-      return ErrorResult{"Invalid argument", 1};
+      return make_error_code_v(1, "invaild argument '-'");
     }
     int ch = -1;
     HasArgs ha = optional_argument;
@@ -184,8 +198,7 @@ private:
       auto pos = arg.find('=');
       if (pos != std::string_view::npos) {
         if (pos + 1 >= arg.size()) {
-          return ErrorResult{std::string("Incorrect argument: ").append(arg),
-                             1};
+          return make_error_code_v(1, "incorrect argument: ", arg);
         }
         name = arg.substr(2, pos - 2);
         optarg = arg.data() + pos + 1;
@@ -205,7 +218,7 @@ private:
 
       /// -x=xxx
       if (arg.size() == 3 && arg[2] == '=') {
-        return ErrorResult{std::string("Incorrect argument: ").append(arg), 1};
+        return error_code{std::string("Incorrect argument: ").append(arg), 1};
       }
       if (arg.size() > 3) {
         if (arg[2] == '=') {
@@ -223,20 +236,19 @@ private:
     }
 
     if (optarg != nullptr && ha == no_argument) {
-      return ErrorResult{std::string("Unacceptable input: ").append(arg), 1};
+      return make_error_code_v(1, "unacceptable input: ", arg);
     }
     if (optarg == nullptr && ha == required_argument) {
       if (index + 1 >= argc_) {
-        return ErrorResult{
-            std::string("Option name cannot be empty: ").append(arg), 1};
+        return make_error_code_v(1, "option name cannot be empty: ", arg);
       }
       optarg = argv_[index + 1];
       index++;
     }
     if (callback(ch, optarg, arg.data())) {
-      return ErrorResult{};
+      return error_code{};
     }
-    return ErrorResult{"skipped", 2};
+    return make_error_code_v(SkipParse, "parse skip");
   }
 };
 

@@ -1,6 +1,6 @@
 //// GIT BASE HEAD
 #ifndef AZE_GIT_BASE_HPP
 #define AZE_GIT_BASE_HPP
-#include "impl/git.hpp"
-#include "impl/git.ipp"
+#include "details/git.hpp"
+#include "details/git.ipp"
 #endif

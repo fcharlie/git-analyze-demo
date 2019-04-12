@@ -3,6 +3,7 @@
 #include <sstream>
 #include <string>
 #include <argvex.hpp>
+#include <console.hpp>
 #include "cheat.hpp"
 
 void usage() {
@@ -33,7 +34,7 @@ example:
 }
 
 template <typename Integer>
-ax::ErrorResult Fromwchars(std::string_view sv_, Integer &iv) {
+ax::error_code Fromwchars(std::string_view sv_, Integer &iv) {
   return ax::Integer_from_chars(sv_, iv, 10);
 }
 
@@ -59,7 +60,7 @@ bool cmd_options(int argc, char **argv, cheat_options &opt) {
       {"verbose", ax::ParseArgv::no_argument, 'V'},
       {"help", ax::ParseArgv::no_argument, 'h'}};
   ax::ParseArgv pa(argc, argv);
-  auto err =
+  auto ec =
       pa.ParseArgument(opts, [&](int ch, const char *optarg, const char *) {
         switch (ch) {
         case 'g':
@@ -117,7 +118,8 @@ bool cmd_options(int argc, char **argv, cheat_options &opt) {
         }
         return true;
       });
-  if (!err) {
+  if (ec && ec.ec != ax::SkipParse) {
+    aze::FPrintF(stderr, "%s\n", ec.message);
     return false;
   }
 
