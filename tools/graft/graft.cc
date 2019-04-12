@@ -40,7 +40,7 @@ bool parse_argv(int argc, char **argv, graft_info_t &gf) {
   };
   ax::ParseArgv pv(argc, argv);
   auto ec =
-      pv.ParseArgument(opts, [&](int ch, const char *optarg, const char *raw) {
+      pv.Parse(opts, [&](int ch, const char *optarg, const char *raw) {
         switch (ch) {
         case 'h':
           PrintUsage();

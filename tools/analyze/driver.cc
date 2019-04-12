@@ -101,7 +101,7 @@ bool parse_opts(int argc, char **argv, aze_options &opt) {
       {"help", ax::ParseArgv::no_argument, 'h'}};
   ax::ParseArgv pa(argc, argv);
   auto ec =
-      pa.ParseArgument(opts, [&](int ch, const char *optarg, const char *) {
+      pa.Parse(opts, [&](int ch, const char *optarg, const char *) {
         switch (ch) {
         case 'g':
           opt.gitdir = optarg;

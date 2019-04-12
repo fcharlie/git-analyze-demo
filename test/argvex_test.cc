@@ -63,7 +63,7 @@ int ParseArgvImplement(int Argc, char **Argv, Dcontext &dctx) {
       {"version", ax::ParseArgv::no_argument, 'v'},
       {"verbose", ax::ParseArgv::no_argument, 'V'}};
   auto err =
-      pa.ParseArgument(opts, [&](int ch, const char *optarg, const char *raw) {
+      pa.Parse(opts, [&](int ch, const char *optarg, const char *raw) {
         switch (ch) {
         case 'h':
           PrintUsage();

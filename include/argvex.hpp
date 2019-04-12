@@ -20,6 +20,10 @@ struct error_code {
   operator bool() { return ec != 0; }
 };
 
+inline error_code make_error_code(absl::string_view m, int ec = ErrorNormal) {
+  return error_code{std::string(m.data(), m.size()), ec};
+}
+
 template <typename... Args> error_code make_error_code_v(int ec, Args... args) {
   std::initializer_list<absl::string_view> as = {
       static_cast<const absl::AlphaNum &>(args).Piece()...};
@@ -93,7 +97,7 @@ error_code Integer_from_chars(std::string_view wsv, Integer &ov,
   for (; _iter != _end; ++_iter) {
     char wch = *_iter;
     if (wch > CHAR_MAX) {
-      return make_error_code_v(1, "out of range");
+      return make_error_code("out of range");
     }
     const unsigned char _digit = _Digit_from_char(static_cast<char>(wch));
 
@@ -114,11 +118,11 @@ error_code Integer_from_chars(std::string_view wsv, Integer &ov,
   }
 
   if (_iter - _begin == static_cast<ptrdiff_t>(msign)) {
-    return make_error_code_v(1, "invalid argument");
+    return make_error_code("invalid argument");
   }
 
   if (_overflowed) {
-    return make_error_code_v(1, "result out of range");
+    return make_error_code("result out of range");
   }
 
   if constexpr (std::is_signed_v<Integer>) {
@@ -148,13 +152,13 @@ public:
     HasArgs has_args;
     int val;
   };
-  using argument_callback_t =
-      std::function<bool(int, const char *optarg, const char *raw)>;
-  //
-  error_code ParseArgument(const std::vector<option> &opts,
-                           const argument_callback_t &callback) {
+  // int ch,const char *optarg, const char *raw
+  using callback_t = std::function<bool(int, const char *, const char *)>;
+  using options_t = std::vector<option>;
+  /////////// Parse
+  error_code Parse(const options_t &opts, const callback_t &callback) {
     if (argc_ == 0 || argv_ == nullptr) {
-      return make_error_code_v(1, "bad argv input");
+      return make_error_code("bad argv input");
     };
     index = 1;
     for (; index < argc_; index++) {
@@ -163,7 +167,7 @@ public:
         uargs.push_back(arg);
         continue;
       }
-      auto ec = ParseInternal(arg, opts, callback);
+      auto ec = parse_internal(arg, opts, callback);
       if (ec) {
         return ec;
       }
@@ -177,81 +181,88 @@ private:
   char *const *argv_;
   std::vector<std::string_view> uargs;
   int index{0};
-  error_code ParseInternal(std::string_view arg,
-                           const std::vector<option> &opts,
-                           const argument_callback_t &callback) {
-    /*
-    -x ; -x value -Xvalue
-    --xy;--xy=value;--xy value
-    */
-    if (arg.size() < 2) {
-      return make_error_code_v(1, "invaild argument '-'");
-    }
-    int ch = -1;
-    HasArgs ha = optional_argument;
-    const char *optarg = nullptr;
-
-    if (arg[1] == '-') {
-      /// parse long
-      /// --name value; --name=value
-      std::string_view name;
-      auto pos = arg.find('=');
-      if (pos != std::string_view::npos) {
-        if (pos + 1 >= arg.size()) {
-          return make_error_code_v(1, "incorrect argument: ", arg);
-        }
-        name = arg.substr(2, pos - 2);
-        optarg = arg.data() + pos + 1;
-      } else {
-        name = arg.substr(2);
-      }
-      for (auto &o : opts) {
-        if (name.compare(o.name) == 0) {
-          ch = o.val;
-          ha = o.has_args;
-          break;
-        }
-      }
-    } else {
-      /// parse short
-      ch = arg[1];
-
-      /// -x=xxx
-      if (arg.size() == 3 && arg[2] == '=') {
-        return error_code{std::string("Incorrect argument: ").append(arg), 1};
-      }
-      if (arg.size() > 3) {
-        if (arg[2] == '=') {
-          optarg = arg.data() + 3;
-        } else {
-          optarg = arg.data() + 2;
-        }
-      }
-      for (auto &o : opts) {
-        if (o.val == ch) {
-          ha = o.has_args;
-          break;
-        }
-      }
-    }
-
-    if (optarg != nullptr && ha == no_argument) {
-      return make_error_code_v(1, "unacceptable input: ", arg);
-    }
-    if (optarg == nullptr && ha == required_argument) {
-      if (index + 1 >= argc_) {
-        return make_error_code_v(1, "option name cannot be empty: ", arg);
-      }
-      optarg = argv_[index + 1];
-      index++;
-    }
-    if (callback(ch, optarg, arg.data())) {
-      return error_code{};
-    }
-    return make_error_code_v(SkipParse, "parse skip");
-  }
+  error_code parse_internal(std::string_view arg, const options_t &opts,
+                            const callback_t &callback);
 };
 
+inline error_code ParseArgv::parse_internal(std::string_view arg,
+                                            const options_t &opts,
+                                            const callback_t &callback) {
+  /*
+  -x ; -x value -Xvalue
+  --xy;--xy=value;--xy value
+  */
+  if (arg.size() < 2) {
+    return make_error_code("invaild argument '-'");
+  }
+
+  int ch = -1;
+  HasArgs ha = optional_argument;
+  const char *optarg = nullptr;
+
+  if (arg[1] == '-') {
+    /// parse long
+    /// --name value; --name=value
+    std::string_view name;
+    auto pos = arg.find('=');
+    if (pos != std::string_view::npos) {
+      if (pos + 1 >= arg.size()) {
+        return make_error_code_v(1, "incorrect argument: ", arg);
+      }
+      name = arg.substr(2, pos - 2);
+      optarg = arg.data() + pos + 1;
+    } else {
+      name = arg.substr(2);
+    }
+    for (auto &o : opts) {
+      if (name.compare(o.name) == 0) {
+        ch = o.val;
+        ha = o.has_args;
+        break;
+      }
+    }
+    if (ch == -1) {
+      return make_error_code_v(1, "unregistered option: ", arg);
+    }
+  } else {
+
+    /// -x=xxx
+    if (arg.size() == 3 && arg[2] == '=') {
+      return make_error_code_v(1, "incorrent argument: ", arg);
+    }
+    if (arg.size() > 3) {
+      if (arg[2] == '=') {
+        optarg = arg.data() + 3;
+      } else {
+        optarg = arg.data() + 2;
+      }
+    }
+    for (auto &o : opts) {
+      if (o.val == arg[1]) {
+        ha = o.has_args;
+        ch = o.val;
+        break;
+      }
+    }
+    if (ch == -1) {
+      return make_error_code_v(1, "unregistered option: ", arg);
+    }
+  }
+  if (optarg != nullptr && ha == no_argument) {
+    return make_error_code_v(1, "unacceptable input: ", arg);
+  }
+  if (optarg == nullptr && ha == required_argument) {
+    if (index + 1 >= argc_) {
+      return make_error_code_v(1, "option name cannot be empty: ", arg);
+    }
+    optarg = argv_[index + 1];
+    index++;
+  }
+  if (callback(ch, optarg, arg.data())) {
+    return error_code{};
+  }
+  return make_error_code("parse skip", SkipParse);
+}
 } // namespace ax
 
 #endif
