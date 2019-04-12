@@ -163,7 +163,7 @@ public:
     index = 1;
     for (; index < argc_; index++) {
       std::string_view arg = argv_[index];
-      if (arg[0] != '-') {
+      if (arg.empty() || arg[0] != '-') {
         uargs.push_back(arg);
         continue;
       }
