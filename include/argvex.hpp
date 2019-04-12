@@ -221,11 +221,7 @@ inline error_code ParseArgv::parse_internal(std::string_view arg,
         break;
       }
     }
-    if (ch == -1) {
-      return make_error_code_v(1, "unregistered option: ", arg);
-    }
   } else {
-
     /// -x=xxx
     if (arg.size() == 3 && arg[2] == '=') {
       return make_error_code_v(1, "incorrent argument: ", arg);
@@ -244,9 +240,9 @@ inline error_code ParseArgv::parse_internal(std::string_view arg,
         break;
       }
     }
-    if (ch == -1) {
-      return make_error_code_v(1, "unregistered option: ", arg);
-    }
+  }
+  if (ch == -1) {
+    return make_error_code_v(1, "unregistered option: ", arg);
   }
   if (optarg != nullptr && ha == no_argument) {
     return make_error_code_v(1, "unacceptable input: ", arg);
