@@ -9,10 +9,11 @@
 #include <cstdlib>
 #include <cstring>
 #include <vector>
-#include <argvex.hpp>
+#include <ax.hpp>
 #include <git.hpp>
 #include <console.hpp>
 #include <os.hpp>
+#include <absl/strings/numbers.h>
 #include "executor.hpp"
 
 /*
@@ -34,30 +35,31 @@ void usage() {
  )";
   aze::FPrintF(stdout, "%s\n", ua);
 }
-template <typename Integer>
-ax::error_code Fromchars(std::string_view sv_, Integer &iv) {
-  return ax::Integer_from_chars(sv_, iv, 10);
-}
+
 const constexpr std::uint64_t GB = 1024 * 1024 * 1024ull;
 const constexpr std::uint64_t MB = 1024 * 1024ull;
-ax::error_code Fromsize(std::string_view sv_, std::uint64_t &iv) {
+bool Fromsize(std::string_view sv_, std::uint64_t &iv) {
   std::uint64_t size = 1;
-  if (aze::ends_with(sv_, "MB") || aze::ends_with(sv_, "mb")) {
-    size = MB;
-    sv_.remove_suffix(2);
-  } else if (aze::ends_with(sv_, "GB") || aze::ends_with(sv_, "gb")) {
-    size = GB;
-    sv_.remove_suffix(2);
-  } else if (aze::ends_with(sv_, "KB") || aze::ends_with(sv_, "kb")) {
-    size = 1024;
-    sv_.remove_suffix(2);
+  struct SizeSuffix {
+    std::string_view sv;
+    std::uint64_t size;
+  } sizesv[]{
+      {"GB", GB},   {"G", GB},  {"MB", MB}, {"M", MB},
+      {"KB", 1024}, {"K", 1024}
+      //
+  };
+  for (const auto &e : sizesv) {
+    if (aze::ends_case_with(sv_, e.sv)) {
+      size = e.size;
+      sv_.remove_suffix(e.sv.size());
+    }
   }
   std::uint64_t k;
-  auto ec = ax::Integer_from_chars(sv_, k, 10);
-  if (!ec) {
-    iv = k * size;
+  if (!absl::SimpleAtoi(sv_, &k)) {
+    return false;
   }
-  return ec;
+  iv = k * size;
+  return true;
 }
 
 std::uint64_t AzeEnv(std::string_view key, std::uint64_t dv) {
@@ -89,19 +91,20 @@ bool parse_opts(int argc, char **argv, aze_options &opt) {
     usage();
     return false;
   }
-  std::vector<ax::ParseArgv::option> opts = {
-      {"git-dir", ax::ParseArgv::required_argument, 'g'},
-      {"who", ax::ParseArgv::no_argument, 'w'},
-      {"all", ax::ParseArgv::no_argument, 'A'},
-      {"timeout", ax::ParseArgv::required_argument, 'T'},
-      {"limitsize", ax::ParseArgv::required_argument, 'L'},
-      {"warnsize", ax::ParseArgv::required_argument, 'W'},
-      {"version", ax::ParseArgv::no_argument, 'v'},
-      {"verbose", ax::ParseArgv::no_argument, 'V'},
-      {"help", ax::ParseArgv::no_argument, 'h'}};
   ax::ParseArgv pa(argc, argv);
-  auto ec =
-      pa.Parse(opts, [&](int ch, const char *optarg, const char *) {
+  pa.Add("git-dir", ax::required_argument, 'g')
+      .Add("who", ax::no_argument, 'w')
+      .Add("all", ax::no_argument, 'A')
+      .Add("timeout", ax::required_argument, 'T')
+      .Add("limitsize", ax::required_argument, 'L')
+      .Add("warnsize", ax::required_argument, 'W')
+      .Add("version", ax::no_argument, 'v')
+      .Add("verbose", ax::no_argument, 'V')
+      .Add("help", ax::no_argument, 'h');
+  // ax::ParseArgv pa(argc, argv);
+  ax::error_code ec;
+  bool result = pa.Execute(
+      [&](int ch, const char *optarg, const char *) {
         switch (ch) {
         case 'g':
           opt.gitdir = optarg;
@@ -113,14 +116,23 @@ bool parse_opts(int argc, char **argv, aze_options &opt) {
           opt.allrefs = true;
           break;
         case 'L':
-          Fromsize(optarg, opt.largesize);
+          if (!Fromsize(optarg, opt.largesize)) {
+            aze::FPrintF(stderr, "WARNING: Limitsize value is wrong: '%s'\n",
+                         optarg);
+          }
           break;
         case 'W':
-          Fromsize(optarg, opt.warnsize);
+          if (!Fromsize(optarg, opt.warnsize)) {
+            aze::FPrintF(stderr, "WARNING: Warnsize value is wrong: '%s'\n",
+                         optarg);
+          }
           break;
-        case 'T':
-          Fromchars(optarg, opt.timeout);
-          break;
+        case 'T': {
+          int64_t timeout = 0;
+          if (absl::SimpleAtoi(optarg, &timeout) && timeout > 0) {
+            opt.timeout = timeout;
+          }
+        } break;
         case 'v':
           aze::FPrintF(stdout, "git-analyze 1.0\n");
           exit(0);
@@ -136,9 +148,10 @@ bool parse_opts(int argc, char **argv, aze_options &opt) {
           break;
         }
         return true;
-      });
-  if (ec && ec.ec != ax::SkipParse) {
-    aze::FPrintF(stderr, "%s\n", ec.message);
+      },
+      ec);
+  if (!result && ec.ec != ax::SkipParse) {
+    aze::FPrintF(stderr, "Parse Argv: %s\n", ec.message);
     return false;
   }
 

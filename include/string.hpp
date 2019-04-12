@@ -48,6 +48,22 @@ inline bool ends_with(std::string_view sv, std::string_view suffix) {
   return memcmp(sv.data() + pos, suffix.data(), suffix.size()) == 0;
 }
 
+inline bool ends_case_with(std::string_view sv, std::string_view suffix) {
+  if (suffix.size() > sv.size()) {
+    return false;
+  }
+  auto pos = sv.size() - suffix.size();
+  auto P0 = sv.data() + pos;
+  auto P1 = suffix.data();
+  auto L = suffix.size();
+  for (size_t I = 0; I < L; I++) {
+    if (::tolower(P0[I]) != ::tolower(P1[I])) {
+      return false;
+    }
+  }
+  return true;
+}
+
 } // namespace aze
 
 #endif
