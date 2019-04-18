@@ -40,6 +40,15 @@ std::string PathClean(std::string_view p) {
   return s;
 }
 
+// when sub startswith parant
+// 1.  size equal --> path equal
+// 2.  path[p.size()]=='/' At this point, 'path' is a subpath of p
+inline bool IsPathContains(std::string_view parent, std::string_view sub) {
+  return (parent.size() <= sub.size() &&
+          memcmp(parent.data(), sub.data(), parent.size()) == 0 &&
+          (sub.size() == parent.size() || sub[parent.size()] == '/'));
+}
+
 bool RulesEngine::AddPrefix(std::string_view path) {
   auto p = PathClean(path);
   if (p.empty()) {
@@ -61,13 +70,8 @@ bool RulesEngine::AddRegex(std::string_view rx) {
 
 bool RulesEngine::FullMatch(std::string_view path) {
   for (const auto &p : prefix) {
-    if (p.size() > path.size()) {
-      continue;
-    }
-    if (path.compare(0, p.size(), p.c_str()) == 0) {
-      if (path.size() == p.size() || path[p.size()] == '/') {
-        return true;
-      }
+    if (IsPathContains(p, path)) {
+      return true;
     }
   }
   for (auto c : rules) {
