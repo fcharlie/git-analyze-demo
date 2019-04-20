@@ -128,8 +128,8 @@ set(HTTP_PARSER_HASH ef26268c54c8084d17654ba2ed5140bffeffd2a040a895ffb22a6cca3f6
 # libre2
 set(LIBRE2_URL https://github.com/google/re2/archive/2019-03-01.tar.gz)
 set(LIBRE2_HASH 05dc21aafc1fa21161214c6145aeed8a6d108bde390584c762aa3e64df557d6d)
-set(LIBUV_URL https://github.com/libuv/libuv/archive/v1.27.0.tar.gz)
-set(LIBUV_HASH 4afcdc84cd315b77c8e532e7b3fde43d536af0e2e835eafbd0e75518ed26dbed)
+set(LIBUV_URL https://github.com/libuv/libuv/archive/v1.28.0.tar.gz)
+set(LIBUV_HASH 9ab338062e5b73bd4a05b7fcb77a0745c925c0be9118e0946434946a262cdad5)
 
 set(LIBGIT2_LIBS git2)
 set(AZE_UNIX_LIB)
@@ -203,6 +203,7 @@ else()
   set(AZE_UNIX_LIB pthread)
 endif()
 
+if(NOT WIN32)
 # build libuv
 ExternalProject_Add(libuv
   URL ${LIBUV_URL}
@@ -216,6 +217,23 @@ ExternalProject_Add(libuv
     BUILD_COMMAND cmake --build .
     INSTALL_COMMAND ${CMAKE_MAKE_PROGRAM} install
 )
+else()
+  include(FetchContent) #cmake 3.11 or Later
+  FetchContent_Declare(libuv
+    URL ${LIBUV_URL}
+    URL_HASH SHA256=${LIBUV_HASH}
+  )
+  FetchContent_GetProperties(libuv)
+  if(NOT libuv_POPULATED)
+    message(STATUS "Fetch content libuv ...")
+    FetchContent_Populate(libuv)
+    message(STATUS "Add include dir ${libuv_SOURCE_DIR}/include ...")
+    include_directories(
+      "${libuv_SOURCE_DIR}/include"
+    )
+  add_subdirectory("${libuv_SOURCE_DIR}")
+  endif()
+endif()
 
 # build libre2
 ExternalProject_Add(libre2
