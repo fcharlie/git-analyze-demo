@@ -83,7 +83,13 @@ bool Executor::InitializeRules(std::string_view sv, std::string_view ref) {
   return engine.PreInitialize(sv, branch);
 }
 
-////////////////////////////////////////////////
+// The entries will be traversed in the specified order, children subtrees will
+// be automatically loaded as required, and the callback will be called once per
+// entry with the current (relative) root for the entry and the entry data
+// itself.
+// If the callback returns a positive value, the passed entry will be skipped on
+// the traversal (in pre mode). A negative value stops the walk.
+// https://libgit2.org/libgit2/#HEAD/group/tree/git_tree_walk
 int git_treewalk_impl(const char *root, const git_tree_entry *entry,
                       void *payload) {
   auto e = reinterpret_cast<Executor *>(payload);
@@ -91,7 +97,7 @@ int git_treewalk_impl(const char *root, const git_tree_entry *entry,
   name.append(git_tree_entry_name(entry));
   if (e->FullMatch(name)) {
     fprintf(stderr, "Path %s is readonly\n", name.c_str());
-    return 1;
+    return -1;
   }
   return 0;
 }
@@ -105,6 +111,17 @@ bool Executor::ExecuteTreeWalk(std::string_view rev) {
                         this) == 0);
 }
 
+// This will iterate through all of the files described in a diff. You should
+// provide a file callback to learn about each file.
+
+// The "hunk" and "line" callbacks are optional, and the text diff of the files
+// will only be calculated if they are not NULL. Of course, these callbacks will
+// not be invoked for binary files on the diff or for files whose only changed
+// is a file mode change.
+
+// Returning a non-zero value from any of the callbacks will terminate the
+// iteration and return the value to the user.
+// https://libgit2.org/libgit2/#HEAD/group/diff/git_diff_foreach
 int git_diff_callback(const git_diff_delta *delta, float progress,
                       void *payload) {
   (void)progress;
