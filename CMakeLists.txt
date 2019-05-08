@@ -118,6 +118,11 @@ set(ANALYZE_CLEANROOT "${CMAKE_BINARY_DIR}/cleanroot")
 message(STATUS "TRACE '${CMAKE_GENERATOR}' ${CMAKE_MAKE_PROGRAM}")
 
 include(ExternalProject)
+include(FetchContent) #cmake 3.11 or Later
+
+#Absl
+set(ABSL_REPO https://github.com/abseil/abseil-cpp.git)
+set(ABSL_TAG aa468ad75539619b47979911297efbb629c52e44)
 
 # Libgit2
 set(LIBGIT2_URL https://github.com/libgit2/libgit2/archive/v0.28.1.tar.gz)
@@ -218,7 +223,6 @@ ExternalProject_Add(libuv
     INSTALL_COMMAND ${CMAKE_MAKE_PROGRAM} install
 )
 else()
-  include(FetchContent) #cmake 3.11 or Later
   FetchContent_Declare(libuv
     URL ${LIBUV_URL}
     URL_HASH SHA256=${LIBUV_HASH}
@@ -258,10 +262,26 @@ set(UV_LIBS
   uv_a
 )
 
+
+FetchContent_Declare(absl
+  GIT_REPOSITORY ${ABSL_REPO}
+  GIT_TAG ${ABSL_TAG}
+)
+
+FetchContent_GetProperties(absl)
+if(NOT absl_POPULATED)
+  message(STATUS "Fetch content absl ${ABSL_TAG} ...")
+  FetchContent_Populate(absl)
+endif()
+
+option(BUILD_TESTING "Force Disable Abseil Test" OFF)
+add_subdirectory("${absl_SOURCE_DIR}")
+
+
 include_directories(
   ${ANALYZE_CLEANROOT}/include
+  ${absl_SOURCE_DIR}
   ./include
-  ./vendor/abseil
 )
 
 link_directories(
@@ -273,7 +293,6 @@ install(FILES "${ANALYZE_CLEANROOT}/share/libgit2/COPYING"
   RENAME copyright
 )
 
-add_subdirectory(vendor/abseil)
 add_subdirectory(tools) # add tools
 if(ENABLE_AZE_CLAR)
   add_subdirectory(test) # test
