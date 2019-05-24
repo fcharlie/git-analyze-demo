@@ -122,7 +122,7 @@ include(FetchContent) #cmake 3.11 or Later
 
 #Absl
 set(ABSL_REPO https://github.com/abseil/abseil-cpp.git)
-set(ABSL_TAG ce65f5ac3cbf897bb5e3de1a51d80fd00866abaa)
+set(ABSL_TAG 27c30ec671cb7b5ba84c4e79feff7fd0b0ac6338)
 
 # Libgit2
 set(LIBGIT2_URL https://github.com/libgit2/libgit2/archive/v0.28.2.tar.gz)
