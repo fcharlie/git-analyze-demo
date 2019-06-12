@@ -1,6 +1,7 @@
 ////////
 #ifndef AZE_IMPL_GIT_IPP
 #define AZE_IMPL_GIT_IPP
+#include <absl/strings/str_cat.h>
 #include "git.hpp"
 
 namespace git {
@@ -146,14 +147,12 @@ repository::get_reference_commit_auto(std::string_view ref) {
   if (aze::starts_with(ref, "refs/heads/") || ref == "HEAD") {
     return get_reference_commit(ref);
   }
-  std::string xref("refs/heads/");
-  xref.append(ref);
-  return get_reference_commit(ref);
+  auto xref = absl::StrCat("refs/heads/", ref);
+  return get_reference_commit(xref);
 }
 
 inline std::optional<config> repository::get_config() {
-  std::string p(git_repository_path(repo_));
-  p.append("/config");
+  auto p = absl::StrCat(git_repository_path(repo_), "/config");
   config c;
   if (git_config_open_ondisk(&c.c, p.c_str()) != 0) {
     return std::nullopt;
