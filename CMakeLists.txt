@@ -122,7 +122,7 @@ include(FetchContent) #cmake 3.11 or Later
 
 #Absl
 set(ABSL_REPO https://github.com/abseil/abseil-cpp.git)
-set(ABSL_TAG b1dd425423380126f6441ce4fbb6f8f6c75b793a)
+set(ABSL_TAG e6b050212c859fbaf67abac76105da10ec348274)
 
 # Libgit2
 set(LIBGIT2_URL https://github.com/libgit2/libgit2/archive/v0.28.2.tar.gz)
@@ -131,10 +131,10 @@ set(LIBGIT2_HASH 42b5f1e9b9159d66d86fff0394215c5733b6ef8f9b9d054cdd8c73ad47177fc
 set(HTTP_PARSER_URL https://github.com/nodejs/http-parser/archive/v2.9.2.tar.gz)
 set(HTTP_PARSER_HASH 5199500e352584852c95c13423edc5f0cb329297c81dd69c3c8f52a75496da08)
 # libre2
-set(LIBRE2_URL https://github.com/google/re2/archive/2019-04-01.tar.gz)
-set(LIBRE2_HASH 2ed94072145272012bb5b7054afcbe707447d49dcd79fd6d1689e6f3dc589def)
-set(LIBUV_URL https://github.com/libuv/libuv/archive/v1.29.1.tar.gz)
-set(LIBUV_HASH bdde1140087ce97080ea323c3598553ece00a24ae63ac568be78bef3e97f3e25)
+set(LIBRE2_URL https://github.com/google/re2/archive/2019-06-01.tar.gz)
+set(LIBRE2_HASH 02b7d73126bd18e9fbfe5d6375a8bb13fadaf8e99e48cbb062e4500fc18e8e2e)
+set(LIBUV_URL https://github.com/libuv/libuv/archive/v1.30.1.tar.gz)
+set(LIBUV_HASH d85566c2c4eae7d8e2c2d27d40e728fea29f9086e98e795c5cdce1a790f43de5)
 
 set(LIBGIT2_LIBS git2)
 set(AZE_UNIX_LIB)
