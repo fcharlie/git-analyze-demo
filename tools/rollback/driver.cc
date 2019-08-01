@@ -12,7 +12,6 @@
 #include <console.hpp>
 #include <argv.hpp>
 #include <git.hpp>
-#include <string.hpp>
 #include "rollback.hpp"
 
 /*
@@ -71,9 +70,9 @@ bool parse_opts(int argc, char **argv, rollback_options &opt) {
         } break;
         case 'N':
           opt.refname = oa;
-          if (!aze::starts_with(opt.refname, "refs/heads/") &&
+          if (!absl::StartsWith(opt.refname, "refs/heads/") &&
               opt.refname != "HEAD") {
-            opt.refname = aze::strcat("refs/heads/", opt.refname);
+            opt.refname = absl::StrCat("refs/heads/", opt.refname);
           }
           break;
         case 'v':

@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 #include <optional>
-#include "../string.hpp"
+#include <absl/strings/match.h>
 #include <git2.h>
 
 namespace git {

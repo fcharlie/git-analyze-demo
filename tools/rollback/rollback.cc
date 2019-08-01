@@ -73,7 +73,7 @@ bool ApplyNewOID(git::repository &r, std::string_view refname,
     aze::FPrintF(stderr, "commit %s not exists in %s history\n", oid, refname);
     return false;
   }
-  auto msg = aze::strcat("rollback '", refname, "' to commit id'", oid, "'");
+  auto msg = absl::StrCat("rollback '", refname, "' to commit id'", oid, "'");
   auto nr = ref->new_target(&id, msg);
   if (!nr) {
     auto e = giterr_last();
@@ -115,8 +115,8 @@ bool ApplyBackRev(git::repository &r, std::string_view refname, int rev) {
     aze::FPrintF(stderr, "rev %d overflow\n", rev);
     return false;
   }
-  auto msg = aze::strcat("rollback '", refname, "' to commit id'",
-                         git_oid_tostr_s(&rid), "'");
+  auto msg = absl::StrCat("rollback '", refname, "' to commit id'",
+                          git_oid_tostr_s(&rid), "'");
   auto nr = ref->new_target(&rid, msg);
   if (!nr) {
     auto e = giterr_last();

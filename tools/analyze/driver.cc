@@ -14,6 +14,7 @@
 #include <console.hpp>
 #include <os.hpp>
 #include <absl/strings/numbers.h>
+#include <absl/strings/strip.h>
 #include "executor.hpp"
 
 /*
@@ -49,9 +50,9 @@ bool Fromsize(std::string_view sv_, std::uint64_t &iv) {
       //
   };
   for (const auto &e : sizesv) {
-    if (aze::ends_case_with(sv_, e.sv)) {
+    if (absl::ConsumeSuffix(&sv_, e.sv)) {
       size = e.size;
-      sv_.remove_suffix(e.sv.size());
+      break;
     }
   }
   std::uint64_t k;

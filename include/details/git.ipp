@@ -144,7 +144,7 @@ repository::get_reference_commit_auto(std::string_view ref) {
   if (c) {
     return c;
   }
-  if (aze::starts_with(ref, "refs/heads/") || ref == "HEAD") {
+  if (absl::StartsWith(ref, "refs/heads/") || ref == "HEAD") {
     return get_reference_commit(ref);
   }
   auto xref = absl::StrCat("refs/heads/", ref);

@@ -64,10 +64,10 @@ bool Executor::Initialize(std::string_view dir, std::string_view branch,
   }
 
   msg = message;
-  if (aze::starts_with(branch, "refs/heads/")) {
+  if (absl::StartsWith(branch, "refs/heads/")) {
     refname = branch;
   } else {
-    refname.assign("refs/heads/").append(branch);
+    refname = absl::StrCat("refs/heads/", branch);
   }
   nb = nb_;
   if (nb) {

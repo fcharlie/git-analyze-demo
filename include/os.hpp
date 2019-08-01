@@ -29,7 +29,7 @@ inline bool Executable(std::string &exe) {
     return false;
   }
   exe.resize(size);
-  return false;
+  return true;
 }
 
 inline std::string Getwd() {

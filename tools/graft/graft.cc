@@ -113,7 +113,7 @@ void dump_error() {
 std::optional<std::string> make_refname(git::repository &r,
                                         std::string_view sv) {
   if (!sv.empty()) {
-    return std::make_optional(aze::strcat("refs/heads/", sv));
+    return std::make_optional(absl::StrCat("refs/heads/", sv));
   }
   auto ref = r.get_reference("HEAD");
   if (!ref) {
