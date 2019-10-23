@@ -134,8 +134,8 @@ set(HTTP_PARSER_HASH 5199500e352584852c95c13423edc5f0cb329297c81dd69c3c8f52a7549
 set(RE2_URL https://github.com/google/re2/archive/2019-09-01.tar.gz)
 set(RE2_HASH b0382aa7369f373a0148218f2df5a6afd6bfa884ce4da2dfb576b979989e615e)
 # libuv
-set(LIBUV_URL https://github.com/libuv/libuv/archive/v1.33.0.tar.gz)
-set(LIBUV_HASH d085b46aea791fb7772c274ccc58faadc56fdf6252d3b09b7fb24bd03881efdb)
+set(LIBUV_URL https://github.com/libuv/libuv/archive/v1.33.1.tar.gz)
+set(LIBUV_HASH 63794499bf5da1720e249d3fc14ff396b70b8736effe6ce5b4e47e0f3d476467)
 
 set(LIBGIT2_LIBS git2)
 set(AZE_UNIX_LIB)
