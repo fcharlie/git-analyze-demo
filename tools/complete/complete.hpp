@@ -38,8 +38,8 @@ public:
 
 private:
   bool Parseconfig();
-  bool RoundYear(int year);
-  bool One(git_time when);
+  bool RoundYear(int year, int offset);
+  bool One(git_time_t t, int offset);
   git::repository r;
   git::tree t; // commit tree
   std::string email;

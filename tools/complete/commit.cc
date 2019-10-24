@@ -99,16 +99,18 @@ bool Executor::Initialize(std::string_view dir, std::string_view branch,
   return true;
 }
 
-bool Executor::One(git_time when) {
-  git_signature sig;
-  sig.name = author.data();
-  sig.email = email.data();
-  sig.when = when;
+bool Executor::One(git_time_t time_, int offset) {
+  git_signature *sig = nullptr;
+  if (git_signature_new(&sig, author.data(), email.data(), time_, offset) !=
+      0) {
+    return false;
+  }
   git_oid nid;
   const git_commit *ps[] = {parent};
-  if (git_commit_create(&nid, r.p(), refname.c_str(), &sig, &sig, nullptr,
+  if (git_commit_create(&nid, r.p(), refname.c_str(), sig, sig, nullptr,
                         msg.data(), t.p(), (nb ? 0 : 1),
                         (nb ? nullptr : ps)) != 0) {
+    git_signature_free(sig);
     return false;
   }
   nb = false;
@@ -116,6 +118,7 @@ bool Executor::One(git_time when) {
     git_commit_free(parent);
     parent = nullptr;
   }
+  git_signature_free(sig);
   totals++;
   return (git_commit_lookup(&parent, r.p(), &nid) == 0);
 }
@@ -126,21 +129,13 @@ static uint32_t Random() {
   return (g_seed >> 16) & 0x7FFF;
 }
 
-bool Executor::RoundYear(int year) {
+bool Executor::RoundYear(int year, int offset) {
   auto t = time(nullptr);
   auto p = localtime(&t);
   unsigned my = year <= 1900 ? p->tm_year : year - 1900;
   struct tm mt;
   memset(&mt, 0, sizeof(tm));
   auto days = Days(year);
-  git_time gt;
-#ifdef _WIN32
-  long tz = 0;
-  _get_timezone(&tz);
-  gt.offset = -tz / 60;
-#else
-  gt.offset = -timezone / 60;
-#endif
   for (unsigned i = 1; i <= days; i++) {
     mt.tm_mday = i;
     mt.tm_mon = 0;
@@ -151,8 +146,8 @@ bool Executor::RoundYear(int year) {
       mt.tm_min = p->tm_min + k;
       mt.tm_sec = p->tm_sec;
       mt.tm_year = my;
-      gt.time = mktime(&mt);
-      if (!One(gt)) {
+      auto t = mktime(&mt);
+      if (!One(t, offset)) {
         return false;
       }
     }
@@ -161,8 +156,15 @@ bool Executor::RoundYear(int year) {
 }
 
 bool Executor::Execute(uint32_t begin, uint32_t end) {
+#ifdef _WIN32
+  long tz = 0;
+  _get_timezone(&tz);
+  auto offset = tz / 60;
+#else
+  auto offset = timezone / 60;
+#endif
   for (auto i = begin; i <= end; i++) {
-    if (!RoundYear(i)) {
+    if (!RoundYear(i, offset)) {
       return false;
     }
     aze::FPrintF(stderr, "\rFill %04d done", i);
