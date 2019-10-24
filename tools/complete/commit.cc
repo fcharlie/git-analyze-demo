@@ -5,6 +5,7 @@
  * Date: 2017.04
  * Copyright (C) 2019. GITEE.COM. All Rights Reserved.
  */
+#include <ctime>
 #include "complete.hpp"
 
 bool Executor::Parseconfig() {
@@ -51,6 +52,11 @@ bool Executor::Parseconfig() {
 
 bool Executor::Initialize(std::string_view dir, std::string_view branch,
                           std::string_view message, bool nb_) {
+#ifdef _WIN32
+  _tzset();
+#else
+  tzset();
+#endif
   git::error_code ec;
   auto xr = git::repository::make_repository_ex(dir, ec);
   if (!xr) {
@@ -128,6 +134,13 @@ bool Executor::RoundYear(int year) {
   memset(&mt, 0, sizeof(tm));
   auto days = Days(year);
   git_time gt;
+#ifdef _WIN32
+  long tz = 0;
+  _get_timezone(&tz);
+  gt.offset = -tz / 60;
+#else
+  gt.offset = -timezone / 60;
+#endif
   for (unsigned i = 1; i <= days; i++) {
     mt.tm_mday = i;
     mt.tm_mon = 0;
