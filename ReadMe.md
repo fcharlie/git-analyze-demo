@@ -15,13 +15,13 @@ Unix 依赖：
 +   GCC 7.3 or Later (Best GCC 8)
 +   CMake 3.12 or Later
 
-```
+```shell
 git clone https://gitee.com/oscstudio/git-analyze.git
 ```
 
 Windows 构建：
 
-```sh
+```shell
 mkdir build
 cd build
 cmake -G "NMake Makefiles" -DCMAKE_BUILD_TYPE=Release ..
@@ -31,7 +31,7 @@ cpack
 
 Unix 构建：
 
-```sh
+```shell
 mkdir build
 cd build
 cmake -DCMAKE_BUILD_TYPE=Release .. -DCMAKE_INSTALL_PREFIX=/opt/oscstudio
@@ -41,7 +41,7 @@ make install
 ## Analyze 工具
 
 git-analyze 命令行参数
-```sh
+```shell
 OVERVIEW: GIT analyze tools
 Usage: git-analyze <options>...] [--] [<pathspec>...] [<refs|branches> ...]
 OPTIONS:
@@ -56,7 +56,9 @@ OPTIONS:
 默认情况下, git-analyze 扫描当前目录的仓库的 HEAD 指向的分支,如果要扫描其他目录或者其他分支需要额外的设置参数,
 仓库目录可以是工作目录的根目录和裸仓库的目录, 分支名可以使用引用或者本地分支名,二者相对顺序必须与下相同.
 
->git-analyze /path/to/repo master
+```shell
+git-analyze /path/to/repo master
+```
 
 其中 limitsize warnsize 参数都是整数,单位是 MB 默认值为 100 MB 和 50 MB, timeout 单位是秒,可以不设置, 这几个都可以使用 --limitsize=100 或者 --limitsize 100 这样的格式.
 
@@ -74,7 +76,7 @@ all 这个开关如果开启时,将扫描所有的引用.
 
 git-rollback 命令行参数
 
-```sh
+```shell
 OVERVIEW: GIT rollback tools
 Usage: git-rollback <options>...] [--] [<pathspec>...] [<refs|branches> ...]
 OPTIONS:
@@ -83,7 +85,6 @@ OPTIONS:
   --backid         set rollback commit id
   --backrev        set rollback current back X rev
   --refname        set rollback current reference name
-
 ```
 参数格式与 git-analyze 类似, --force 将强制运行 git gc 并清除悬空对象. 当 未指定 git-dir 时,为当前目录,未指定 refname 时,为 HEAD 指向的分支.
 
@@ -135,10 +136,10 @@ Update 钩子是一个实验性的钩子用户实现 git 只读目录功能，�
 git 支持使用 git subcommand 的格式运行特定命令,比如 git add 对应的命令就是 git-add , 当用户需要直接运行 git analyze 这种方式运行这些命令,
 有几种方法可以做到,第一种是将 git-analyze 加入环境变量,然后可以直接运行
 
-```bash
- git analyze . refs/heads/master
- git rollback --backrev 1
- ```
+```shell
+git analyze . refs/heads/master
+git rollback --backrev 1
+```
 
 同样也可以使用软链接的方式将命令链接到系统目录, 在 POSIX 系统中,或者 Windows Subsystem for Linux 可以使用 ln -s , 在 Windows 中
 可以使用 mklink  /d .
